@@ -1,28 +1,31 @@
 package frc.robot.util;
 
-import java.util.function.BooleanSupplier;
-
 public class EdgeDetector {
-    private final BooleanSupplier source;
-
-    public EdgeDetector(BooleanSupplier source) {
-        this.source = source;
-    }
-
-    private boolean val;
     private boolean prevVal;
     private boolean risingEdge;
     private boolean fallingEdge;
 
-    public void update() {
-        val = source.getAsBoolean();
-        risingEdge = val && !prevVal;
-        fallingEdge = !val && prevVal;
-        prevVal = val;
+    public EdgeDetector() {
+        this(false);
+    }
+    public EdgeDetector(boolean startingValue) {
+        prevVal = startingValue;
+    }
+
+    public void update(boolean value) {
+        risingEdge = false;
+        fallingEdge = false;
+        if(value && !prevVal) {
+            risingEdge = true;
+        }
+        if(!value && prevVal) {
+            fallingEdge = true;
+        }
+        prevVal = value;
     }
 
     public boolean getValue() {
-        return val;
+        return prevVal;
     }
     public boolean risingEdge() {
         return risingEdge;
