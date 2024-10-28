@@ -1,5 +1,9 @@
 package frc.robot.util.led.strips.hardware;
 
+import java.util.stream.IntStream;
+
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
@@ -31,5 +35,6 @@ public class AddressableStrip implements HardwareStrip {
     @Override
     public void refresh() {
         strip.setData(buffer);
+        Logger.recordOutput("LEDS/Strip", IntStream.range(0, buffer.getLength()).mapToObj((index) -> buffer.getLED(index).toHexString()).toArray(String[]::new));
     }
 }
