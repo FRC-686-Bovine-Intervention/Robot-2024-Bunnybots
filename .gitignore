@@ -175,6 +175,11 @@ simgui.json
 
 # Simulation data log directory
 logs/
+/**/BuildConstants.java
+*.wpilog
+
+# Allow photonvision settings
+!photonvision*settings*
 
 # Folder that has CTRE Phoenix Sim device config storage
 ctre_sim/
