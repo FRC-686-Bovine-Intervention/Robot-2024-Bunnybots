@@ -1,6 +1,15 @@
 package frc.robot.util;
 
-import edu.wpi.first.math.util.Units;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Second;
+
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 public class GearRatio {
     private final double ratio;
@@ -41,15 +50,15 @@ public class GearRatio {
         return new Chain(toothCount, this);
     }
 
-    public Wheel wheelRadius(double radius) {
-        return new Wheel(radius, this);
-    }
-    public Wheel wheelDiameter(double diameter) {
-        return wheelRadius(diameter / 2);
-    }
-    public Wheel wheelCircumference(double circumference) {
-        return wheelDiameter(circumference / Math.PI);
-    }
+    // public Wheel wheelRadius(Measure<Distance> radius) {
+    //     return new Wheel(radius);
+    // }
+    // public Wheel wheelDiameter(Measure<Distance> diameter) {
+    //     return wheelRadius(diameter.divide(2));
+    // }
+    // public Wheel wheelCircumference(Measure<Distance> circumference) {
+    //     return wheelDiameter(circumference.divide(Math.PI));
+    // }
 
     public static class Gear {
         private final double toothCount;
@@ -88,42 +97,71 @@ public class GearRatio {
     }
 
     public static class Wheel {
-        private final double radius;
-        private final GearRatio ratio;
-        private final GearRatio inverseRatio;
+        private final Distance radius;
 
-        private Wheel(double radius, GearRatio ratio) {
+        private Wheel(Distance radius) {
             this.radius = radius;
-            this.ratio = ratio;
-            this.inverseRatio = this.ratio.inverse();
         }
 
-        public double surfacePerRad() {
-            return ratio.ratio() * radius;
+        public static Wheel radius(Distance radius) {
+            return new Wheel(radius);
         }
-        public double surfacePerRot() {
-            return Units.rotationsToRadians(surfacePerRad());
+        public static Wheel diameter(Distance diameter) {
+            return radius(diameter.divide(2));
         }
-
-        public double radPerSurface() {
-            return inverseRatio.ratio() / radius;
-        }
-        public double rotPerSurface() {
-            return Units.radiansToRotations(radPerSurface());
+        public static Wheel circumference(Distance circumference) {
+            return diameter(circumference.divide(Math.PI));
         }
 
-        public double radsToSurface(double rads) {
-            return surfacePerRad() * rads;
-        }
-        public double rotsToSurface(double rots) {
-            return surfacePerRot() * rots;
+        public Distance radius() {
+            return radius;
         }
 
-        public double surfaceToRads(double surface) {
-            return radPerSurface() * surface;
+        public Distance surfacePer(AngleUnit angleUnits) {
+            return angleToSurface(angleUnits.one());
         }
-        public double surfaceToRots(double surface) {
-            return rotPerSurface() * surface;
+        public Angle anglePer(DistanceUnit distUnits) {
+            return surfaceToAngle(distUnits.one());
         }
+
+        // public double surfacePerRad() {
+        //     return ratio.ratio() * radius;
+        // }
+        // public double surfacePerRot() {
+        //     return Units.rotationsToRadians(surfacePerRad());
+        // }
+
+        // public double radPerSurface() {
+        //     return inverseRatio.ratio() / radius;
+        // }
+        // public double rotPerSurface() {
+        //     return Units.radiansToRotations(radPerSurface());
+        // }
+
+        // public double radsToSurface(double rads) {
+        //     return surfacePerRad() * rads;
+        // }
+        // public double rotsToSurface(double rots) {
+        //     return surfacePerRot() * rots;
+        // }
+
+        public Distance angleToSurface(Angle angle) {
+            return radius.times(angle.in(Radians));
+        }
+        public LinearVelocity angularVelocityToSurfaceVelocity(AngularVelocity angularVelocity) {
+            return radius.per(Second).times(angularVelocity.in(RadiansPerSecond));
+        }
+        public Angle surfaceToAngle(Distance surface) {
+            return Radians.of(surface.baseUnitMagnitude() / radius.baseUnitMagnitude());
+        }
+        public AngularVelocity surfaceVelocityToAngularVelocity(LinearVelocity surfaceVelocity) {
+            return RadiansPerSecond.of(surfaceVelocity.baseUnitMagnitude() / radius.per(Second).baseUnitMagnitude());
+        }
+        // public double surfaceToRads(double surface) {
+        //     return radPerSurface() * surface;
+        // }
+        // public double surfaceToRots(double surface) {
+        //     return rotPerSurface() * surface;
+        // }
     }
 }

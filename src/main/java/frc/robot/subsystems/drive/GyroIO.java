@@ -7,18 +7,21 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import org.littletonrobotics.junction.AutoLog;
+
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 public interface GyroIO {
   @AutoLog
   public static class GyroIOInputs {
     public boolean connected = false;
-    public double rollPositionRad = 0.0;
-    public double pitchPositionRad = 0.0;
-    public double yawPositionRad = 0.0;
-    public double rollVelocityRadPerSec = 0.0;
-    public double pitchVelocityRadPerSec = 0.0;
-    public double yawVelocityRadPerSec = 0.0;
+    public Rotation3d rotation = new Rotation3d();
+    public AngularVelocity yawVelocity = RadiansPerSecond.zero();
+    public AngularVelocity pitchVelocity = RadiansPerSecond.zero();
+    public AngularVelocity rollVelocity = RadiansPerSecond.zero();
   }
 
   public default void updateInputs(GyroIOInputs inputs) {}

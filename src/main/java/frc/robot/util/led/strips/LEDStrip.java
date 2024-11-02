@@ -1,7 +1,9 @@
 package frc.robot.util.led.strips;
 
 import java.util.Arrays;
+import java.util.function.DoubleFunction;
 import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.util.led.strips.software.ConcatenatedStrip;
@@ -24,6 +26,15 @@ public interface LEDStrip {
     }
     public default void clear() {
         foreach((int i) -> setLED(i, Color.kBlack));
+    }
+    public default void apply(DoubleFunction<Color> gradient) {
+        foreach((i) -> setLED(i, gradient.apply((double) i/getLength())));
+    }
+    public default void apply(Supplier<Color> fill) {
+        foreach((i) -> setLED(i, fill.get()));
+    }
+    public default void apply(Color fill) {
+        foreach((i) -> setLED(i, fill));
     }
 
     public default LEDStrip concat(LEDStrip... strips) {

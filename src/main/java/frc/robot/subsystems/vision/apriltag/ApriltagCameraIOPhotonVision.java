@@ -37,6 +37,7 @@ public class ApriltagCameraIOPhotonVision implements ApriltagCameraIO {
         // set default values
         inputs.isConnected = photonCam.isConnected();
         notConnectedAlert.set(!inputs.isConnected);
+        cam.connectedConsumer.accept(inputs.isConnected);
         inputs.hasResult = false;
 
         if ((!inputs.isConnected) || (photonPoseEstimator == null)) return;

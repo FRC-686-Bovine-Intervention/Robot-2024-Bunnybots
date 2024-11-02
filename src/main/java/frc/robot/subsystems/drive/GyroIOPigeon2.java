@@ -10,7 +10,6 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
-import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 
 /** IO implementation for Pigeon2 */
@@ -34,12 +33,10 @@ public class GyroIOPigeon2 implements GyroIO {
   public void updateInputs(GyroIOInputs inputs) {
     inputs.connected = pigeon.getYaw().getStatus().isOK();
 
-    inputs.yawPositionRad =     Units.degreesToRadians( pigeon.getYaw().getValue());    // ccw+
-    inputs.pitchPositionRad =   Units.degreesToRadians(-pigeon.getPitch().getValue());  // up+
-    inputs.rollPositionRad =    Units.degreesToRadians(-pigeon.getRoll().getValue());   // ccw+
+    inputs.rotation = pigeon.getRotation3d();
 
-    inputs.yawVelocityRadPerSec =   Units.degreesToRadians( pigeon.getAngularVelocityZWorld().getValue());   // ccw+
-    inputs.pitchVelocityRadPerSec = Units.degreesToRadians(-pigeon.getAngularVelocityYWorld().getValue());   // up+
-    inputs.rollVelocityRadPerSec =  Units.degreesToRadians(-pigeon.getAngularVelocityXWorld().getValue());   // ccw+
+    inputs.yawVelocity = pigeon.getAngularVelocityZWorld().getValue();   // ccw+
+    inputs.pitchVelocity = pigeon.getAngularVelocityYWorld().getValue().unaryMinus();   // up+
+    inputs.rollVelocity = pigeon.getAngularVelocityXWorld().getValue().unaryMinus();   // ccw+
   }
 }

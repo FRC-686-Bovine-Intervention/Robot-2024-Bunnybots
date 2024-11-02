@@ -15,9 +15,9 @@ public interface ApriltagCameraIO {
         public boolean isConnected;
         public boolean hasResult;
         public double timestamp;
-        public int[] tagsSeen;
-        public double[] cameraToTagDist;
-        public Pose3d estimatedRobotPose;
+        public int[] tagsSeen = new int[0];
+        public double[] cameraToTagDist = new double[0];
+        public Pose3d estimatedRobotPose = new Pose3d();
 
         // public Optional<ApriltagCameraResult> getResult() {
         //     return Optional.ofNullable(hasResult ? result : null);

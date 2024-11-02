@@ -11,13 +11,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.DriveConstants.DriveModulePosition;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.commands.FieldOrientedDrive;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
@@ -49,10 +47,10 @@ public class RobotContainer {
             case REAL:
                 drive = new Drive(
                     new GyroIOPigeon2(),
-                    new ModuleIOFalcon550(DriveModulePosition.FRONT_LEFT),
-                    new ModuleIOFalcon550(DriveModulePosition.FRONT_RIGHT),
-                    new ModuleIOFalcon550(DriveModulePosition.BACK_LEFT),
-                    new ModuleIOFalcon550(DriveModulePosition.BACK_RIGHT)
+                    new ModuleIOFalcon550(DriveConstants.modules[0]),
+                    new ModuleIOFalcon550(DriveConstants.modules[1]),
+                    new ModuleIOFalcon550(DriveConstants.modules[2]),
+                    new ModuleIOFalcon550(DriveConstants.modules[3])
                 );
                 apriltagVision = new ApriltagVision();
             break;
@@ -82,13 +80,14 @@ public class RobotContainer {
         manualOverrides = new ManualOverrides();
 
         driveJoystick = driveController.leftStick
-                .smoothRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
-                .radialSensitivity(0.75)
-                .radialSlewRateLimit(DriveConstants.joystickSlewRateLimit);
+            .smoothRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
+            .radialSensitivity(0.75)
+            .radialSlewRateLimit(DriveConstants.joystickSlewRateLimit)
+        ;
 
-        joystickTranslational = FieldOrientedDrive.joystickSpectatorToFieldRelative(
-                driveJoystick,
-                () -> false
+        joystickTranslational = Drive.Translational.joystickSpectatorToFieldRelative(
+            driveJoystick,
+            () -> false
         );
 
         System.out.println("[Init RobotContainer] Configuring Default Subsystem Commands");

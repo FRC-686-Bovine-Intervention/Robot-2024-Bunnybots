@@ -7,6 +7,11 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;
@@ -15,35 +20,40 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
-import frc.robot.Constants.DriveConstants.DriveModulePosition;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.DriveConstants.ModuleConfig;
+import frc.robot.util.LoggedTunableMeasure;
 import frc.robot.util.LoggedTunableNumber;
 
 public class Module {
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
-    private final DriveModulePosition position;
+    private final ModuleConfig config;
 
-    private SwerveModulePosition prevModulePosition;
-
-    private static final LoggedTunableNumber wheelRadius = new LoggedTunableNumber("Drive/Module/WheelRadius", Constants.DriveConstants.wheelRadiusMeters);
+    private static final LoggedTunableMeasure<DistanceUnit> wheelRadius = new LoggedTunableMeasure<>("Drive/Module/WheelRadius", Meters.of(DriveConstants.wheelRadius.in(Meters)));
     private static final LoggedTunableNumber driveKp = new LoggedTunableNumber("Drive/Module/Drive/kP", 0.1);
     private static final LoggedTunableNumber driveKd = new LoggedTunableNumber("Drive/Module/Drive/kD", 0.0);
     private static final LoggedTunableNumber driveKs = new LoggedTunableNumber("Drive/Module/Drive/kS", 0.18507);
     private static final LoggedTunableNumber driveKv = new LoggedTunableNumber("Drive/Module/Drive/kV", 0.08005);
     private static final LoggedTunableNumber turnKp = new LoggedTunableNumber("Drive/Module/Turn/kP", 5.0);
     private static final LoggedTunableNumber turnKd = new LoggedTunableNumber("Drive/Module/Turn/kD", 0.0);
-
+    
     private SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0.0, 0.0);
     private final PIDController driveFeedback = new PIDController(0.0, 0.0, 0.0, Constants.dtSeconds);
     private final PIDController turnFeedback = new PIDController(0.0, 0.0, 0.0, Constants.dtSeconds);
+    
+    private SwerveModuleState state = new SwerveModuleState();
+    private SwerveModulePosition modulePosition = new SwerveModulePosition();
+    private SwerveModulePosition prevModulePosition = new SwerveModulePosition();
 
-    public Module(ModuleIO io, DriveModulePosition position) {
+    public Module(ModuleIO io, ModuleConfig config) {
         this.io = io;
-        this.position = position;
-        prevModulePosition = getPosition();
-        inputs.driveMotor.positionRad = 0;
-        inputs.turnMotor.positionRad = 0;
+        this.config = config;
 
         turnFeedback.enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -53,7 +63,7 @@ public class Module {
         prevModulePosition = getPosition();
 
         io.updateInputs(inputs);
-        Logger.processInputs("Drive/Module " + position.name(), inputs);
+        Logger.processInputs("Inputs/Drive/Module " + config.name, inputs);
 
         // Update controllers if tunable numbers have changed
         if (driveKp.hasChanged(hashCode()) | driveKd.hasChanged(hashCode())) {
@@ -65,6 +75,15 @@ public class Module {
         if (driveKs.hasChanged(hashCode()) | driveKv.hasChanged(hashCode())) {
             driveFeedforward = new SimpleMotorFeedforward(driveKs.get(), driveKv.get());
         }
+
+        var angle = Rotation2d.fromRadians(MathUtil.angleModulus(inputs.turnMotor.encoder.position.in(Radians)));
+        state = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters), angle);
+        modulePosition = new SwerveModulePosition(inputs.driveMotor.encoder.position.in(Radians) * wheelRadius.in(Meters), angle);
+
+        Logger.recordOutput("test/" + config.name + "/drive", inputs.driveMotor);
+        Logger.recordOutput("test/" + config.name + "/turn", inputs.turnMotor);
+        Logger.recordOutput("test/" + config.name + "/speed/angle", inputs.driveMotor.encoder.velocity.in(RadiansPerSecond));
+        Logger.recordOutput("test/" + config.name + "/speed/meter", inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters));
     }
 
     /**
@@ -72,23 +91,24 @@ public class Module {
      * periodically. Returns the
      * optimized state.
      */
-    public SwerveModuleState runSetpoint(SwerveModuleState state) {
+    public SwerveModuleState runSetpoint(SwerveModuleState setpoint) {
         // Optimize state based on current angle
-        var optimizedState = SwerveModuleState.optimize(state, getAngle());
+        var optimizedSetpoint = SwerveModuleState.optimize(setpoint, getAngle());
 
         // Run turn controller
-        io.setTurnVoltage(turnFeedback.calculate(getAngle().getRadians(), optimizedState.angle.getRadians()));
+        io.setTurnVoltage(Volts.of(turnFeedback.calculate(getAngle().getRadians(), optimizedSetpoint.angle.getRadians())));
 
         // Update velocity based on turn error
-        optimizedState.speedMetersPerSecond *= Math.cos(turnFeedback.getPositionError());
+        optimizedSetpoint.speedMetersPerSecond *= Math.cos(turnFeedback.getError());
 
         // Run drive controller
-        double velocityRadPerSec = optimizedState.speedMetersPerSecond / wheelRadius.get();
-        io.setDriveVoltage(
-                driveFeedforward.calculate(velocityRadPerSec)
-                        + driveFeedback.calculate(inputs.driveMotor.velocityRadPerSec, velocityRadPerSec));
+        double velocityRadPerSec = optimizedSetpoint.speedMetersPerSecond / wheelRadius.in(Meters);
+        io.setDriveVoltage(Volts.of(
+            driveFeedforward.calculate(velocityRadPerSec)
+            + driveFeedback.calculate(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond), velocityRadPerSec)
+        ));
 
-        return optimizedState;
+        return optimizedSetpoint;
     }
 
     /**
@@ -96,8 +116,8 @@ public class Module {
      * Must be called
      * periodically.
      */
-    public void runCharacterization(double volts) {
-        io.setTurnVoltage(turnFeedback.calculate(getAngle().getRadians(), 0.0));
+    public void runCharacterization(Voltage volts) {
+        io.setTurnVoltage(Volts.of(turnFeedback.calculate(getAngle().getRadians(), 0.0)));
         io.setDriveVoltage(volts);
     }
 
@@ -114,36 +134,26 @@ public class Module {
 
     /** Returns the current turn angle of the module. */
     public Rotation2d getAngle() {
-        return new Rotation2d(MathUtil.angleModulus(inputs.turnMotor.positionRad));
+        return modulePosition.angle;
     }
 
     /** Returns the current drive position of the module in radians. */
-    public double getPositionRadians() {
-        return inputs.driveMotor.positionRad;
+    public Angle getAngularPosition() {
+        return inputs.driveMotor.encoder.position;
     }
 
-    /** Returns the current drive position of the module in meters. */
-    public double getPositionMeters() {
-        return inputs.driveMotor.positionRad * wheelRadius.get();
-    }
-
-    /** Returns the current drive velocity of the module in meters per second. */
-    public double getVelocityMetersPerSec() {
-        return inputs.driveMotor.velocityRadPerSec * wheelRadius.get();
-    }
-
-    public double getCurrentAmps() {
-        return inputs.driveMotor.currentAmps;
+    public Current getCurrent() {
+        return inputs.driveMotor.motor.current;
     }
 
     /** Returns the module position (turn angle and drive position). */
     public SwerveModulePosition getPosition() {
-        return new SwerveModulePosition(getPositionMeters(), getAngle());
+        return modulePosition;
     }
 
     /** Returns the module state (turn angle and drive velocity). */
     public SwerveModuleState getState() {
-        return new SwerveModuleState(getVelocityMetersPerSec(), getAngle());
+        return state;
     }
 
     /** Returns change in module position since last tick */
@@ -155,12 +165,12 @@ public class Module {
 
     /** Returns the drive velocity in radians/sec. */
     public double getCharacterizationVelocity() {
-        return inputs.driveMotor.velocityRadPerSec;
+        return inputs.driveMotor.encoder.velocity.in(RadiansPerSecond);
     }
 
     /** Returns the drive wheel radius. */
     public static double getWheelRadius() {
-        return wheelRadius.get();
+        return wheelRadius.in(Meters);
     }
 
     /** Zeros module encoders. */
@@ -170,5 +180,4 @@ public class Module {
         // position
         prevModulePosition = getPosition();
     }
-
 }

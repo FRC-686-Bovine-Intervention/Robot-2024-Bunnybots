@@ -8,6 +8,7 @@
 package frc.robot.util;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardInput;
@@ -18,11 +19,12 @@ import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.networktables.StringPublisher;
 
 /** A string chooser for the dashboard where the options can be changed on-the-fly. */
-public class SwitchableChooser implements LoggedDashboardInput {
-  private static final String placeholder = "<NA>";
+public class SwitchableChooser implements LoggedDashboardInput, LazyOptional<String> {
+  public static final String placeholder = "<NA>";
 
-  private String[] options = new String[] {placeholder};
-  private String active = placeholder;
+  private String[] options;
+  private Optional<String> active = Optional.empty();
+  private Optional<String> defaultO = Optional.empty();
 
   private final StringPublisher namePublisher;
   private final StringPublisher typePublisher;
@@ -45,40 +47,44 @@ public class SwitchableChooser implements LoggedDashboardInput {
 
     namePublisher.set(name);
     typePublisher.set("String Chooser");
-    optionsPublisher.set(this.options);
-    defaultPublisher.set(this.options[0]);
-    activePublisher.set(this.options[0]);
-    selectedPublisher.set(this.options[0]);
+    setOptions();
   }
 
   /** Updates the set of available options. */
-  public void setOptions(String[] options) {
-    if (Arrays.equals(options, this.options)) {
-      return;
-    }
-    this.options = options.length == 0 ? new String[] {placeholder} : options;
-    optionsPublisher.set(this.options);
-    periodic();
+  public void setOptions(String... options) {
+    if (Arrays.equals(options, this.options)) return;
+    this.options = options;
+    optionsPublisher.set(this.options.length == 0 ? new String[]{placeholder} : this.options);
+    setActive(Optional.empty());
+  }
+
+  public void setDefault(Optional<String> defaultOption) {
+    if (this.defaultO.equals(defaultOption)) return;
+    this.defaultO = defaultOption;
+    defaultPublisher.set(defaultOption.orElse(placeholder));
+    setActive(defaultOption);
+  }
+
+  public String[] getOptions() {
+    return options;
   }
 
   /** Returns the selected option. */
-  public String get() {
-    return active == placeholder ? null : active;
+  @Override
+  public Optional<String> get() {
+    return active;
+  }
+
+  public void setActive(Optional<String> newActive) {
+    active = newActive;
+    selectedPublisher.set(active.orElse(placeholder));
+    activePublisher.set(active.orElse(placeholder));
   }
 
   public void periodic() {
     String selected = selectedInput.get();
-    active = null;
-    for (String option : options) {
-      if (!option.equals(placeholder) && option.equals(selected)) {
-        active = option;
-      }
+    if (Arrays.stream(options).anyMatch(selected::equals)) {
+      setActive(Optional.ofNullable(selected));
     }
-    if (active == null) {
-      active = options[0];
-      selectedPublisher.set(active);
-    }
-    defaultPublisher.set(active);
-    activePublisher.set(active);
   }
 }
