@@ -1,10 +1,5 @@
 package frc.robot.subsystems.manualOverrides;
 
-import frc.robot.util.VirtualSubsystem;
-
-public class ManualOverrides extends VirtualSubsystem {
+public class ManualOverrides {
     public ManualOverrides() {}
-
-    @Override
-    public void periodic() {}    
 }

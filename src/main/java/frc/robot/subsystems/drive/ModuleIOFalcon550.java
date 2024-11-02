@@ -22,10 +22,9 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
-import frc.robot.Constants.CANDevices;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.DriveConstants.ModuleConfig;
+import frc.robot.Robot;
+import frc.robot.constants.CANDevices;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConfig;
 import frc.robot.util.Alert;
 import frc.robot.util.Alert.AlertType;
 
@@ -119,7 +118,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
         // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 255, 1000);
         // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 255, 1000);
 
-        talon.getPosition().setUpdateFrequency(Constants.loopFrequencyHz);
+        talon.getPosition().setUpdateFrequency(Robot.defaultPeriodSecs);
     }
 
     @Override

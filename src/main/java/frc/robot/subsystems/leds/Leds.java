@@ -9,9 +9,9 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.Constants;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.GameState;
+import frc.robot.Robot;
+import frc.robot.auto.AutoConstants;
 import frc.robot.util.VirtualSubsystem;
 import frc.robot.util.led.functions.Gradient.InterpolationStyle;
 import frc.robot.util.led.functions.TilingFunction;
@@ -103,7 +103,7 @@ public class Leds extends VirtualSubsystem {
             }
         });
         System.out.println("[Init Leds] Starting Loading Notifier");
-        loadingNotifier.startPeriodic(Constants.dtSeconds);
+        loadingNotifier.startPeriodic(Robot.defaultPeriodSecs);
     }
 
     public final AnimationFlag estopped = new AnimationFlag();

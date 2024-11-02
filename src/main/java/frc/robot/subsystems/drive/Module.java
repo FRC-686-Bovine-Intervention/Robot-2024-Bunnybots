@@ -24,9 +24,7 @@ import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.DriveConstants.ModuleConfig;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConfig;
 import frc.robot.util.LoggedTunableMeasure;
 import frc.robot.util.LoggedTunableNumber;
 
@@ -44,8 +42,8 @@ public class Module {
     private static final LoggedTunableNumber turnKd = new LoggedTunableNumber("Drive/Module/Turn/kD", 0.0);
     
     private SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0.0, 0.0);
-    private final PIDController driveFeedback = new PIDController(0.0, 0.0, 0.0, Constants.dtSeconds);
-    private final PIDController turnFeedback = new PIDController(0.0, 0.0, 0.0, Constants.dtSeconds);
+    private final PIDController driveFeedback = new PIDController(0.0, 0.0, 0.0);
+    private final PIDController turnFeedback = new PIDController(0.0, 0.0, 0.0);
     
     private SwerveModuleState state = new SwerveModuleState();
     private SwerveModulePosition modulePosition = new SwerveModulePosition();

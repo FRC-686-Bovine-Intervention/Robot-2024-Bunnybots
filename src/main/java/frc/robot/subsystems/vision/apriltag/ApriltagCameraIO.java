@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.math.geometry.Pose3d;
-import frc.robot.Constants.VisionConstants.Camera;
+import frc.robot.subsystems.vision.VisionConstants.Camera;
 
 public interface ApriltagCameraIO {
 

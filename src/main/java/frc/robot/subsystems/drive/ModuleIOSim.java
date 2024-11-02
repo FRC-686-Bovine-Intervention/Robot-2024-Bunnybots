@@ -9,8 +9,7 @@ import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.Constants;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.Robot;
 
 public class ModuleIOSim implements ModuleIO {
     // jKg constants unknown, stolen from Mechanical Advnatage
@@ -25,10 +24,10 @@ public class ModuleIOSim implements ModuleIO {
     private boolean zeroEncodersFlag = false;
 
     public void updateInputs(ModuleIOInputs inputs) {
-        driveSim.update(Constants.dtSeconds);
-        turnSim.update(Constants.dtSeconds);
+        driveSim.update(Robot.defaultPeriodSecs);
+        turnSim.update(Robot.defaultPeriodSecs);
 
-        double angleDiffRad = turnSim.getAngularVelocityRadPerSec() * Constants.dtSeconds;
+        double angleDiffRad = turnSim.getAngularVelocityRadPerSec() * Robot.defaultPeriodSecs;
         turnRelativePosition.mut_acc(angleDiffRad);
         turnAbsolutePosition.mut_acc(angleDiffRad);
         turnAbsolutePosition.mut_setMagnitude(MathUtil.angleModulus(turnAbsolutePosition.in(Radians)));

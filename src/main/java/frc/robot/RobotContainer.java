@@ -10,8 +10,9 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
@@ -105,7 +106,7 @@ public class RobotContainer {
         System.out.println("[Init RobotContainer] Configuring System Check");
         configureSystemCheck();
 
-        if (Constants.tuningMode) {
+        if (RobotConstants.tuningMode) {
             new Alert("Tuning mode active, do not use in competition.", AlertType.INFO).set(true);
         }
     }

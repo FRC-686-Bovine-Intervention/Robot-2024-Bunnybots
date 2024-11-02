@@ -17,7 +17,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
@@ -31,6 +30,7 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.MathUtil;
@@ -52,10 +52,8 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
-import edu.wpi.first.units.MomentOfInertiaUnit;
 import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -64,11 +62,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.DriveConstants.ModuleConfig;
-import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.RobotConstants;
 import frc.robot.RobotState;
+import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConfig;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LazyOptional;
@@ -130,7 +126,7 @@ public class Drive extends VirtualSubsystem {
         lastMovementTimer.start();
 
         // initialize pose estimator
-        Pose2d initialPoseMeters = FieldConstants.subwooferFront.getOurs();
+        Pose2d initialPoseMeters = new Pose2d();
         RobotState.getInstance().initializePoseEstimator(kinematics, getGyroRotation(), getModulePositions(), initialPoseMeters);
         prevGyroYaw = getPose().getRotation();
 
@@ -195,7 +191,7 @@ public class Drive extends VirtualSubsystem {
             SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.maxDriveSpeed);
 
             // Set to last angles if zero
-            if (MathExtraUtil.isNear(new ChassisSpeeds(), correctedSpeeds, 0.05, DriveConstants.headingTolerance)) {
+            if (MathExtraUtil.isNear(new ChassisSpeeds(), correctedSpeeds, 0.05, DriveConstants.headingTolerance.in(Radians))) {
                 for (int i = 0; i < DriveConstants.modules.length; i++) {
                     setpointStates[i] = new SwerveModuleState(0.0, lastSetpointStates[i].angle);
                 }
@@ -435,7 +431,7 @@ public class Drive extends VirtualSubsystem {
                     addRequirements(subsystem);
                     setName("PID Controlled Heading");
                     headingPID.enableContinuousInput(-Math.PI, Math.PI);  // since gyro angle is not limited to [-pi, pi]
-                    headingPID.setTolerance(DriveConstants.headingTolerance, DriveConstants.omegaTolerance);
+                    headingPID.setTolerance(DriveConstants.headingTolerance.in(Radians), DriveConstants.omegaTolerance.in(RadiansPerSecond));
                 }
                 private Rotation2d desiredHeading;
                 private boolean headingSet;
@@ -520,6 +516,11 @@ public class Drive extends VirtualSubsystem {
         isCharacterizing = false;
         setpoint = speeds;
         // speeds will be applied next drive.periodic()
+    }
+
+    public void drivePPVelocity(ChassisSpeeds speeds, DriveFeedforwards ff) {
+        //TODO: Actually do something with PP ff
+        driveVelocity(speeds);
     }
 
     public void drivePercent(ChassisSpeeds speeds) {

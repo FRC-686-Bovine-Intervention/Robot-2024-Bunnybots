@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 
-import frc.robot.Constants.VisionConstants.Camera;
+import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIO.ApriltagCameraResult;
 
 public class ApriltagCamera {

@@ -23,8 +23,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
-import frc.robot.Constants.CANDevices;
-import frc.robot.Constants.RobotConstants;
+import frc.robot.constants.CANDevices;
 import frc.robot.util.Environment;
 import frc.robot.util.GearRatio;
 import frc.robot.util.GearRatio.Wheel;
@@ -32,6 +31,11 @@ import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.MathExtraUtil;
 
 public final class DriveConstants {
+    /**Distance between the front and back wheels*/
+    public static final Distance trackWidthX = Inches.of(25.5);
+    /**Distance between the left and right wheels*/
+    public static final Distance trackWidthY = Inches.of(25.5);
+
     public static class ModuleConfig {
         public final String name;
         public final int driveMotorID;
@@ -60,8 +64,8 @@ public final class DriveConstants {
             InvertedValue.CounterClockwise_Positive,
             Rotations.of(0.75),
             new Translation2d(
-                RobotConstants.trackWidthX.divide(+2),
-                RobotConstants.trackWidthY.divide(+2)
+                trackWidthX.divide(+2),
+                trackWidthY.divide(+2)
             )
         ),
         new ModuleConfig(
@@ -70,8 +74,8 @@ public final class DriveConstants {
             InvertedValue.Clockwise_Positive,
             Rotations.of(0.5),
             new Translation2d(
-                RobotConstants.trackWidthX.divide(+2),
-                RobotConstants.trackWidthY.divide(-2)
+                trackWidthX.divide(+2),
+                trackWidthY.divide(-2)
             )
         ),
         new ModuleConfig(
@@ -80,8 +84,8 @@ public final class DriveConstants {
             InvertedValue.CounterClockwise_Positive,
             Rotations.of(0.5),
             new Translation2d(
-                RobotConstants.trackWidthX.divide(-2),
-                RobotConstants.trackWidthY.divide(+2)
+                trackWidthX.divide(-2),
+                trackWidthY.divide(+2)
             )
         ),
         new ModuleConfig(
@@ -90,8 +94,8 @@ public final class DriveConstants {
             InvertedValue.Clockwise_Positive,
             Rotations.of(0.75),
             new Translation2d(
-                RobotConstants.trackWidthX.divide(-2),
-                RobotConstants.trackWidthY.divide(-2)
+                trackWidthX.divide(-2),
+                trackWidthY.divide(-2)
             )
         ),
     };
@@ -126,7 +130,7 @@ public final class DriveConstants {
 
     public static final LinearVelocity maxDriveSpeed = MetersPerSecond.of(6);
     /**Tangential speed (m/s) = radial speed (rad/s) * radius (m)*/
-    public static final AngularVelocity maxTurnRate = RadiansPerSecond.of(maxDriveSpeed.in(MetersPerSecond) / new Translation2d(RobotConstants.trackWidthX.divide(2), RobotConstants.trackWidthY.divide(2)).getNorm());
+    public static final AngularVelocity maxTurnRate = RadiansPerSecond.of(maxDriveSpeed.in(MetersPerSecond) / new Translation2d(trackWidthX.divide(2), trackWidthY.divide(2)).getNorm());
     public static final DoubleSupplier maxDriveSpeedEnvCoef = Environment.switchVar(
         () -> 1,
         new LoggedTunableNumber("Demo Constraints/Max Translational Percentage", 0.25)
