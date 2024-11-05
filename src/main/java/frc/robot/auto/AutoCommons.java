@@ -10,6 +10,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -21,16 +22,47 @@ import frc.util.AllianceFlipUtil;
 import frc.util.AllianceFlipUtil.FlippedPose2d;
 
 public class AutoCommons {
-    public static enum CenterNote {
-        Note1,
-        Note2,
-        Note3,
-        Note4,
-        Note5,
-        ;
-        public Map.Entry<String, CenterNote> toEntry() {
-            return Map.entry(this.name(), this);
+    public interface ToEntry<E extends Enum<E> & ToEntry<E>> {
+        @SuppressWarnings("unchecked")
+        default Map.Entry<String, E> toEntry() {
+            return Map.entry(this.name(), (E) this);
         }
+
+        String name();
+    }
+
+    public static enum StartPosition implements ToEntry<StartPosition> {
+        Far(FlippedPose2d.fromBlue(
+            new Pose2d(
+                new Translation2d(1.218, 0.883), Rotation2d.fromDegrees(0.0)
+            ))),
+        Middle(FlippedPose2d.fromBlue(
+            new Pose2d(
+                new Translation2d(1.260, 2.528), Rotation2d.fromDegrees(0.0)
+            ))),
+        Close(FlippedPose2d.fromBlue(
+            new Pose2d(
+                new Translation2d(1.260, 5.127), Rotation2d.fromDegrees(0.0)
+            ))),
+        ;
+        public final FlippedPose2d startPose;
+        StartPosition(FlippedPose2d startPose) {
+            this.startPose = startPose;
+        }
+    }
+
+    public static enum PathType implements ToEntry<PathType> {
+        Close,
+        Far
+    }
+
+    public static Translation2d getFirstPoint(PathPlannerPath path) {
+        PathType.Far.toEntry();
+        return AllianceFlipUtil.apply(path.getPoint(0).position);
+    }
+
+    public static Translation2d getLastPoint(PathPlannerPath path) {
+        return AllianceFlipUtil.apply(path.getPoint(path.numPoints() - 1).position);
     }
 
     public static Command setOdometryFlipped(FlippedPose2d pose, Drive drive) {
@@ -42,24 +74,14 @@ public class AutoCommons {
             .deadlineFor(Commands.startEnd(
                 () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)
-            ))
-        ;
+            ));
     }
     public static Command followPathFlipped(PathPlannerPath path, Drive.Translational drive) {
         return new FollowPathCommand(path, drive.drive::getPose, drive.drive::getRobotMeasuredSpeeds, drive.drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive)
             .deadlineFor(Commands.startEnd(
                 () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)
-            ))
-        ;
-    }
-
-    public static Translation2d getFirstPoint(PathPlannerPath path) {
-        return AllianceFlipUtil.apply(path.getPoint(0).position);
-    }
-
-    public static Translation2d getLastPoint(PathPlannerPath path) {
-        return AllianceFlipUtil.apply(path.getPoint(path.numPoints() - 1).position);
+            ));
     }
 
     public static class AutoPaths {
@@ -67,7 +89,7 @@ public class AutoCommons {
         private static boolean preloading;
         public static void preload() {
             preloading = true;
-            // loadPath("Amp Start to Spike");
+            // load paths
             preloading = false;
             System.out.println("[Init AutoPaths] Loaded paths");
             PathPlannerLogging.setLogActivePathCallback((path) -> Logger.recordOutput("Autonomous/Path", path.toArray(Pose2d[]::new)));
@@ -75,16 +97,27 @@ public class AutoCommons {
         }
 
         public static PathPlannerPath loadPath(String name) {
-            return loadPath(name, false);
-        }
-
-        public static PathPlannerPath loadPath(String name, boolean isStagePath) {
             if(loadedPaths.containsKey(name)) {
                 return loadedPaths.get(name);
             } else {
                 if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.kWarning).set(true);
                 try {
                     var path = PathPlannerPath.fromPathFile(name);
+                    loadedPaths.put(name, path);
+                    return path;
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+        }
+
+        public static PathPlannerPath loadChoreoTrajectory(String name) {
+            if(loadedPaths.containsKey(name)) {
+                return loadedPaths.get(name);
+            } else {
+                if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.WARNING).set(true);
+                try {
+                    var path = PathPlannerPath.fromChoreoTrajectory(name);
                     loadedPaths.put(name, path);
                     return path;
                 } catch (Exception e) {

@@ -78,7 +78,9 @@ public class RobotContainer {
     private final XboxController driveController = new XboxController(0);
     private final Joystick driveJoystick;
     private final Supplier<ChassisSpeeds> joystickTranslational;
+    @SuppressWarnings("unused")
     private final ButtonBoard3x3 buttonBoard = new ButtonBoard3x3(1);
+    @SuppressWarnings("unused")
     private final CommandJoystick simJoystick = new CommandJoystick(2);
 
     public RobotContainer() {
