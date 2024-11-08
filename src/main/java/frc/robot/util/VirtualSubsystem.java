@@ -39,4 +39,6 @@ public abstract class VirtualSubsystem {
 
   /** This method is called periodically once per loop cycle. */
   public abstract void periodic();
+  /** This method is called periodically once per loop cycle after all commands execute. */
+  public void postCommandPeriodic() {}
 }

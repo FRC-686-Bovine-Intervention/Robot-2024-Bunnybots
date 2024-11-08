@@ -9,6 +9,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.Robot;
 
@@ -31,6 +32,13 @@ public class ModuleIOSim implements ModuleIO {
     private boolean zeroEncodersFlag = false;
 
     public void updateInputs(ModuleIOInputs inputs) {
+        if (DriverStation.isDisabled()) {
+            driveAppliedVolts.mut_setBaseUnitMagnitude(0);
+            turnAppliedVolts.mut_setBaseUnitMagnitude(0);
+        }
+        driveSim.setInputVoltage(driveAppliedVolts.in(Volts));
+        turnSim.setInputVoltage(turnAppliedVolts.in(Volts));
+        
         driveSim.update(Robot.defaultPeriodSecs);
         turnSim.update(Robot.defaultPeriodSecs);
 
@@ -54,12 +62,10 @@ public class ModuleIOSim implements ModuleIO {
     
     public void setDriveVoltage(Voltage volts) {
         driveAppliedVolts.mut_replace(MathUtil.clamp(volts.in(Volts), -12, 12), Volts);
-        driveSim.setInputVoltage(driveAppliedVolts.in(Volts));
     }
 
     public void setTurnVoltage(Voltage volts) {
         turnAppliedVolts.mut_replace(MathUtil.clamp(volts.in(Volts), -12, 12), Volts);
-        turnSim.setInputVoltage(turnAppliedVolts.in(Volts));
     }
 
     public void zeroEncoders() {

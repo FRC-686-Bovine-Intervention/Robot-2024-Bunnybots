@@ -18,6 +18,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.util.VirtualSubsystem;
 
 public class Robot extends LoggedRobot {
     private Command autonomousCommand;
@@ -111,7 +112,10 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
+        GameState.getInstance().periodic();
+        VirtualSubsystem.periodicAll();
         CommandScheduler.getInstance().run();
+        // robotContainer.robotPeriodic();
     }
 
     @Override
@@ -124,13 +128,7 @@ public class Robot extends LoggedRobot {
     public void disabledExit() {}
 
     @Override
-    public void autonomousInit() {
-        autonomousCommand = robotContainer.getAutonomousCommand();
-
-        if (autonomousCommand != null) {
-            autonomousCommand.schedule();
-        }
-    }
+    public void autonomousInit() {}
 
     @Override
     public void autonomousPeriodic() {}
@@ -139,11 +137,7 @@ public class Robot extends LoggedRobot {
     public void autonomousExit() {}
 
     @Override
-    public void teleopInit() {
-        if (autonomousCommand != null) {
-            autonomousCommand.cancel();
-        }
-    }
+    public void teleopInit() {}
 
     @Override
     public void teleopPeriodic() {}
@@ -153,7 +147,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void testInit() {
-    CommandScheduler.getInstance().cancelAll();
+        CommandScheduler.getInstance().cancelAll();
     }
 
     @Override

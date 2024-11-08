@@ -24,7 +24,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Robot;
 import frc.robot.constants.CANDevices;
-import frc.robot.subsystems.drive.DriveConstants.ModuleConfig;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.util.Alert;
 import frc.robot.util.Alert.AlertType;
 
@@ -34,7 +34,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
     private final AbsoluteEncoder turnAbsoluteEncoder;
     private final Angle initialTurnOffset;
 
-    public ModuleIOFalcon550(ModuleConfig config) {
+    public ModuleIOFalcon550(ModuleConstants config) {
         driveMotor = new TalonFX(config.driveMotorID, CANDevices.driveCanBusName);
         turnMotor = new CANSparkMax(config.turnMotorID, MotorType.kBrushless);
         turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
