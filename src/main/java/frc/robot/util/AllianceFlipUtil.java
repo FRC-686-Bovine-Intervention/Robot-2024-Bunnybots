@@ -1,5 +1,7 @@
 package frc.robot.util;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.Optional;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -11,9 +13,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import frc.robot.Constants.FieldConstants;
-import frc.robot.util.AllianceFlipUtil.FieldFlipType;
-import frc.robot.util.AllianceFlipUtil.FlippedTranslation2d;
+import frc.robot.constants.FieldConstants;
 
 public class AllianceFlipUtil {
     public static enum FieldFlipType {
@@ -35,8 +35,8 @@ public class AllianceFlipUtil {
     public static Translation2d flip(Translation2d translation, FieldFlipType flipType) {
         switch(flipType) {
             default:
-            case CenterPointFlip: return new Translation2d(FieldConstants.fieldLength - translation.getX(), FieldConstants.fieldWidth - translation.getY());
-            case MirrorFlip:      return new Translation2d(FieldConstants.fieldLength - translation.getX(), translation.getY());
+            case CenterPointFlip: return new Translation2d(FieldConstants.fieldLength.in(Meters) - translation.getX(), FieldConstants.fieldWidth.in(Meters) - translation.getY());
+            case MirrorFlip:      return new Translation2d(FieldConstants.fieldLength.in(Meters) - translation.getX(), translation.getY());
         }
     }
 
@@ -85,8 +85,8 @@ public class AllianceFlipUtil {
     public static Translation3d flip(Translation3d translation, FieldFlipType flipType) {
         switch(flipType) {
             default:
-            case CenterPointFlip: return new Translation3d(FieldConstants.fieldLength - translation.getX(), FieldConstants.fieldWidth - translation.getY(), translation.getZ());
-            case MirrorFlip:      return new Translation3d(FieldConstants.fieldLength - translation.getX(), translation.getY(), translation.getZ());
+            case CenterPointFlip: return new Translation3d(FieldConstants.fieldLength.in(Meters) - translation.getX(), FieldConstants.fieldWidth.in(Meters) - translation.getY(), translation.getZ());
+            case MirrorFlip:      return new Translation3d(FieldConstants.fieldLength.in(Meters) - translation.getX(), translation.getY(), translation.getZ());
         }
     }
     

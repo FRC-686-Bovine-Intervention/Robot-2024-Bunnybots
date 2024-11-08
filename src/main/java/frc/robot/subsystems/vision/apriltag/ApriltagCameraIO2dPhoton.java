@@ -4,24 +4,21 @@ import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.VisionConstants.Camera;
+import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.vision.VisionConstants.Camera;
 
 public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
     private final PhotonCamera photonCam;
     private final Camera camMeta;
-    private final AprilTagFieldLayout fieldLayout;
 
     public ApriltagCameraIO2dPhoton(Camera camMeta) {
         this.camMeta = camMeta;
         this.photonCam = new PhotonCamera(camMeta.hardwareName);
-        this.fieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
     }
 
     public void updateInputs(ApriltagCameraIOInputs inputs) {
@@ -33,7 +30,7 @@ public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
             return;
         }
         var result = photonCam.getLatestResult();
-        Logger.recordOutput("DEBUG/Tag Field Poses", fieldLayout.getTags().stream().map((tag) -> tag.pose).toArray(Pose3d[]::new));
+        Logger.recordOutput("DEBUG/Tag Field Poses", FieldConstants.apriltagLayout.getTags().stream().map((tag) -> tag.pose).toArray(Pose3d[]::new));
         Logger.recordOutput("DEBUG/photonresult", result);
         Logger.recordOutput("DEBUG/tagposes", result.getTargets().stream().map(this::resultToTargets).toArray(Pose3d[]::new));
     }
@@ -42,7 +39,7 @@ public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
     private static final double pitchCalib = 0;//-19.41;
 
     private Pose3d resultToTargets(PhotonTrackedTarget target) {
-        var tagPos = fieldLayout.getTagPose(target.getFiducialId()).get();
+        var tagPos = FieldConstants.apriltagLayout.getTagPose(target.getFiducialId()).get();
         var pitch = -target.getYaw();
         var yaw = target.getPitch();
         var targetCamViewTransform = camMeta.getRobotToCam().plus(

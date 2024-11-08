@@ -169,11 +169,12 @@ out/
 .fleet
 
 # Simulation GUI and other tools window save file
-*-window.json
-simgui*.json
 networktables.json
+simgui.json
+*-window.json
 
 # Simulation data log directory
+logs/
 /**/BuildConstants.java
 *.wpilog
 
@@ -182,4 +183,7 @@ networktables.json
 
 # Folder that has CTRE Phoenix Sim device config storage
 ctre_sim/
-*.asv
+
+# clangd
+/.cache
+compile_commands.json

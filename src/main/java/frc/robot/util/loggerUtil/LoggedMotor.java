@@ -1,68 +1,62 @@
 package frc.robot.util.loggerUtil;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
+import static edu.wpi.first.units.Units.Volts;
+
 import java.nio.ByteBuffer;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.CANSparkMax;
 
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.MutCurrent;
+import edu.wpi.first.units.measure.MutTemperature;
+import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import frc.robot.Constants;
 
 public class LoggedMotor implements StructSerializable {
-    public double positionRad = Double.NaN;
-    public double velocityRadPerSec = Double.NaN;
-    public double appliedVolts = Double.NaN;
-    public double currentAmps = Double.NaN;
-    public double tempCelsius = Double.NaN;
+    public final MutVoltage appliedVoltage = Volts.mutable(0);
+    public final MutCurrent current = Amps.mutable(0);
+    public final MutTemperature temperature = Celsius.mutable(0);
 
     public void updateFrom(TalonFX talon) {
-        this.positionRad = Units.rotationsToRadians(talon.getPosition().getValueAsDouble());
-        this.velocityRadPerSec = talon.getVelocity().getValueAsDouble();
-        this.appliedVolts = talon.getMotorVoltage().getValueAsDouble();
-        this.currentAmps = talon.getStatorCurrent().getValueAsDouble();
-        this.tempCelsius = talon.getDeviceTemp().getValueAsDouble();
+        this.appliedVoltage.mut_replace(talon.getMotorVoltage().getValueAsDouble(), Volts);
+        this.current.mut_replace(talon.getStatorCurrent().getValueAsDouble(), Amps);
+        this.temperature.mut_replace(talon.getDeviceTemp().getValueAsDouble(), Celsius);
     }
 
     public void updateFrom(CANSparkMax spark) {
-        this.positionRad = Units.rotationsToRadians(spark.getEncoder().getPosition());
-        this.velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(spark.getEncoder().getVelocity());
-        this.appliedVolts = spark.getAppliedOutput() * 12;
-        this.currentAmps = spark.getOutputCurrent();
+        this.appliedVoltage.mut_replace(spark.getAppliedOutput() * 12, Volts);
+        this.current.mut_replace(spark.getOutputCurrent(), Amps);
     }
 
     public void updateFrom(DCMotorSim sim) {
-        this.positionRad = sim.getAngularPositionRad();
-        this.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
-        this.currentAmps = sim.getCurrentDrawAmps();
+        this.current.mut_replace(sim.getCurrentDrawAmps(), Amps);
     }
-    public void updateFrom(DCMotorSim sim, double appliedVolts) {
+    public void updateFrom(DCMotorSim sim, Voltage appliedVolts) {
         updateFrom(sim);
-        this.appliedVolts = appliedVolts;
+        this.appliedVoltage.mut_replace(appliedVolts);
     }
 
     public void updateFrom(FlywheelSim sim) {
-        this.positionRad += sim.getAngularVelocityRadPerSec() * Constants.dtSeconds;
-        this.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
-        this.currentAmps = sim.getCurrentDrawAmps();
+        this.current.mut_replace(sim.getCurrentDrawAmps(), Amps);
     }
-    public void updateFrom(FlywheelSim sim, double appliedVolts) {
+    public void updateFrom(FlywheelSim sim, Voltage appliedVolts) {
         updateFrom(sim);
-        this.appliedVolts = appliedVolts;
+        this.appliedVoltage.mut_replace(appliedVolts);
     }
 
     public void updateFrom(SingleJointedArmSim sim) {
-        this.positionRad = sim.getAngleRads();
-        this.velocityRadPerSec = sim.getVelocityRadPerSec();
-        this.currentAmps = sim.getCurrentDrawAmps();
+        this.current.mut_replace(sim.getCurrentDrawAmps(), Amps);
     }
-    public void updateFrom(SingleJointedArmSim sim, double appliedVolts) {
+    public void updateFrom(SingleJointedArmSim sim, Voltage appliedVolts) {
         updateFrom(sim);
-        this.appliedVolts = appliedVolts;
+        this.appliedVoltage.mut_replace(appliedVolts);
     }
 
     public static final LoggedMotorStruct struct = new LoggedMotorStruct();
@@ -74,38 +68,34 @@ public class LoggedMotor implements StructSerializable {
         }
 
         @Override
-        public String getTypeString() {
-            return "struct:Motor";
+        public String getTypeName() {
+            return "Motor";
         }
 
         @Override
         public int getSize() {
-            return kSizeDouble * 5;
+            return kSizeDouble * 3;
         }
 
         @Override
         public String getSchema() {
-            return "double PositionRad;double VelocityRadPerSec;double AppliedVolts;double CurrentAmps;double TempCelsius";
+            return "double AppliedVolts;double CurrentAmps;double TempCelsius";
         }
 
         @Override
         public LoggedMotor unpack(ByteBuffer bb) {
             var motor = new LoggedMotor();
-            motor.positionRad = bb.getDouble();
-            motor.velocityRadPerSec = bb.getDouble();
-            motor.appliedVolts = bb.getDouble();
-            motor.currentAmps = bb.getDouble();
-            motor.tempCelsius = bb.getDouble();
+            motor.appliedVoltage.mut_setBaseUnitMagnitude(bb.getDouble());
+            motor.current.mut_setBaseUnitMagnitude(bb.getDouble());
+            motor.temperature.mut_setBaseUnitMagnitude(bb.getDouble());
             return motor;
         }
 
         @Override
         public void pack(ByteBuffer bb, LoggedMotor value) {
-            bb.putDouble(value.positionRad);
-            bb.putDouble(value.velocityRadPerSec);
-            bb.putDouble(value.appliedVolts);
-            bb.putDouble(value.currentAmps);
-            bb.putDouble(value.tempCelsius);
+            bb.putDouble(value.appliedVoltage.baseUnitMagnitude());
+            bb.putDouble(value.current.baseUnitMagnitude());
+            bb.putDouble(value.temperature.baseUnitMagnitude());
         }
     }
 }

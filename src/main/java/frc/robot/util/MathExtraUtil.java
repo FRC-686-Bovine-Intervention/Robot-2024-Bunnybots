@@ -18,6 +18,11 @@ public class MathExtraUtil {
     public static double average(double... a) {
         return Arrays.stream(a).average().orElse(0);
     }
+    @SafeVarargs
+    @SuppressWarnings("unchecked")
+    public static <U extends Unit> Measure<U> average(Measure<U>... a) {
+        return (Measure<U>)a[0].unit().ofBaseUnits(Arrays.stream(a).mapToDouble((measure) -> measure.baseUnitMagnitude()).average().orElse(0));
+    }
 
     public static Rotation2d backwards(Rotation2d rotation) {
         return new Rotation2d(-rotation.getCos(), -rotation.getSin());
@@ -60,14 +65,22 @@ public class MathExtraUtil {
         var bol = isNear(new Translation2d(expected.vxMetersPerSecond, expected.vyMetersPerSecond), new Translation2d(actual.vxMetersPerSecond, actual.vyMetersPerSecond), linearTolerance) && MathUtil.isNear(expected.omegaRadiansPerSecond, actual.omegaRadiansPerSecond, angularTolerance);
         return bol;
     }
-    public static <U extends Unit<U>> boolean isNear(Measure<U> expected, Measure<U> actual, Measure<U> tolerance) {
+    public static <U extends Unit> boolean isNear(Measure<U> expected, Measure<U> actual, Measure<U> tolerance) {
         return MathUtil.isNear(expected.baseUnitMagnitude(), actual.baseUnitMagnitude(), tolerance.baseUnitMagnitude());
     }
 
     public static boolean isWithin(double value, double min, double max) {
         return value >= min && value <= max;
     }
-    public static <U extends Unit<U>> boolean isWithin(Measure<U> value, Measure<U> min, Measure<U> max) {
+    public static <U extends Unit> boolean isWithin(Measure<U> value, Measure<U> min, Measure<U> max) {
         return isWithin(value.baseUnitMagnitude(), min.baseUnitMagnitude(), max.baseUnitMagnitude());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <U extends Unit> Measure<U> interpolate(Measure<U> start, Measure<U> end, double t) {
+        return (Measure<U>)start.unit().ofBaseUnits(MathUtil.interpolate(start.baseUnitMagnitude(), end.baseUnitMagnitude(), t));
+    }
+    public static <U extends Unit> double inverseInterpolate(Measure<U> start, Measure<U> end, Measure<U> t) {
+        return MathUtil.inverseInterpolate(start.baseUnitMagnitude(), end.baseUnitMagnitude(), t.baseUnitMagnitude());
     }
 }

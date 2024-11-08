@@ -10,12 +10,12 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
-import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
+import frc.robot.Robot;
+import frc.robot.constants.CANDevices;
 
 /** IO implementation for Pigeon2 */
 public class GyroIOPigeon2 implements GyroIO {
-  private final Pigeon2 pigeon = new Pigeon2(Constants.CANDevices.pigeonCanID, Constants.CANDevices.driveCanBusName);
+  private final Pigeon2 pigeon = new Pigeon2(CANDevices.pigeonCanID, CANDevices.driveCanBusName);
 
   public GyroIOPigeon2() {
     var config = new Pigeon2Configuration();
@@ -26,7 +26,7 @@ public class GyroIOPigeon2 implements GyroIO {
     pigeon.getConfigurator().apply(config);
 
     // set signals to an appropriate rate
-    pigeon.getYaw().setUpdateFrequency(Constants.loopFrequencyHz);
+    pigeon.getYaw().setUpdateFrequency(Robot.defaultPeriodSecs);
 
     pigeon.setYaw(0);
   }
@@ -34,12 +34,10 @@ public class GyroIOPigeon2 implements GyroIO {
   public void updateInputs(GyroIOInputs inputs) {
     inputs.connected = pigeon.getYaw().getStatus().isOK();
 
-    inputs.yawPositionRad =     Units.degreesToRadians( pigeon.getYaw().getValue());    // ccw+
-    inputs.pitchPositionRad =   Units.degreesToRadians(-pigeon.getPitch().getValue());  // up+
-    inputs.rollPositionRad =    Units.degreesToRadians(-pigeon.getRoll().getValue());   // ccw+
+    inputs.rotation = pigeon.getRotation3d();
 
-    inputs.yawVelocityRadPerSec =   Units.degreesToRadians( pigeon.getAngularVelocityZWorld().getValue());   // ccw+
-    inputs.pitchVelocityRadPerSec = Units.degreesToRadians(-pigeon.getAngularVelocityYWorld().getValue());   // up+
-    inputs.rollVelocityRadPerSec =  Units.degreesToRadians(-pigeon.getAngularVelocityXWorld().getValue());   // ccw+
+    inputs.yawVelocity = pigeon.getAngularVelocityZWorld().getValue();   // ccw+
+    inputs.pitchVelocity = pigeon.getAngularVelocityYWorld().getValue().unaryMinus();   // up+
+    inputs.rollVelocity = pigeon.getAngularVelocityXWorld().getValue().unaryMinus();   // ccw+
   }
 }

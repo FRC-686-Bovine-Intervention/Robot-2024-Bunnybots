@@ -40,11 +40,11 @@ public class BranchingRaceCommandGroup extends Command {
         CommandScheduler.getInstance().registerComposedCommands(flatCommands);
 
         for (Command command : flatCommands) {
-            if (!Collections.disjoint(command.getRequirements(), m_requirements)) {
+            if (!Collections.disjoint(command.getRequirements(), getRequirements())) {
                 throw new IllegalArgumentException(
                     "Multiple commands in a parallel composition cannot require the same subsystems");
             }
-            m_requirements.addAll(command.getRequirements());
+            getRequirements().addAll(command.getRequirements());
             m_runWhenDisabled &= command.runsWhenDisabled();
             if (command.getInterruptionBehavior() == InterruptionBehavior.kCancelSelf) {
                 m_interruptBehavior = InterruptionBehavior.kCancelSelf;

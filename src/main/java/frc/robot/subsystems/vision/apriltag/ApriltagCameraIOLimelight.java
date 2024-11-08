@@ -1,7 +1,7 @@
 package frc.robot.subsystems.vision.apriltag;
 
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.Constants.VisionConstants.Camera;
+import frc.robot.subsystems.vision.VisionConstants.Camera;
 
 public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
 

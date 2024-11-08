@@ -11,14 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.wpi.first.wpilibj.Watchdog;
-import frc.robot.Constants;
+import frc.robot.Robot;
 
 /**
  * Represents a subsystem unit that requires a periodic callback but not require a hardware mutex.
  */
 public abstract class VirtualSubsystem {
   private static List<VirtualSubsystem> subsystems = new ArrayList<>();
-  private static final Watchdog watchdog = new Watchdog(Constants.dtSeconds, () -> {});
+  private static final Watchdog watchdog = new Watchdog(Robot.defaultPeriodSecs, () -> {});
 
   public VirtualSubsystem() {
     subsystems.add(this);

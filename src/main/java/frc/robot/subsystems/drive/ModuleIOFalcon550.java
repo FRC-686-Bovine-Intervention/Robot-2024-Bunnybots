@@ -1,12 +1,15 @@
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Celsius;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Volts;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkBase.IdleMode;
@@ -17,10 +20,11 @@ import com.revrobotics.SparkAbsoluteEncoder;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
-import frc.robot.Constants.CANDevices;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.DriveConstants.DriveModulePosition;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Robot;
+import frc.robot.constants.CANDevices;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConfig;
 import frc.robot.util.Alert;
 import frc.robot.util.Alert.AlertType;
 
@@ -28,28 +32,24 @@ public class ModuleIOFalcon550 implements ModuleIO {
     private final TalonFX  driveMotor;
     private final CANSparkMax turnMotor;
     private final AbsoluteEncoder turnAbsoluteEncoder;
-    // private final RelativeEncoder turnRelativeEncoder;
-    private final double initialOffsetRadians;
-    private final InvertedValue driveInverted;
+    private final Angle initialTurnOffset;
 
-    public ModuleIOFalcon550(DriveModulePosition position) {
-        driveMotor = new TalonFX(position.driveMotorID, CANDevices.driveCanBusName);
-        turnMotor = new CANSparkMax(position.turnMotorID, MotorType.kBrushless);
+    public ModuleIOFalcon550(ModuleConfig config) {
+        driveMotor = new TalonFX(config.driveMotorID, CANDevices.driveCanBusName);
+        turnMotor = new CANSparkMax(config.turnMotorID, MotorType.kBrushless);
         turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
-        // turnRelativeEncoder = turnMotor.getAlternateEncoder(SparkMaxAlternateEncoder.Type.kQuadrature, 8192);
-        driveInverted = position.driveInverted;
-        initialOffsetRadians = Units.rotationsToRadians(position.cancoderOffsetRotations);
+        initialTurnOffset = config.cancoderOffset;
 
         /** Configure Drive Motors */
         var driveConfig = new TalonFXConfiguration();
         // change factory defaults here
-        driveConfig.MotorOutput.Inverted = driveInverted;
+        driveConfig.MotorOutput.Inverted = config.driveInverted;
         driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         driveConfig.MotorOutput.DutyCycleNeutralDeadband = 0.0;
         driveConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.1875;
         driveConfig.CurrentLimits.SupplyCurrentLimit = 55;
-        driveConfig.CurrentLimits.SupplyCurrentThreshold = 55;
-        driveConfig.CurrentLimits.SupplyTimeThreshold = 0;
+        driveConfig.CurrentLimits.SupplyCurrentLowerLimit = 55;
+        driveConfig.CurrentLimits.SupplyCurrentLowerTime = 0;
         driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         driveConfig.CurrentLimits.StatorCurrentLimit = 55;
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -66,26 +66,22 @@ public class ModuleIOFalcon550 implements ModuleIO {
 
         zeroEncoders();
 
-        tempWarning = new Alert(position.name() + " Module has exceeded 70C", AlertType.WARNING);
-        tempAlert = new Alert(position.name() + " Module has exceeded 100C", AlertType.ERROR);
+        tempWarning = new Alert(config.name + " Module has exceeded 70C", AlertType.WARNING);
+        tempAlert = new Alert(config.name + " Module has exceeded 100C", AlertType.ERROR);
     }
 
     private final Alert tempWarning;
     private final Alert tempAlert;
 
     public void updateInputs(ModuleIOInputs inputs) {
-        inputs.driveMotor.positionRad =       Units.rotationsToRadians(driveMotor.getPosition().getValue()) / DriveConstants.driveWheelGearReduction;
-        inputs.driveMotor.velocityRadPerSec = Units.rotationsToRadians(driveMotor.getVelocity().getValue()) / DriveConstants.driveWheelGearReduction;
-        inputs.driveMotor.appliedVolts =      driveMotor.getMotorVoltage().getValue();
-        inputs.driveMotor.currentAmps =       driveMotor.getSupplyCurrent().getValue();
-        inputs.driveMotor.tempCelsius =       driveMotor.getDeviceTemp().getValue();
+        inputs.driveMotor.updateFrom(driveMotor);
+        inputs.driveMotor.encoder.position.mut_divide(DriveConstants.driveWheelGearReduction);
+        inputs.driveMotor.encoder.velocity.mut_divide(DriveConstants.driveWheelGearReduction);
 
-        inputs.turnMotor.positionRad =        MathUtil.angleModulus(Units.rotationsToRadians(turnAbsoluteEncoder.getPosition())) - initialOffsetRadians;
-        inputs.turnMotor.velocityRadPerSec =  Units.rotationsToRadians(turnAbsoluteEncoder.getVelocity());
-        inputs.turnMotor.appliedVolts =       turnMotor.getAppliedOutput();
-        inputs.turnMotor.currentAmps =        turnMotor.getOutputCurrent();
+        inputs.turnMotor.updateFrom(turnMotor);
+        inputs.turnMotor.encoder.position.mut_replace(MathUtil.angleModulus(Units.rotationsToRadians(turnAbsoluteEncoder.getPosition())) - initialTurnOffset.in(Radians), Radians);
 
-        tempWarning.set(inputs.driveMotor.tempCelsius > 70);
+        tempWarning.set(inputs.driveMotor.motor.temperature.in(Celsius) > 70);
         tempAlert.set(driveMotor.getFault_DeviceTemp().getValue());
     }
 
@@ -94,12 +90,12 @@ public class ModuleIOFalcon550 implements ModuleIO {
         // turnRelativeEncoder.setPosition(turnAbsoluteEncoder.getPosition());
     }
 
-    public void setDriveVoltage(double volts) {
-        driveMotor.setVoltage(volts);
+    public void setDriveVoltage(Voltage volts) {
+        driveMotor.setVoltage(volts.in(Volts));
     }
 
-    public void setTurnVoltage(double volts) {
-        turnMotor.setVoltage(volts);
+    public void setTurnVoltage(Voltage volts) {
+        turnMotor.setVoltage(volts.in(Volts));
     }
 
     private static void setFramePeriods(TalonFX talon, boolean needMotorSensor) {
@@ -122,7 +118,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
         // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 255, 1000);
         // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 255, 1000);
 
-        talon.getPosition().setUpdateFrequency(Constants.loopFrequencyHz);
+        talon.getPosition().setUpdateFrequency(Robot.defaultPeriodSecs);
     }
 
     @Override
@@ -142,6 +138,6 @@ public class ModuleIOFalcon550 implements ModuleIO {
         if(driveRequest instanceof VoltageOut) {
             driveMotor.setControl(new NeutralOut());
         }
-        setTurnVoltage(0);
+        setTurnVoltage(Volts.zero());
     }
 }
