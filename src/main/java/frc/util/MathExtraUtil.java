@@ -2,7 +2,10 @@ package frc.util;
 
 import java.util.Arrays;
 
+import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -82,5 +85,12 @@ public class MathExtraUtil {
     }
     public static <U extends Unit> double inverseInterpolate(Measure<U> start, Measure<U> end, Measure<U> t) {
         return MathUtil.inverseInterpolate(start.baseUnitMagnitude(), end.baseUnitMagnitude(), t.baseUnitMagnitude());
+    }
+
+    public static Matrix<N2, N2> rotationMatrix(Rotation2d rot) {
+        return MatBuilder.fill(Nat.N2(), Nat.N2(),
+			+rot.getCos(), -rot.getSin(),
+            +rot.getSin(), +rot.getCos()
+		);
     }
 }
