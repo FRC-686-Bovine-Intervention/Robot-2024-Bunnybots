@@ -16,9 +16,9 @@ import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.util.Alert.AlertType;
 
-public class PerspectiveType {
+public class Perspective {
 	private Matrix<N2,N2> spectatorToField;
-	private PerspectiveType(Matrix<N2,N2> spectatorToField) {
+	private Perspective(Matrix<N2,N2> spectatorToField) {
 		this.spectatorToField = spectatorToField;
 	}
 	
@@ -27,16 +27,16 @@ public class PerspectiveType {
 	}
 	
 	private static final Matrix<N2,N2> joystickToRobot = MathExtraUtil.rotationMatrix(Rotation2d.kCW_90deg);
-	private static final PerspectiveType posY = new PerspectiveType(MathExtraUtil.rotationMatrix(Rotation2d.kCCW_90deg).times(joystickToRobot));
-	private static final PerspectiveType negY = new PerspectiveType(MathExtraUtil.rotationMatrix(Rotation2d.kCW_90deg).times(joystickToRobot));
-	private static final PerspectiveType posX = new PerspectiveType(MathExtraUtil.rotationMatrix(Rotation2d.kZero).times(joystickToRobot));
-	private static final PerspectiveType negX = new PerspectiveType(MathExtraUtil.rotationMatrix(Rotation2d.k180deg).times(joystickToRobot));
+	private static final Perspective posY = new Perspective(MathExtraUtil.rotationMatrix(Rotation2d.kCCW_90deg).times(joystickToRobot));
+	private static final Perspective negY = new Perspective(MathExtraUtil.rotationMatrix(Rotation2d.kCW_90deg).times(joystickToRobot));
+	private static final Perspective posX = new Perspective(MathExtraUtil.rotationMatrix(Rotation2d.kZero).times(joystickToRobot));
+	private static final Perspective negX = new Perspective(MathExtraUtil.rotationMatrix(Rotation2d.k180deg).times(joystickToRobot));
 	private static final LoggedTunableMeasure<AngleUnit> customTunable = new LoggedTunableMeasure<>("Perspective/Custom", Degrees.zero());
-	private static final PerspectiveType custom = new PerspectiveType(MathExtraUtil.rotationMatrix(Rotation2d.fromRadians(customTunable.in(Radians))).times(joystickToRobot));
+	private static final Perspective custom = new Perspective(MathExtraUtil.rotationMatrix(Rotation2d.fromRadians(customTunable.in(Radians))).times(joystickToRobot));
 
-	private static final MappedSwitchableChooser<PerspectiveType> chooser;
+	private static final MappedSwitchableChooser<Perspective> chooser;
 	static {
-		var map = new LinkedHashMap<String, PerspectiveType>();
+		var map = new LinkedHashMap<String, Perspective>();
 		map.put("Blue Left (+Y)", posY);
 		map.put("Blue Right (-Y)", negY);
 		map.put("Blue Alliance (+X)", posX);
@@ -56,22 +56,22 @@ public class PerspectiveType {
             public void periodic() {
                 FMS_edge_detector.update();
 				if (FMS_edge_detector.risingEdge()) {
-					chooser.setSelected(getAllianceType());
+					chooser.setSelected(getAlliance());
 				}
 				if (chooser.get() == custom) {
 					custom.spectatorToField = MathExtraUtil.rotationMatrix(Rotation2d.fromRadians(customTunable.in(Radians))).times(joystickToRobot);
 				}
 				chooser.setActive(chooser.get());
-				comp_wrong_perspective_alert.set(Environment.isCompetition() && getCurrentType() != getAllianceType());
+				comp_wrong_perspective_alert.set(Environment.isCompetition() && getCurrent() != getAlliance());
             }
         });
     }
 
-	public static PerspectiveType getAllianceType() {
+	public static Perspective getAlliance() {
 		return AllianceFlipUtil.shouldFlip() ? negX : posX;
 	}
 
-	public static PerspectiveType getCurrentType() {
+	public static Perspective getCurrent() {
 		return chooser.getActive();
 	}
 }
