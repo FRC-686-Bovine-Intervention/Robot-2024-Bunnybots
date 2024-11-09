@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.subsystems.leds.Leds;
+import frc.util.PerspectiveType;
 import frc.util.VirtualSubsystem;
 
 public class Robot extends LoggedRobot {
@@ -55,7 +56,7 @@ public class Robot extends LoggedRobot {
 
             // Running a physics simulator, log to local folder
             case SIM:
-                Logger.addDataReceiver(new WPILOGWriter("sim_logs"));
+                Logger.addDataReceiver(new WPILOGWriter("logs"));
                 Logger.addDataReceiver(new NT4Publisher());
             break;
 
@@ -92,21 +93,21 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance()
             .onCommandInitialize(
                 (Command command) -> {
-                logCommandFunction.accept(command, true);
+                    logCommandFunction.accept(command, true);
                 }
             )
         ;
         CommandScheduler.getInstance()
             .onCommandFinish(
                 (Command command) -> {
-                logCommandFunction.accept(command, false);
+                    logCommandFunction.accept(command, false);
                 }
             )
         ;
         CommandScheduler.getInstance()
             .onCommandInterrupt(
                 (Command command) -> {
-                logCommandFunction.accept(command, false);
+                    logCommandFunction.accept(command, false);
                 }
             )
         ;
@@ -115,6 +116,7 @@ public class Robot extends LoggedRobot {
         robotContainer = new RobotContainer();
 
         SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
+        PerspectiveType.getCurrentType();
     }
 
     @Override
