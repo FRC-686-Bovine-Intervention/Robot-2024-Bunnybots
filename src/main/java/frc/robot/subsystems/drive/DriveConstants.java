@@ -18,17 +18,18 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.CANDevices;
-import frc.robot.util.Environment;
-import frc.robot.util.GearRatio;
-import frc.robot.util.GearRatio.Wheel;
-import frc.robot.util.LoggedTunableNumber;
-import frc.robot.util.MathExtraUtil;
+import frc.util.Environment;
+import frc.util.GearRatio;
+import frc.util.LoggedTunableNumber;
+import frc.util.MathExtraUtil;
+import frc.util.GearRatio.Wheel;
 
 public final class DriveConstants {
     /**Distance between the front and back wheels*/
@@ -36,7 +37,7 @@ public final class DriveConstants {
     /**Distance between the left and right wheels*/
     public static final Distance trackWidthY = Inches.of(25.5);
 
-    public static class ModuleConfig {
+    public static class ModuleConstants {
         public final String name;
         public final int driveMotorID;
         public final int turnMotorID;
@@ -46,7 +47,7 @@ public final class DriveConstants {
         public final Angle cancoderOffset;
         public final Translation2d moduleTranslation;
         public final Vector<N2> positiveRotVec;
-        ModuleConfig(String name, int driveMotorID, int turnMotorID, InvertedValue driveInverted, Angle cancoderOffset, Translation2d moduleTranslation) {
+        ModuleConstants(String name, int driveMotorID, int turnMotorID, InvertedValue driveInverted, Angle cancoderOffset, Translation2d moduleTranslation) {
             this.name = name;
             this.driveMotorID = driveMotorID;
             this.turnMotorID = turnMotorID;
@@ -57,8 +58,8 @@ public final class DriveConstants {
         }
     }
 
-    public static final ModuleConfig[] modules = {
-        new ModuleConfig(
+    public static final ModuleConstants[] modules = {
+        new ModuleConstants(
             "Front Left",
             CANDevices.frontLeftDriveMotorID, CANDevices.frontLeftTurnMotorID,
             InvertedValue.CounterClockwise_Positive,
@@ -68,7 +69,7 @@ public final class DriveConstants {
                 trackWidthY.divide(+2)
             )
         ),
-        new ModuleConfig(
+        new ModuleConstants(
             "Front Right",
             CANDevices.frontRightDriveMotorID, CANDevices.frontRightTurnMotorID,
             InvertedValue.Clockwise_Positive,
@@ -78,7 +79,7 @@ public final class DriveConstants {
                 trackWidthY.divide(-2)
             )
         ),
-        new ModuleConfig(
+        new ModuleConstants(
             "Back Left",
             CANDevices.backLeftDriveMotorID, CANDevices.backLeftTurnMotorID,
             InvertedValue.CounterClockwise_Positive,
@@ -88,7 +89,7 @@ public final class DriveConstants {
                 trackWidthY.divide(+2)
             )
         ),
-        new ModuleConfig(
+        new ModuleConstants(
             "Back Right",
             CANDevices.backRightDriveMotorID, CANDevices.backRightTurnMotorID,
             InvertedValue.Clockwise_Positive,
@@ -100,6 +101,8 @@ public final class DriveConstants {
         ),
     };
     public static final Translation2d[] moduleTranslations = Arrays.stream(modules).map((a) -> a.moduleTranslation).toArray(Translation2d[]::new);
+
+    public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
 
     /**Weight with battery and bumpers*/
     public static final double weightKg = Pounds.of(58.0).in(Kilograms);

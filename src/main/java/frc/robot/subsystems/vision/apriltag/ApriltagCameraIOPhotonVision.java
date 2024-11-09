@@ -11,8 +11,8 @@ import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
-import frc.robot.util.Alert;
-import frc.robot.util.Alert.AlertType;
+import frc.util.Alert;
+import frc.util.Alert.AlertType;
 
 public class ApriltagCameraIOPhotonVision implements ApriltagCameraIO {
 

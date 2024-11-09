@@ -7,9 +7,11 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import org.littletonrobotics.junction.Logger;
@@ -20,18 +22,21 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.drive.DriveConstants.ModuleConfig;
-import frc.robot.util.LoggedTunableMeasure;
-import frc.robot.util.LoggedTunableNumber;
+import edu.wpi.first.wpilibj.Timer;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
+import frc.util.LoggedTunableMeasure;
+import frc.util.LoggedTunableNumber;
 
 public class Module {
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
-    private final ModuleConfig config;
+    private final ModuleConstants config;
 
     private static final LoggedTunableMeasure<DistanceUnit> wheelRadius = new LoggedTunableMeasure<>("Drive/Module/WheelRadius", Meters.of(DriveConstants.wheelRadius.in(Meters)));
     private static final LoggedTunableNumber driveKp = new LoggedTunableNumber("Drive/Module/Drive/kP", 0.1);
@@ -49,7 +54,11 @@ public class Module {
     private SwerveModulePosition modulePosition = new SwerveModulePosition();
     private SwerveModulePosition prevModulePosition = new SwerveModulePosition();
 
-    public Module(ModuleIO io, ModuleConfig config) {
+    private final Timer currentSpikeTimer = new Timer();
+    private static final LoggedTunableMeasure<CurrentUnit> currentSpikeThreshold = new LoggedTunableMeasure<>("Drive/Current Spike Threshold", Amps.of(0)); 
+    private static final LoggedTunableMeasure<TimeUnit> currentSpikeTime = new LoggedTunableMeasure<>("Drive/Current Spike Time", Seconds.of(0));
+
+    public Module(ModuleIO io, ModuleConstants config) {
         this.io = io;
         this.config = config;
 
@@ -111,11 +120,10 @@ public class Module {
 
     /**
      * Runs the module with the specified voltage while controlling to zero degrees.
-     * Must be called
-     * periodically.
+     * Must be called periodically.
      */
-    public void runCharacterization(Voltage volts) {
-        io.setTurnVoltage(Volts.of(turnFeedback.calculate(getAngle().getRadians(), 0.0)));
+    public void runVoltage(Voltage volts, Rotation2d moduleAngle) {
+        io.setTurnVoltage(Volts.of(turnFeedback.calculate(getAngle().getRadians(), moduleAngle.getRadians())));
         io.setDriveVoltage(volts);
     }
 

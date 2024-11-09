@@ -1,49 +1,25 @@
 package frc.robot.subsystems.leds;
 
-import java.util.Optional;
-
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.GameState;
 import frc.robot.Robot;
-import frc.robot.auto.AutoConstants;
-import frc.robot.util.VirtualSubsystem;
-import frc.robot.util.led.functions.Gradient.InterpolationStyle;
-import frc.robot.util.led.functions.TilingFunction;
-import frc.robot.util.led.strips.LEDStrip;
-import frc.robot.util.led.strips.hardware.AddressableStrip;
-import frc.robot.util.led.strips.hardware.HardwareStrip;
+import frc.util.VirtualSubsystem;
+import frc.util.led.animation.AllianceColorAnimation;
+import frc.util.led.animation.AutonomousFinishedAnimation;
+import frc.util.led.animation.FillAnimation;
+import frc.util.led.animation.FlashingAnimation;
+import frc.util.led.animation.StatusLightAnimation;
+import frc.util.led.functions.InterpolationFunction;
+import frc.util.led.functions.WaveFunction;
+import frc.util.led.strips.hardware.AddressableStrip;
+import frc.util.led.strips.hardware.HardwareStrip;
 
 public class Leds extends VirtualSubsystem {
     private static Leds instance;
     public static Leds getInstance() {if(instance == null) {instance = new Leds();} return instance;}
     
     private final HardwareStrip hardwareStrip;
-    private final LEDStrip rightStrip;
-    private final LEDStrip backStrip;
-    private final LEDStrip leftStrip;
-
-    private final LEDStrip sideStrips;
-    private final LEDStrip sideStripTips;
-    private final LEDStrip dsConnectedStrip;
-    private final LEDStrip lAprilConnectedStrip;
-    private final LEDStrip rAprilConnectedStrip;
-    private final LEDStrip nVisionConnectedStrip;
-
-    private final LEDStrip backRightStrip;
-    private final LEDStrip backLeftStrip;
-
-    private final LEDStrip fullLeftStrip;
-    private final LEDStrip fullRightStrip;
-
-    private final LEDStrip fullSideStrips;
-
-    private final LEDStrip backMirroredStrip;
 
     private final Notifier loadingNotifier;
 
@@ -65,36 +41,44 @@ public class Leds extends VirtualSubsystem {
         //     };
         // }
 
-        rightStrip = hardwareStrip.substrip(0, 19);
-        backStrip = hardwareStrip.substrip(19, 38);
-        leftStrip = hardwareStrip.substrip(38, 57).reverse();
+        var rightStrip = hardwareStrip.substrip(0, 19);
+        var backStrip = hardwareStrip.substrip(19, 38);
+        var leftStrip = hardwareStrip.substrip(38, 57).reverse();
 
-        sideStrips = leftStrip.parallel(rightStrip);
-        sideStripTips = sideStrips.substrip(15).concat(backStrip.substrip(5, 13));
-        dsConnectedStrip = sideStrips.substrip(0, 2);
-        lAprilConnectedStrip = sideStrips.substrip(2, 3);
-        rAprilConnectedStrip = sideStrips.substrip(3, 4);
-        nVisionConnectedStrip = sideStrips.substrip(4, 5);
+        var sideStrips = leftStrip.parallel(rightStrip);
+        var sideStripTips = sideStrips.substrip(15).concat(backStrip.substrip(5, 13));
         
-        backRightStrip = backStrip.substrip(0, 10);
-        backLeftStrip = backStrip.substrip(9).reverse();
+        var backRightStrip = backStrip.substrip(0, 10);
+        var backLeftStrip = backStrip.substrip(9).reverse();
         
-        fullLeftStrip = leftStrip.concat(backLeftStrip);
-        fullRightStrip = rightStrip.concat(backRightStrip);
+        var fullLeftStrip = leftStrip.concat(backLeftStrip);
+        var fullRightStrip = rightStrip.concat(backRightStrip);
         
-        fullSideStrips = fullLeftStrip.parallel(fullRightStrip);
-        
-        backMirroredStrip = backRightStrip.reverse().parallel(backLeftStrip.reverse());
+        var fullSideStrips = fullLeftStrip.parallel(fullRightStrip);
+
+        estopped = new FillAnimation(hardwareStrip, Color.kRed);
+        allianceColorAnimation = new AllianceColorAnimation(fullSideStrips);
+        driverStationConnection = new StatusLightAnimation(sideStrips.substrip(0, 2), Color.kOrange, Color.kGreen);
+        lAprilConnection = new StatusLightAnimation(sideStrips.substrip(2, 3), Color.kOrange, Color.kGreen);
+        rAprilConnection = new StatusLightAnimation(sideStrips.substrip(3, 4), Color.kOrange, Color.kGreen);
+        nVisionConnection = new StatusLightAnimation(sideStrips.substrip(4, 5), Color.kOrange, Color.kGreen);
+        noteSecured = new FillAnimation(sideStripTips, Color.kGreen);
+        visionAcquired = new FillAnimation(sideStripTips, Color.kOrange);
+        visionLocked = new FillAnimation(sideStripTips, Color.kPurple);
+        defenseSpin = new FlashingAnimation(hardwareStrip, WaveFunction.Sinusoidal, InterpolationFunction.linear.gradient(Color.kBlack, Color.kYellow));
+        humanPlayerFlash = new FlashingAnimation(hardwareStrip, WaveFunction.Sawtooth, InterpolationFunction.linear.gradient(Color.kBlack, Color.kWhite));
+        noteAcquired = new FlashingAnimation(hardwareStrip, WaveFunction.Sawtooth, InterpolationFunction.linear.gradient(Color.kBlack, Color.kGreen));
+        autonomousFinishedAnimation = new AutonomousFinishedAnimation(sideStrips, hardwareStrip);
 
         loadingNotifier = new Notifier(() -> {
             synchronized(this) {
                 hardwareStrip.apply(
-                    InterpolationStyle.Linear.gradient(
+                    InterpolationFunction.linear.gradient(
                         Color.kBlack,
                         Color.kDimGray
                     )
                     .apply(
-                        TilingFunction.Sinusoidal.tile(
+                        WaveFunction.Sinusoidal.applyAsDouble(
                             System.currentTimeMillis() / 1000.0
                         )
                     )
@@ -106,30 +90,30 @@ public class Leds extends VirtualSubsystem {
         loadingNotifier.startPeriodic(Robot.defaultPeriodSecs);
     }
 
-    public final AnimationFlag estopped = new AnimationFlag();
-    public final AnimationFlag autonomousOverrun = new AnimationFlag();
-    public final AnimationFlag noteAcquired = new AnimationFlag();
-    public final AnimationFlag noteSecured = new AnimationFlag();
-    public final AnimationFlag visionAcquired = new AnimationFlag();
-    public final AnimationFlag visionLocked = new AnimationFlag();
-    public final AnimationFlag humanPlayerFlash = new AnimationFlag();
-    public final AnimationFlag shooterBarGraph = new AnimationFlag();
-    public final AnimationFlag defenseSpin = new AnimationFlag();
-    public final AnimationFlag climbingMode = new AnimationFlag();
-    public final AnimationFlag climbing = new AnimationFlag();
-    public boolean lAprilConnected;
-    public boolean rAprilConnected;
-    public boolean nVisionConnected;
-    public boolean shooterReady;
-    public double shooterTarget;
-    public double shooterSpeed;
-    public double climberPos;
+    public final FillAnimation estopped;
+    public final AllianceColorAnimation allianceColorAnimation;
+    public final StatusLightAnimation driverStationConnection;
+    public final StatusLightAnimation lAprilConnection;
+    public final StatusLightAnimation rAprilConnection;
+    public final StatusLightAnimation nVisionConnection;
+    public final FlashingAnimation noteAcquired;
+    public final FillAnimation noteSecured;
+    public final FillAnimation visionAcquired;
+    public final FillAnimation visionLocked;
+    public final FlashingAnimation defenseSpin;
+    public final FlashingAnimation humanPlayerFlash;
+    public final AutonomousFinishedAnimation autonomousFinishedAnimation;
 
     private int skippedFrames = 0;
     private static final int frameSkipAmount = 15;
 
     @Override
-    public synchronized void periodic() {
+    public void periodic() {
+        driverStationConnection.setStatus(DriverStation.isDSAttached());
+    }
+
+    @Override
+    public synchronized void postCommandPeriodic() {
         if(skippedFrames < frameSkipAmount) {
             skippedFrames++;
             return;
@@ -137,124 +121,30 @@ public class Leds extends VirtualSubsystem {
         loadingNotifier.stop();
 
         // Default alliance color scrolling
-        fullSideStrips.apply((pos) -> 
-            InterpolationStyle.Linear.gradient(() -> 
-                new Color[]{
-                    (DriverStation.getAlliance().isEmpty() ? Color.kRed : Color.kBlack),
-                    (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Color.kRed : Color.kFirstBlue)
-                }
-            )
-            .apply(
-                TilingFunction.Sinusoidal.tile(
-                    pos*4 - Timer.getFPGATimestamp()
-                )
-            )
-        );
+        allianceColorAnimation.apply();
 
         if(DriverStation.isDisabled()) {
-            dsConnectedStrip.apply(DriverStation.isDSAttached() ? Color.kGreen : Color.kOrange);
-            lAprilConnectedStrip.apply(lAprilConnected ? Color.kGreen : Color.kOrange);
-            rAprilConnectedStrip.apply(rAprilConnected ? Color.kGreen : Color.kOrange);
-            nVisionConnectedStrip.apply(nVisionConnected ? Color.kGreen : Color.kOrange);
+            driverStationConnection.apply();
+            lAprilConnection.apply();
+            rAprilConnection.apply();
+            nVisionConnection.apply();
         }
 
-        if(visionAcquired.get()) {
-            sideStripTips.apply(Color.kOrange);
-        }
-        if(visionLocked.get()) {
-            sideStripTips.apply(Color.kPurple);
-        }
-        if(noteSecured.get()) {
-            sideStripTips.apply(Color.kGreen);
-        }
+        visionAcquired.applyIfFlagged();
+        visionLocked.applyIfFlagged();
+        noteSecured.applyIfFlagged();
 
-        if(visionLocked.get() && DriverStation.isAutonomousEnabled()) {
-            sideStripTips.apply(Color.kPurple);
-        }
+        defenseSpin.applyIfFlagged();
 
-        if(defenseSpin.get()) {
-            fullSideStrips.apply(
-                InterpolationStyle.Linear.gradient(Color.kBlack, Color.kYellow)
-                .apply(
-                    TilingFunction.Sinusoidal.tile(
-                        Timer.getFPGATimestamp()*4
-                    )
-                )
-            );
-        }
+        humanPlayerFlash.applyIfFlagged();
 
-        if(humanPlayerFlash.get()) {
-            fullSideStrips.apply(
-                InterpolationStyle.Step.gradient(Color.kBlack, Color.kWhite)
-                .apply(
-                    TilingFunction.Sawtooth.tile(
-                        Timer.getFPGATimestamp()*8
-                    )
-                )
-            );
-        }
+        noteAcquired.applyIfFlagged();
 
-        if(noteAcquired.get()) {
-            fullSideStrips.apply(
-                InterpolationStyle.Linear.gradient(Color.kBlack, Color.kGreen)
-                .apply(
-                    TilingFunction.Sawtooth.tile(
-                        Timer.getFPGATimestamp()*8
-                    )
-                )
-            );
-        }
+        autonomousFinishedAnimation.applyIfFlagged();
 
-        if(autonomousOverrun.get()) {
-            if(!DriverStation.isFMSAttached()) {
-                hardwareStrip.apply(
-                    InterpolationStyle.Step.gradient(
-                        Color.kRed,
-                        Color.kBlack
-                    )
-                    .apply(
-                        TilingFunction.Modulo.tile(
-                            GameState.getInstance().LAST_ENABLE.getTimeSince()
-                        )
-                    )
-                );
-            }
-        } else if(
-            GameState.getInstance().lastEnabledMode.isAutonomous() && 
-            GameState.getInstance().AUTONOMOUS_COMMAND_FINISH.isSet() && 
-            !GameState.getInstance().BEGIN_ENABLE.hasBeenSince(15.3)
-        ) {
-            sideStrips.apply((pos) -> {
-                var timeLeft = AutoConstants.allottedAutoTime - (GameState.getInstance().AUTONOMOUS_COMMAND_FINISH.getTimeSince() - GameState.getInstance().BEGIN_ENABLE.getTimeSince());
-                var a = GameState.getInstance().AUTONOMOUS_COMMAND_FINISH.getTimeSince() / timeLeft;
-                var barPos = 1-a;
-                return (pos <= barPos ? Color.kGreen : Color.kBlack);
-            });
-        }
-
-        if(estopped.get() || DriverStation.isEStopped()) {
-            hardwareStrip.apply(Color.kRed);
-        }
+        estopped.applyIfFlagged();
 
         //TODO: End game notification
         hardwareStrip.refresh();
-    }
-
-    public static class AnimationFlag {
-        private boolean scheduled;
-        public boolean get() {
-            return scheduled;
-        }
-        public void set(boolean scheduled) {
-            this.scheduled = scheduled;
-        }
-
-        public Command setCommand() {
-            return Commands.startEnd(
-                () -> set(true),
-                () -> set(false)
-            )
-            .until(() -> !scheduled);
-        }
     }
 }

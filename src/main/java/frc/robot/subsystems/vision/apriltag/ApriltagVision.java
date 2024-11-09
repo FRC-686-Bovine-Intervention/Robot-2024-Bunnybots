@@ -15,8 +15,8 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.RobotState;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIO.ApriltagCameraResult;
-import frc.robot.util.LoggedTunableNumber;
-import frc.robot.util.VirtualSubsystem;
+import frc.util.LoggedTunableNumber;
+import frc.util.VirtualSubsystem;
 
 public class ApriltagVision extends VirtualSubsystem {
 

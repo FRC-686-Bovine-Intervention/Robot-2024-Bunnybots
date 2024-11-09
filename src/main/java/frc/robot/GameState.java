@@ -1,5 +1,7 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.OptionalDouble;
@@ -7,9 +9,10 @@ import java.util.function.BooleanSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.util.SuppliedEdgeDetector;
+import frc.util.SuppliedEdgeDetector;
 
 public class GameState {
     private static GameState instance;
@@ -36,6 +39,7 @@ public class GameState {
     public final Timestamp BEGIN_ENABLE = new Timestamp();
     public final Timestamp LAST_ENABLE = new Timestamp();
     public final Timestamp AUTONOMOUS_COMMAND_FINISH = new Timestamp();
+    public final Timestamp AUTONOMOUS_ALLOTTED_TIMESTAMP = new Timestamp();
     
     public final SuppliedEdgeDetector enabled = new SuppliedEdgeDetector(DriverStation::isEnabled);
     public Optional<EnabledMode> currentEnabledMode = Optional.empty();
@@ -62,6 +66,9 @@ public class GameState {
         AUTONOMOUS_COMMAND_FINISH.timestamp.ifPresent((timestamp) -> 
             Logger.recordOutput("GameState/Timestamps/Autonomous Command Finish", timestamp)
         );
+        AUTONOMOUS_ALLOTTED_TIMESTAMP.timestamp.ifPresent((timestamp) -> 
+            Logger.recordOutput("GameState/Timestamps/Autonomous Allotted Timestamp", timestamp)
+        );
         
         Logger.recordOutput("GameState/Current Enabled", currentEnabledMode.map(Enum::name).orElse("DISABLED"));
         Logger.recordOutput("GameState/Last Enabled", lastEnabledMode);
@@ -77,6 +84,9 @@ public class GameState {
         }
         public boolean hasBeenSince(double length) {
             return getTimeSince() >= length;
+        }
+        public boolean hasBeenSince(Time length) {
+            return hasBeenSince(length.in(Seconds));
         }
 
         public void set() {

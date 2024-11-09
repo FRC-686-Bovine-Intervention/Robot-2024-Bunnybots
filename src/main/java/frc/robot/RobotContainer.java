@@ -4,12 +4,16 @@
 
 package frc.robot;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import frc.robot.auto.AutoManager;
+import frc.robot.auto.AutoSelector;
+import frc.robot.auto.AutoSelector.AutoRoutine;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -17,21 +21,19 @@ import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
-import frc.robot.util.Alert;
-import frc.robot.util.Alert.AlertType;
-import frc.robot.util.controllers.ButtonBoard3x3;
-import frc.robot.util.controllers.Joystick;
-import frc.robot.util.controllers.XboxController;
+import frc.util.Alert;
+import frc.util.Alert.AlertType;
+import frc.util.controllers.ButtonBoard3x3;
+import frc.util.controllers.Joystick;
+import frc.util.controllers.XboxController;
 
 public class RobotContainer {
     // Subsystems
     public final Drive drive;
     public final ApriltagVision apriltagVision;
     public final ManualOverrides manualOverrides;
-    public final Leds leds;
 
     // Controllers
     private final XboxController driveController = new XboxController(0);
@@ -77,7 +79,6 @@ public class RobotContainer {
                 apriltagVision = new ApriltagVision();
             break;
         }
-        leds = new Leds();
         manualOverrides = new ManualOverrides();
 
         driveJoystick = driveController.leftStick
@@ -113,8 +114,8 @@ public class RobotContainer {
 
     private void configureSubsystems() {
         drive.translationSubsystem.setDefaultCommand(
-                drive.translationSubsystem.fieldRelative(joystickTranslational)
-                    .withName("Driver Control Field Relative")
+            drive.translationSubsystem.fieldRelative(joystickTranslational)
+                .withName("Driver Control Field Relative")
         );
     }
 
@@ -122,11 +123,27 @@ public class RobotContainer {
 
     private void configureNotifications() {}
 
-    private void configureAutos() {}
+    private void configureAutos() {
+        var selector = new AutoSelector("AutoSelector");
+
+        selector.addRoutine(new AutoRoutine("Finish in 5", List.of()) {
+            public Command generateCommand() {
+                return Commands.waitSeconds(5);
+            }
+        });
+        selector.addRoutine(new AutoRoutine("Finish in 10", List.of()) {
+            public Command generateCommand() {
+                return Commands.waitSeconds(10);
+            }
+        });
+        selector.addRoutine(new AutoRoutine("Finish in 20", List.of()) {
+            public Command generateCommand() {
+                return Commands.waitSeconds(20);
+            }
+        });
+
+        new AutoManager(selector);
+    }
 
     private void configureSystemCheck() {}
-
-    public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
-    }
 }
