@@ -30,8 +30,8 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
-import frc.robot.util.LoggedTunableMeasure;
-import frc.robot.util.LoggedTunableNumber;
+import frc.util.LoggedTunableMeasure;
+import frc.util.LoggedTunableNumber;
 
 public class Module {
     private final ModuleIO io;

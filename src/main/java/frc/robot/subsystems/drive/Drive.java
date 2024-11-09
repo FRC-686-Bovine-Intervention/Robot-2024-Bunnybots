@@ -14,7 +14,6 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.Arrays;
@@ -51,8 +50,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.CurrentUnit;
-import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
@@ -66,14 +63,13 @@ import frc.robot.RobotState;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.leds.Leds;
-import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.LazyOptional;
-import frc.robot.util.LoggedTunableMeasure;
-import frc.robot.util.LoggedTunableNumber;
-import frc.robot.util.MathExtraUtil;
-import frc.robot.util.PerspectiveType;
-import frc.robot.util.VirtualSubsystem;
-import frc.robot.util.controllers.Joystick;
+import frc.util.AllianceFlipUtil;
+import frc.util.LazyOptional;
+import frc.util.LoggedTunableNumber;
+import frc.util.MathExtraUtil;
+import frc.util.PerspectiveType;
+import frc.util.VirtualSubsystem;
+import frc.util.controllers.Joystick;
 
 public class Drive extends VirtualSubsystem {
     private final GyroIO gyroIO;
@@ -170,29 +166,29 @@ public class Drive extends VirtualSubsystem {
         fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, gyroAngle);
 
         // Skid Detection
-        SwerveModuleState[] rotationalStates = new SwerveModuleState[DriveConstants.modules.length];
-        SwerveModuleState[] translationalStates = new SwerveModuleState[DriveConstants.modules.length];
+        // SwerveModuleState[] rotationalStates = new SwerveModuleState[DriveConstants.modules.length];
+        // SwerveModuleState[] translationalStates = new SwerveModuleState[DriveConstants.modules.length];
 
-        for (int i = 0; i < DriveConstants.modules.length; i++) {
-            var rotationalState = new SwerveModuleState(-gyroInputs.yawVelocity.in(RadiansPerSecond) * DriveConstants.modules[i].moduleTranslation.getNorm(), MathExtraUtil.rotationFromVector(DriveConstants.modules[i].positiveRotVec));
-            var rotational = new Translation2d(rotationalState.speedMetersPerSecond, rotationalState.angle);
-            rotationalStates[i] = rotationalState;
-            var measured = new Translation2d(measuredStates[i].speedMetersPerSecond, measuredStates[i].angle);
-            var translational = measured.minus(rotational);
-            translationalStates[i] = new SwerveModuleState(translational.getNorm(), translational.getAngle());
-        }
+        // for (int i = 0; i < DriveConstants.modules.length; i++) {
+        //     var rotationalState = new SwerveModuleState(-gyroInputs.yawVelocity.in(RadiansPerSecond) * DriveConstants.modules[i].moduleTranslation.getNorm(), MathExtraUtil.rotationFromVector(DriveConstants.modules[i].positiveRotVec));
+        //     var rotational = new Translation2d(rotationalState.speedMetersPerSecond, rotationalState.angle);
+        //     rotationalStates[i] = rotationalState;
+        //     var measured = new Translation2d(measuredStates[i].speedMetersPerSecond, measuredStates[i].angle);
+        //     var translational = measured.minus(rotational);
+        //     translationalStates[i] = new SwerveModuleState(translational.getNorm(), translational.getAngle());
+        // }
 
-        Logger.recordOutput("Drive/SwerveStates/Rotational States", rotationalStates);
-        Logger.recordOutput("Drive/SwerveStates/Translational States", translationalStates);
+        // Logger.recordOutput("Drive/SwerveStates/Rotational States", rotationalStates);
+        // Logger.recordOutput("Drive/SwerveStates/Translational States", translationalStates);
 
-        var minTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).min().orElse(0);
-        var maxTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).max().orElse(0);
-        var averageTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).average().orElse(0);
-        var maxDistanceFromAverage = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).map((a) -> averageTranslational - a).map(Math::abs).average().orElse(0);
-        Logger.recordOutput("Drive/Skid Detection/Min Translational Speed", minTranslational);
-        Logger.recordOutput("Drive/Skid Detection/Max Translational Speed", maxTranslational);
-        Logger.recordOutput("Drive/Skid Detection/MaxMin Ratio", maxTranslational / minTranslational);
-        Logger.recordOutput("Drive/Skid Detection/Largest From Average", maxDistanceFromAverage);
+        // var minTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).min().orElse(0);
+        // var maxTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).max().orElse(0);
+        // var averageTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).average().orElse(0);
+        // var maxDistanceFromAverage = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).map((a) -> averageTranslational - a).map(Math::abs).average().orElse(0);
+        // Logger.recordOutput("Drive/Skid Detection/Min Translational Speed", minTranslational);
+        // Logger.recordOutput("Drive/Skid Detection/Max Translational Speed", maxTranslational);
+        // Logger.recordOutput("Drive/Skid Detection/MaxMin Ratio", maxTranslational / minTranslational);
+        // Logger.recordOutput("Drive/Skid Detection/Largest From Average", maxDistanceFromAverage);
     }
 
     public void postCommandPeriodic() {
@@ -228,7 +224,7 @@ public class Drive extends VirtualSubsystem {
             }
         }
         Logger.recordOutput("Drive/SwerveStates/Setpoints", setpointStates);
-        Logger.recordOutput("Drive/SwerveStates/SetpointsOptimized", setpointStatesOptimized);
+        // Logger.recordOutput("Drive/SwerveStates/SetpointsOptimized", setpointStatesOptimized);
         Logger.recordOutput("Drive/Center of Rotation", getPose().transformBy(new Transform2d(centerOfRotation, new Rotation2d())));
     }
 
@@ -328,7 +324,7 @@ public class Drive extends VirtualSubsystem {
                 ;
                 @Override
                 public void execute() {
-                    Leds.getInstance().defenseSpin.set(true);
+                    Leds.getInstance().defenseSpin.setFlag(true);
                     var joyVec = PerspectiveType.getCurrentType().toField(joystick.toVector());
                     var desiredLinear = VecBuilder.fill(drive.setpointSpeeds.vxMetersPerSecond, drive.setpointSpeeds.vyMetersPerSecond);
                     var fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(drive.setpointSpeeds, drive.getRotation());
@@ -368,7 +364,7 @@ public class Drive extends VirtualSubsystem {
                 public void end(boolean interrupted) {
                     stop();
                     drive.setCenterOfRotation(new Translation2d());
-                    Leds.getInstance().defenseSpin.set(false);
+                    Leds.getInstance().defenseSpin.setFlag(true);
                 }
             };
         }

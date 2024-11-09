@@ -15,10 +15,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.util.Alert;
-import frc.robot.util.Alert.AlertType;
-import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.AllianceFlipUtil.FlippedPose2d;
+import frc.util.Alert;
+import frc.util.AllianceFlipUtil;
+import frc.util.Alert.AlertType;
+import frc.util.AllianceFlipUtil.FlippedPose2d;
 
 public class AutoCommons {
     public static enum CenterNote {

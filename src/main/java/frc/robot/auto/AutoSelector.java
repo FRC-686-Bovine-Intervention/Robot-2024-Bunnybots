@@ -15,10 +15,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.GameState;
-import frc.robot.subsystems.leds.Leds;
-import frc.robot.util.SwitchableChooser;
-import frc.robot.util.VirtualSubsystem;
+import frc.util.SwitchableChooser;
+import frc.util.VirtualSubsystem;
 
 public class AutoSelector extends VirtualSubsystem {
     private final LoggedDashboardChooser<AutoRoutine> routineChooser;
@@ -29,7 +27,7 @@ public class AutoSelector extends VirtualSubsystem {
 
     private static final AutoRoutine defaultRoutine = new AutoRoutine("Do Nothing", List.of()) {
         public Command generateCommand() {
-            return Commands.none();
+            return Commands.idle();
         }
     };
     private final String questionPlaceHolder = "NA";
@@ -100,27 +98,7 @@ public class AutoSelector extends VirtualSubsystem {
         }
         if(!config.equals(lastConfiguration)) {
             System.out.println("[AutoSelector] Generating new command\n" + config);
-            lastCommand = selectedRoutine.generateCommand()
-                .beforeStarting(
-                    () -> GameState.getInstance().AUTONOMOUS_COMMAND_FINISH.clear()
-                )
-                .finallyDo(
-                    (interrupted) -> {
-                        GameState.getInstance().AUTONOMOUS_COMMAND_FINISH.set();
-                        var autoTime = GameState.getInstance().BEGIN_ENABLE.getTimeSince();
-                        if(autoTime > AutoConstants.allottedAutoTime) {
-                            System.out.println(String.format("[AutoManager] Autonomous overran the allotted %.1f seconds!", AutoConstants.allottedAutoTime));
-                            Leds.getInstance().autonomousOverrun.setCommand().withTimeout(1.5).schedule();
-                        }
-                        if(interrupted) {
-                            System.out.println(String.format("[AutoManager] Autonomous interrupted after %.2f seconds", autoTime));
-                        } else {
-                            System.out.println(String.format("[AutoManager] Autonomous finished in %.2f seconds", autoTime));
-                        }
-                    }
-                )
-                .withName("AUTO " + selectedRoutine.name)
-            ;
+            lastCommand = AutoManager.generateAutoCommand(selectedRoutine);
         }
         lastConfiguration = config;
         configPublisher.set(lastConfiguration.toString());

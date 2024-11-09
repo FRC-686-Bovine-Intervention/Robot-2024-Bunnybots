@@ -25,8 +25,8 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Robot;
 import frc.robot.constants.CANDevices;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
-import frc.robot.util.Alert;
-import frc.robot.util.Alert.AlertType;
+import frc.util.Alert;
+import frc.util.Alert.AlertType;
 
 public class ModuleIOFalcon550 implements ModuleIO {
     private final TalonFX  driveMotor;

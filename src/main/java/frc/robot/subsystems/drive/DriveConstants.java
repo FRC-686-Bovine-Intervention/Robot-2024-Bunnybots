@@ -25,11 +25,11 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.CANDevices;
-import frc.robot.util.Environment;
-import frc.robot.util.GearRatio;
-import frc.robot.util.GearRatio.Wheel;
-import frc.robot.util.LoggedTunableNumber;
-import frc.robot.util.MathExtraUtil;
+import frc.util.Environment;
+import frc.util.GearRatio;
+import frc.util.LoggedTunableNumber;
+import frc.util.MathExtraUtil;
+import frc.util.GearRatio.Wheel;
 
 public final class DriveConstants {
     /**Distance between the front and back wheels*/

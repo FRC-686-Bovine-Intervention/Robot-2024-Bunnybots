@@ -3,7 +3,7 @@ package frc.robot.subsystems.drive;
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.util.loggerUtil.LoggedEncodedMotor;
+import frc.util.loggerUtil.LoggedEncodedMotor;
 
 public interface ModuleIO {
 

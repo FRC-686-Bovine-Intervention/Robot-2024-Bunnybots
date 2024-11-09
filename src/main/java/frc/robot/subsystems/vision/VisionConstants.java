@@ -39,9 +39,7 @@ public final class VisionConstants {
                     Units.degreesToRadians(+0)
                 )
             ),
-            (connected) -> {
-                Leds.getInstance().lAprilConnected = connected;
-            }
+            Leds.getInstance().lAprilConnection::setStatus
             // robotToCameraFromCalibTag(
             //     new Transform3d(
             //         new Translation3d(
@@ -91,9 +89,7 @@ public final class VisionConstants {
                 //     Units.degreesToRadians(-9.707)
                 // )
             ),
-            (connected) -> {
-                Leds.getInstance().rAprilConnected = connected;
-            }
+            Leds.getInstance().rAprilConnection::setStatus
         ),
         NoteVision(
             "Note Cam",
@@ -111,9 +107,7 @@ public final class VisionConstants {
                     Math.PI
                 )
             ),
-            (connected) -> {
-                Leds.getInstance().nVisionConnected = connected;
-            }
+            Leds.getInstance().nVisionConnection::setStatus
         ),
         ;
         public final String hardwareName;
