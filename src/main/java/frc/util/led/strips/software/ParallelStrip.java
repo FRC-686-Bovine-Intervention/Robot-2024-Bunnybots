@@ -1,5 +1,8 @@
 package frc.util.led.strips.software;
 
+import java.util.Arrays;
+import java.util.stream.IntStream;
+
 import edu.wpi.first.wpilibj.util.Color;
 import frc.util.led.strips.LEDStrip;
 
@@ -9,19 +12,14 @@ public class ParallelStrip implements LEDStrip {
 
     public ParallelStrip(LEDStrip... strips) {
         this.strips = strips;
-        int maxLength = 0;
-        for(LEDStrip strip : strips) {
-            maxLength = Math.max(maxLength, strip.getLength());
-        }
-        this.length = maxLength;
+        this.length = Arrays.stream(this.strips).mapToInt(LEDStrip::getLength).max().orElse(0);
     }
 
     @Override
     public LEDStrip parallel(LEDStrip... strips) {
         LEDStrip[] newStrips = new LEDStrip[strips.length + this.strips.length];
-        for(int i = 0; i < newStrips.length; i++) {
-            newStrips[i] = (i < this.strips.length ? newStrips[i] = this.strips[i] : strips[i - this.strips.length]);
-        }
+        IntStream.range(0, this.strips.length).forEach((i) -> newStrips[i] = this.strips[i]);
+        IntStream.range(0, strips.length).forEach((i) -> newStrips[i + this.strips.length] = strips[i]);
         return new ParallelStrip(newStrips);
     }
 

@@ -49,7 +49,8 @@ public class AutoSelector extends VirtualSubsystem {
             var publisher =
                 NetworkTableInstance.getDefault()
                     .getStringTopic("/SmartDashboard/" + key + "/Question #" + Integer.toString(i + 1))
-                    .publish();
+                    .publish()
+            ;
             publisher.set(questionPlaceHolder);
             questionPublishers.add(publisher);
             responseChoosers.add(new SwitchableChooser(key + "/Question #" + Integer.toString(i + 1) + " Chooser"));

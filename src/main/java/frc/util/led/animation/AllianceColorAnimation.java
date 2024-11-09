@@ -13,7 +13,7 @@ public class AllianceColorAnimation {
     private final LEDStrip strip;
     private final Gradient unknownGradient = new Gradient(InterpolationFunction.linear, Color.kBlue, Color.kRed);
     private final Gradient blueGradient = new Gradient(InterpolationFunction.linear, Color.kBlue, Color.kBlack);
-    private final Gradient redGradient = new Gradient(InterpolationFunction.linear, Color.kBlack, Color.kRed);
+    private final Gradient redGradient = new Gradient(InterpolationFunction.linear, Color.kRed, Color.kBlack);
 
     public AllianceColorAnimation(LEDStrip strip) {
         this.strip = strip;
@@ -34,7 +34,7 @@ public class AllianceColorAnimation {
             }
             return gradient.apply(
                 WaveFunction.Sinusoidal.applyAsDouble(
-                    pos*4 - Timer.getFPGATimestamp()
+                    pos * 4 - Timer.getFPGATimestamp()
                 )
             );
         });

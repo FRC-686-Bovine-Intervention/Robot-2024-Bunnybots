@@ -47,10 +47,6 @@ public class Leds extends VirtualSubsystem {
 
         var sideStrips = leftStrip.parallel(rightStrip);
         var sideStripTips = sideStrips.substrip(15).concat(backStrip.substrip(5, 13));
-        var dsConnectedStrip = sideStrips.substrip(0, 2);
-        var lAprilConnectedStrip = sideStrips.substrip(2, 3);
-        var rAprilConnectedStrip = sideStrips.substrip(3, 4);
-        var nVisionConnectedStrip = sideStrips.substrip(4, 5);
         
         var backRightStrip = backStrip.substrip(0, 10);
         var backLeftStrip = backStrip.substrip(9).reverse();
@@ -62,10 +58,10 @@ public class Leds extends VirtualSubsystem {
 
         estopped = new FillAnimation(hardwareStrip, Color.kRed);
         allianceColorAnimation = new AllianceColorAnimation(fullSideStrips);
-        driverStationConnection = new StatusLightAnimation(dsConnectedStrip, Color.kOrange, Color.kGreen);
-        lAprilConnection = new StatusLightAnimation(lAprilConnectedStrip, Color.kOrange, Color.kGreen);
-        rAprilConnection = new StatusLightAnimation(rAprilConnectedStrip, Color.kOrange, Color.kGreen);
-        nVisionConnection = new StatusLightAnimation(nVisionConnectedStrip, Color.kOrange, Color.kGreen);
+        driverStationConnection = new StatusLightAnimation(sideStrips.substrip(0, 2), Color.kOrange, Color.kGreen);
+        lAprilConnection = new StatusLightAnimation(sideStrips.substrip(2, 3), Color.kOrange, Color.kGreen);
+        rAprilConnection = new StatusLightAnimation(sideStrips.substrip(3, 4), Color.kOrange, Color.kGreen);
+        nVisionConnection = new StatusLightAnimation(sideStrips.substrip(4, 5), Color.kOrange, Color.kGreen);
         noteSecured = new FillAnimation(sideStripTips, Color.kGreen);
         visionAcquired = new FillAnimation(sideStripTips, Color.kOrange);
         visionLocked = new FillAnimation(sideStripTips, Color.kPurple);
