@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.subsystems.leds.Leds;
-import frc.util.PerspectiveType;
+import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
 
 public class Robot extends LoggedRobot {
@@ -116,7 +116,7 @@ public class Robot extends LoggedRobot {
         robotContainer = new RobotContainer();
 
         SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
-        PerspectiveType.getCurrentType();
+        Perspective.getCurrent();
     }
 
     @Override

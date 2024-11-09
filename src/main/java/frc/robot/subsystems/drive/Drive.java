@@ -67,7 +67,7 @@ import frc.util.AllianceFlipUtil;
 import frc.util.LazyOptional;
 import frc.util.LoggedTunableNumber;
 import frc.util.MathExtraUtil;
-import frc.util.PerspectiveType;
+import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
 import frc.util.controllers.Joystick;
 import frc.util.robotStructure.Root;
@@ -268,7 +268,7 @@ public class Drive extends VirtualSubsystem {
 
         public static Supplier<ChassisSpeeds> joystickSpectatorToFieldRelative(Joystick translationalJoystick, BooleanSupplier precisionSupplier) {
             return () -> {
-                var fieldVec = PerspectiveType.getCurrentType().toField(
+                var fieldVec = Perspective.getCurrent().toField(
                     translationalJoystick.toVector()
                     .times(
                         DriveConstants.maxDriveSpeed.in(MetersPerSecond) * 
@@ -326,7 +326,7 @@ public class Drive extends VirtualSubsystem {
                 @Override
                 public void execute() {
                     Leds.getInstance().defenseSpin.setFlag(true);
-                    var joyVec = PerspectiveType.getCurrentType().toField(joystick.toVector());
+                    var joyVec = Perspective.getCurrent().toField(joystick.toVector());
                     var desiredLinear = VecBuilder.fill(drive.setpointSpeeds.vxMetersPerSecond, drive.setpointSpeeds.vyMetersPerSecond);
                     var fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(drive.setpointSpeeds, drive.getRotation());
                     var perpendicularLinear = new Vector<N2>(perpendicularMatrix.times(
@@ -425,7 +425,7 @@ public class Drive extends VirtualSubsystem {
                             preciseTurnTimer.restart();
                             return Optional.empty();
                         }
-                        var joyHeading = MathExtraUtil.rotationFromVector(PerspectiveType.getCurrentType().toField(joystick.toVector()));
+                        var joyHeading = MathExtraUtil.rotationFromVector(Perspective.getCurrent().toField(joystick.toVector()));
                         if(preciseTurnTimer.hasElapsed(preciseTurnTimeThreshold)) {
                             return outputMap(joyHeading);
                         }
