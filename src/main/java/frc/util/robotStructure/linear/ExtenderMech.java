@@ -1,4 +1,4 @@
-package frc.util.robotStructure;
+package frc.util.robotStructure.linear;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
