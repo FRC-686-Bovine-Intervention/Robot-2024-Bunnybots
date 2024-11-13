@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -43,7 +43,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
         var driveConfig = new TalonFXConfiguration();
         // change factory defaults here
         driveConfig.MotorOutput.Inverted = config.driveInverted;
-        driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         driveConfig.MotorOutput.DutyCycleNeutralDeadband = 0.0;
         driveConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.1875;
         driveConfig.CurrentLimits.SupplyCurrentLimit = 55;
@@ -90,8 +90,13 @@ public class ModuleIOFalcon550 implements ModuleIO {
         // turnRelativeEncoder.setPosition(turnAbsoluteEncoder.getPosition());
     }
 
+    private final VoltageOut driveVolts = 
+        new VoltageOut(0)
+        .withOverrideBrakeDurNeutral(true)
+    ;
+
     public void setDriveVoltage(Voltage volts) {
-        driveMotor.setVoltage(volts.in(Volts));
+        driveMotor.setControl(driveVolts.withOutput(volts));
     }
 
     public void setTurnVoltage(Voltage volts) {
@@ -121,14 +126,17 @@ public class ModuleIOFalcon550 implements ModuleIO {
         talon.getPosition().setUpdateFrequency(Robot.defaultPeriodSecs);
     }
 
+    private final StaticBrake driveBrake = new StaticBrake();
+    private final NeutralOut driveNeutral = new NeutralOut();
     @Override
     public void setDriveBrakeMode(boolean enable) {
-        // driveMotor.setControl(enable == null ? new NeutralOut() : (enable.booleanValue() ? new StaticBrake() : new CoastOut()));
+        driveMotor.setControl(enable ? driveBrake : driveNeutral);
     }
 
     @Override
     public void setTurnBrakeMode(boolean enable) {
-        // turnMotor.setIdleMode(enable. ? IdleMode.kBrake : IdleMode.kCoast);
+        //TODO Reimplement module turn brake mode
+        // turnMotor.setIdleMode(enable ? IdleMode.kBrake : IdleMode.kCoast);
     }
 
     @Override

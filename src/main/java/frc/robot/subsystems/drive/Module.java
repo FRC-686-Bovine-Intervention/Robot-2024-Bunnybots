@@ -28,8 +28,8 @@ import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
+import frc.util.CurrentSpikeDetector;
 import frc.util.LoggedTunableMeasure;
 import frc.util.LoggedTunableNumber;
 
@@ -54,9 +54,9 @@ public class Module {
     private SwerveModulePosition modulePosition = new SwerveModulePosition();
     private SwerveModulePosition prevModulePosition = new SwerveModulePosition();
 
-    private final Timer currentSpikeTimer = new Timer();
     private static final LoggedTunableMeasure<CurrentUnit> currentSpikeThreshold = new LoggedTunableMeasure<>("Drive/Current Spike Threshold", Amps.of(0)); 
     private static final LoggedTunableMeasure<TimeUnit> currentSpikeTime = new LoggedTunableMeasure<>("Drive/Current Spike Time", Seconds.of(0));
+    private final CurrentSpikeDetector driveCurrentSpikeDetector = new CurrentSpikeDetector(currentSpikeThreshold, currentSpikeTime);
 
     public Module(ModuleIO io, ModuleConstants config) {
         this.io = io;
@@ -87,10 +87,7 @@ public class Module {
         state = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters), angle);
         modulePosition = new SwerveModulePosition(inputs.driveMotor.encoder.position.in(Radians) * wheelRadius.in(Meters), angle);
 
-        Logger.recordOutput("test/" + config.name + "/drive", inputs.driveMotor);
-        Logger.recordOutput("test/" + config.name + "/turn", inputs.turnMotor);
-        Logger.recordOutput("test/" + config.name + "/speed/angle", inputs.driveMotor.encoder.velocity.in(RadiansPerSecond));
-        Logger.recordOutput("test/" + config.name + "/speed/meter", inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters));
+        driveCurrentSpikeDetector.update(getDriveCurrent());
     }
 
     /**
@@ -98,24 +95,22 @@ public class Module {
      * periodically. Returns the
      * optimized state.
      */
-    public SwerveModuleState runSetpoint(SwerveModuleState setpoint) {
+    public void runSetpoint(SwerveModuleState setpoint) {
         // Optimize state based on current angle
-        var optimizedSetpoint = SwerveModuleState.optimize(setpoint, getAngle());
+        setpoint.optimize(getAngle());
 
         // Run turn controller
-        io.setTurnVoltage(Volts.of(turnFeedback.calculate(getAngle().getRadians(), optimizedSetpoint.angle.getRadians())));
+        io.setTurnVoltage(Volts.of(turnFeedback.calculate(getAngle().getRadians(), setpoint.angle.getRadians())));
 
         // Update velocity based on turn error
-        optimizedSetpoint.speedMetersPerSecond *= Math.cos(turnFeedback.getError());
+        setpoint.speedMetersPerSecond *= Math.cos(turnFeedback.getError());
 
         // Run drive controller
-        double velocityRadPerSec = optimizedSetpoint.speedMetersPerSecond / wheelRadius.in(Meters);
-        io.setDriveVoltage(Volts.of(
-            driveFeedforward.calculate(velocityRadPerSec)
-            + driveFeedback.calculate(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond), velocityRadPerSec)
+        double velocityRadPerSec = setpoint.speedMetersPerSecond / wheelRadius.in(Meters);
+        io.setDriveVoltage(
+            driveFeedforward.calculate(RadiansPerSecond.of(velocityRadPerSec))
+            .plus(Volts.of(driveFeedback.calculate(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond), velocityRadPerSec))
         ));
-
-        return optimizedSetpoint;
     }
 
     /**
@@ -148,8 +143,12 @@ public class Module {
         return inputs.driveMotor.encoder.position;
     }
 
-    public Current getCurrent() {
+    public Current getDriveCurrent() {
         return inputs.driveMotor.motor.current;
+    }
+
+    public boolean currentSpiking() {
+        return driveCurrentSpikeDetector.hasSpike();
     }
 
     /** Returns the module position (turn angle and drive position). */

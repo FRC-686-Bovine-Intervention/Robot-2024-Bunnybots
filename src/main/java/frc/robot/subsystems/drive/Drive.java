@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -197,8 +198,8 @@ public class Drive extends VirtualSubsystem {
         setpointStates = DriveConstants.kinematics.toSwerveModuleStates(correctedSpeeds, centerOfRotation);
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.maxDriveSpeed);
 
+        Logger.recordOutput("Drive/SwerveStates/Setpoints", setpointStates);
         Logger.recordOutput("Drive/Chassis Speeds/Setpoint", setpointSpeeds);
-        var setpointStatesOptimized = new SwerveModuleState[setpointStates.length];
         // Run modules
         if (DriverStation.isDisabled()) {
             // Stop moving while disabled
@@ -207,9 +208,7 @@ public class Drive extends VirtualSubsystem {
             //     module.stop();
             // }
         } else if (isCharacterizing) {
-            for (int i = 0; i < DriveConstants.modules.length; i++) {
-                modules[i].runVoltage(characterizationVolts, setpointStates[i].angle);
-            }
+            IntStream.range(0, DriveConstants.modules.length).forEach((i) -> modules[i].runVoltage(characterizationVolts, setpointStates[i].angle));
         } else {
             // Set to last angles if zero
             // if (MathExtraUtil.isNear(new ChassisSpeeds(), correctedSpeeds, 0.05, DriveConstants.headingTolerance.in(Radians))) {
@@ -219,13 +218,9 @@ public class Drive extends VirtualSubsystem {
             // }
 
             // Send setpoints to modules
-            setpointStatesOptimized = new SwerveModuleState[DriveConstants.modules.length];
-            for (int i = 0; i < DriveConstants.modules.length; i++) {
-                setpointStatesOptimized[i] = modules[i].runSetpoint(setpointStates[i]);
-            }
+            IntStream.range(0, DriveConstants.modules.length).forEach((i) -> modules[i].runSetpoint(setpointStates[i]));
         }
-        Logger.recordOutput("Drive/SwerveStates/Setpoints", setpointStates);
-        // Logger.recordOutput("Drive/SwerveStates/SetpointsOptimized", setpointStatesOptimized);
+        Logger.recordOutput("Drive/SwerveStates/Setpoints Optimized", setpointStates);
         Logger.recordOutput("Drive/Center of Rotation", getPose().transformBy(new Transform2d(centerOfRotation, new Rotation2d())));
     }
 
