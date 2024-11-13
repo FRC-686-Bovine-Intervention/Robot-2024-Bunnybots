@@ -1,30 +1,13 @@
 package frc.util.robotStructure;
 
-import static edu.wpi.first.units.Units.Radians;
-
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.math.numbers.N3;
 
-public class ArmMech extends Mechanism3d {
-    private Transform3d angle;
-
-    public void setAngle(Angle angle) {
-        this.angle = new Transform3d(Translation3d.kZero, new Rotation3d(Radians.zero(), angle, Radians.zero()));
-    }
-
+public class ArmMech extends AngularMech {
+    private static final Vector<N3> axis = VecBuilder.fill(0,1,0);
     public ArmMech(Transform3d base) {
-        super(base);
-    }
-
-    @Override
-    public Transform3d getRobotRelative() {
-        return super.getRobotRelative().plus(angle);
-    }
-    @Override
-    public Pose3d getFieldRelative() {
-        return super.getFieldRelative().plus(angle);
+        super(base, axis);
     }
 }

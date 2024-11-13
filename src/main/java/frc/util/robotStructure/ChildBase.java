@@ -17,6 +17,12 @@ public abstract class ChildBase implements Component {
     }
 
     @Override
+    public ChildBase addChild(ChildBase child) {
+        child.setParent(this);
+        return this;
+    }
+
+    @Override
     public Transform3d getRobotRelative() {
         return parent.getRobotRelative().plus(base);
     }

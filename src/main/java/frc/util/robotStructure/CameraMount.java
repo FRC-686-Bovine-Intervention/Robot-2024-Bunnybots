@@ -12,7 +12,7 @@ public class CameraMount extends ChildBase {
     public static final String KEY = "Camera Overrides";
     private static final List<CameraMount> cameraOverrides = new ArrayList<>();
 
-    public CameraMount(Transform3d base, String name) {
+    public CameraMount(Transform3d base) {
         super(base);
         cameraOverrides.add(this);
     }
