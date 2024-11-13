@@ -12,11 +12,10 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.CANSparkBase.IdleMode;
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.SparkAbsoluteEncoder;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
@@ -30,14 +29,14 @@ import frc.util.Alert.AlertType;
 
 public class ModuleIOFalcon550 implements ModuleIO {
     private final TalonFX  driveMotor;
-    private final CANSparkMax turnMotor;
+    private final SparkMax turnMotor;
     private final AbsoluteEncoder turnAbsoluteEncoder;
     private final Angle initialTurnOffset;
 
     public ModuleIOFalcon550(ModuleConstants config) {
         driveMotor = new TalonFX(config.driveMotorID, CANDevices.driveCanBusName);
-        turnMotor = new CANSparkMax(config.turnMotorID, MotorType.kBrushless);
-        turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
+        turnMotor = new SparkMax(config.turnMotorID, MotorType.kBrushless);
+        turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder();
         initialTurnOffset = config.cancoderOffset;
 
         /** Configure Drive Motors */
@@ -56,11 +55,12 @@ public class ModuleIOFalcon550 implements ModuleIO {
         driveMotor.getConfigurator().apply(driveConfig);
 
         /** Configure Turn Motors */
-        turnMotor.setInverted(false);
-        turnMotor.setIdleMode(IdleMode.kBrake);
-        turnMotor.setSmartCurrentLimit(40);
-        turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        var turnConfig = new SparkMaxConfig();
+        turnConfig.idleMode(IdleMode.kBrake);
+        turnConfig.inverted(false);
+        turnConfig.smartCurrentLimit(40);
+        // turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        // turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
 
         setFramePeriods(driveMotor, true);
 
@@ -122,14 +122,13 @@ public class ModuleIOFalcon550 implements ModuleIO {
     }
 
     @Override
-    public void setDriveBrakeMode(Boolean enable) {
-        driveMotor.setControl(enable == null ? new NeutralOut() : (enable.booleanValue() ? new StaticBrake() : new CoastOut()));
+    public void setDriveBrakeMode(boolean enable) {
+        // driveMotor.setControl(enable == null ? new NeutralOut() : (enable.booleanValue() ? new StaticBrake() : new CoastOut()));
     }
 
     @Override
-    public void setTurnBrakeMode(Boolean enable) {
-        if(enable == null) return;
-        turnMotor.setIdleMode(enable.booleanValue() ? IdleMode.kBrake : IdleMode.kCoast);
+    public void setTurnBrakeMode(boolean enable) {
+        // turnMotor.setIdleMode(enable. ? IdleMode.kBrake : IdleMode.kCoast);
     }
 
     @Override

@@ -3,7 +3,7 @@ package frc.util.loggerUtil;
 import java.nio.ByteBuffer;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.CANSparkMax;
+import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.struct.Struct;
@@ -29,7 +29,7 @@ public class LoggedEncodedMotor implements StructSerializable {
         motor.updateFrom(talon);
     }
 
-    public void updateFrom(CANSparkMax spark) {
+    public void updateFrom(SparkMax spark) {
         encoder.updateFrom(spark.getAbsoluteEncoder());
         motor.updateFrom(spark);
     }

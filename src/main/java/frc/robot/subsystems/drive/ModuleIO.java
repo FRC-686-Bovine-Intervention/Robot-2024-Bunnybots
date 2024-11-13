@@ -23,10 +23,10 @@ public interface ModuleIO {
     public default void setTurnVoltage(Voltage volts) {}
 
     /** Enable or disable brake mode on the drive motor. */
-    public default void setDriveBrakeMode(Boolean enable) {}
+    public default void setDriveBrakeMode(boolean enable) {}
 
     /** Enable or disable brake mode on the turn motor. */
-    public default void setTurnBrakeMode(Boolean enable) {}
+    public default void setTurnBrakeMode(boolean enable) {}
 
     public default void stop() {}
 

@@ -7,7 +7,7 @@ import static edu.wpi.first.units.Units.Volts;
 import java.nio.ByteBuffer;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.CANSparkMax;
+import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.units.measure.MutCurrent;
 import edu.wpi.first.units.measure.MutTemperature;
@@ -25,12 +25,12 @@ public class LoggedMotor implements StructSerializable {
     public final MutTemperature temperature = Celsius.mutable(0);
 
     public void updateFrom(TalonFX talon) {
-        this.appliedVoltage.mut_replace(talon.getMotorVoltage().getValueAsDouble(), Volts);
-        this.current.mut_replace(talon.getStatorCurrent().getValueAsDouble(), Amps);
-        this.temperature.mut_replace(talon.getDeviceTemp().getValueAsDouble(), Celsius);
+        this.appliedVoltage.mut_replace(talon.getMotorVoltage().getValue());
+        this.current.mut_replace(talon.getStatorCurrent().getValue());
+        this.temperature.mut_replace(talon.getDeviceTemp().getValue());
     }
 
-    public void updateFrom(CANSparkMax spark) {
+    public void updateFrom(SparkMax spark) {
         this.appliedVoltage.mut_replace(spark.getAppliedOutput() * 12, Volts);
         this.current.mut_replace(spark.getOutputCurrent(), Amps);
     }
