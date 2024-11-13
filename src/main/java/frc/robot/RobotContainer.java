@@ -22,6 +22,10 @@ import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.AutoSelector.AutoRoutine;
 import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.arm.ArmIO;
+import frc.robot.subsystems.arm.ArmIOFalcon;
+import frc.robot.subsystems.arm.ArmIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -41,6 +45,7 @@ import frc.util.controllers.XboxController;
 public class RobotContainer {
     // Subsystems
     public final Drive drive;
+    public final Arm arm;
     public final ApriltagVision apriltagVision;
     public final ManualOverrides manualOverrides;
 
@@ -63,6 +68,7 @@ public class RobotContainer {
                         .toArray(ModuleIO[]::new)
                 );
                 apriltagVision = new ApriltagVision();
+                arm = new Arm(new ArmIOFalcon(), buttonBoard.povUp(), buttonBoard.povDown());
             break;
             case SIM:
                 drive = new Drive(
@@ -72,6 +78,7 @@ public class RobotContainer {
                         .toArray(ModuleIO[]::new)
                 );
                 apriltagVision = new ApriltagVision();
+                arm = new Arm(new ArmIOSim(), () -> false, () -> false);
             break;
             default:
             case REPLAY:
@@ -83,6 +90,7 @@ public class RobotContainer {
                     new ModuleIO(){}
                 );
                 apriltagVision = new ApriltagVision();
+                arm = new Arm(new ArmIO() {}, () -> false, () -> false);
             break;
         }
         manualOverrides = new ManualOverrides();
