@@ -2,12 +2,18 @@ package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Time;
+import frc.robot.Robot;
 
 public final class RobotConstants {
     public static final boolean tuningMode = true;
+
+    public static final Time dt = Seconds.of(Robot.defaultPeriodSecs);
+    public static final double dtSeconds = dt.in(Seconds);
 
     /**Distance between back bumper and front bumper, aka in the X axis */
     public static final Distance robotLength = Centimeters.of(90);
