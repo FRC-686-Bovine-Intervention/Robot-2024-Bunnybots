@@ -7,10 +7,17 @@ package frc.robot;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.AutoSelector.AutoRoutine;
@@ -119,7 +126,28 @@ public class RobotContainer {
         );
     }
 
-    private void configureControls() {}
+    private void configureControls() {
+        new Trigger(() -> driveController.rightStick.magnitude() > 0.85 && drive.rotationalSubsystem.getCurrentCommand() == null).onTrue(
+            drive.rotationalSubsystem.headingFromJoystick(
+                driveController.rightStick.smoothRadialDeadband(0.85),
+                new Rotation2d[]{
+                    // Cardinals
+                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(0))),
+                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(90))),
+                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(180))),
+                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(270))),
+                    // Subwoofer
+                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(120))),
+                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(240))),
+                    // Source
+                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(300))),
+                },
+                () -> Rotation2d.kZero
+            )
+            .withName("Drive Custom Flick")
+        );
+        Logger.recordOutput("Testing/bucket", new Pose3d());
+    }
 
     private void configureNotifications() {}
 

@@ -126,6 +126,7 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().run();
         // robotContainer.robotPeriodic();
         VirtualSubsystem.postCommandPeriodicAll();
+        RobotState.getInstance().log();
     }
 
     @Override
