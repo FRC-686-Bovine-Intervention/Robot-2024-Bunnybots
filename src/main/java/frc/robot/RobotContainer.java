@@ -4,9 +4,14 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import java.util.List;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,12 +27,14 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
+import frc.robot.subsystems.test.Test;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.util.Alert;
 import frc.util.Alert.AlertType;
 import frc.util.controllers.ButtonBoard3x3;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.robotStructure.CameraMount;
 
 public class RobotContainer {
     // Subsystems
@@ -80,6 +87,9 @@ public class RobotContainer {
             break;
         }
         manualOverrides = new ManualOverrides();
+
+        var test = new Test(driveController.povUp(), driveController.povDown());
+        drive.structureRoot.addChild(test.armMech.addChild(test.uprightGamepiecePose).addChild(test.invertedGamepiecePose).addChild(new CameraMount(new Transform3d())).addChild(new CameraMount(new Transform3d(new Translation3d(1,1,0), new Rotation3d(Degrees.zero(), Degrees.zero(), Degrees.of(180))))));
 
         driveJoystick = driveController.leftStick
             .smoothRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)

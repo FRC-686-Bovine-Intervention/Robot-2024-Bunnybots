@@ -70,6 +70,7 @@ import frc.util.MathExtraUtil;
 import frc.util.PerspectiveType;
 import frc.util.VirtualSubsystem;
 import frc.util.controllers.Joystick;
+import frc.util.robotStructure.Root;
 
 public class Drive extends VirtualSubsystem {
     private final GyroIO gyroIO;
@@ -102,6 +103,8 @@ public class Drive extends VirtualSubsystem {
     private Timer lastMovementTimer = new Timer(); // used for brake mode
 
     private Twist2d fieldVelocity = new Twist2d();
+
+    public final Root structureRoot = new Root();
 
     public Drive(GyroIO gyroIO, ModuleIO flModuleIO, ModuleIO frModuleIO, ModuleIO blModuleIO, ModuleIO brModuleIO) {
         System.out.println("[Init Drive] Instantiating Drive");
@@ -163,6 +166,7 @@ public class Drive extends VirtualSubsystem {
         }
         Logger.recordOutput("Drive/Chassis Speeds/Measured", robotRelativeSpeeds);
         RobotState.getInstance().addDriveMeasurement(gyroAngle, getModulePositions());
+        structureRoot.setPose(getPose());
         fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, gyroAngle);
 
         // Skid Detection
