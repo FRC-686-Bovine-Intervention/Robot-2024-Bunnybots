@@ -104,8 +104,6 @@ public class Drive extends VirtualSubsystem {
 
     private Twist2d fieldVelocity = new Twist2d();
 
-    public final Root structureRoot = new Root();
-
     public Drive(GyroIO gyroIO, ModuleIO flModuleIO, ModuleIO frModuleIO, ModuleIO blModuleIO, ModuleIO brModuleIO) {
         System.out.println("[Init Drive] Instantiating Drive");
         this.gyroIO = gyroIO;
@@ -166,7 +164,6 @@ public class Drive extends VirtualSubsystem {
         }
         Logger.recordOutput("Drive/Chassis Speeds/Measured", robotRelativeSpeeds);
         RobotState.getInstance().addDriveMeasurement(gyroAngle, getModulePositions());
-        structureRoot.setPose(getPose());
         fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, gyroAngle);
 
         // Skid Detection

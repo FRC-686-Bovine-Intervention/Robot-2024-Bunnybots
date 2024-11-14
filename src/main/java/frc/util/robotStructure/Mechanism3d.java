@@ -9,17 +9,17 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Unit;
 
-public abstract class Mechanism3d<M extends Measure<? extends Unit>> extends ChildBase {
+public abstract class Mechanism3d<U extends Unit> extends ChildBase {
     public static final String KEY = "Mechanism3d";
     protected final Vector<N3> axis;
-    protected Transform3d transform;
+    protected Transform3d transform = Transform3d.kZero;
 
     public Mechanism3d(Transform3d base, Vector<N3> axis) {
         super(base);
         this.axis = axis;
     }
 
-    public abstract void setData(M data);
+    public abstract void set(Measure<U> data);
 
     @Override
     public Transform3d getRobotRelative() {
