@@ -301,21 +301,7 @@ public class RobotContainer {
         AutoPaths.preload();
         var selector = new AutoSelector("AutoSelector");
 
-        selector.addRoutine(new AutoRoutine("Finish in 5", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(5);
-            }
-        });
-        selector.addRoutine(new AutoRoutine("Finish in 10", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(10);
-            }
-        });
-        selector.addRoutine(new AutoRoutine("Finish in 20", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(20);
-            }
-        });
+        selector.addRoutine(new ScoreHigh(drive));
 
         new AutoManager(selector);
     }
