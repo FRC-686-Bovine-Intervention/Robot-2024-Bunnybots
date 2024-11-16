@@ -4,16 +4,13 @@
 
 package frc.robot;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.auto.AutoSelector.AutoRoutine;
+import frc.robot.auto.ScoreHigh;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -22,7 +19,6 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
-import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.util.Alert;
 import frc.util.Alert.AlertType;
@@ -129,21 +125,7 @@ public class RobotContainer {
     private void configureAutos() {
         var selector = new AutoSelector("AutoSelector");
 
-        selector.addRoutine(new AutoRoutine("Finish in 5", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(5);
-            }
-        });
-        selector.addRoutine(new AutoRoutine("Finish in 10", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(10);
-            }
-        });
-        selector.addRoutine(new AutoRoutine("Finish in 20", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(20);
-            }
-        });
+        selector.addRoutine(new ScoreHigh(drive));
 
         new AutoManager(selector);
     }

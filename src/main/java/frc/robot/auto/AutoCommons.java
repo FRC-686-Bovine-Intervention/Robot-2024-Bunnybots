@@ -2,6 +2,7 @@ package frc.robot.auto;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -54,6 +55,26 @@ public class AutoCommons {
     public static enum PathType implements ToEntry<PathType> {
         Close,
         Far
+    }
+
+    public static enum Canister implements ToEntry<Canister> {
+        Canister1(1),
+        Canister2(2),
+        Canister3(3),
+        Canister4(4)
+        ;
+        private int number;
+        Canister(int number) {
+            this.number = number;
+        }
+        @Override
+        public Entry<String, Canister> toEntry() {
+            return Map.entry(Integer.toString(number), this);
+        }
+        @Override
+        public String toString() {
+            return Integer.toString(this.number);
+        }
     }
 
     public static Translation2d getFirstPoint(PathPlannerPath path) {

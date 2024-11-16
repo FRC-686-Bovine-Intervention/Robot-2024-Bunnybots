@@ -26,7 +26,7 @@ public class AutoSelector extends VirtualSubsystem {
     private final List<SwitchableChooser> responseChoosers;
     private final String key;
     
-    private static final AutoRoutine defaultRoutine = new AutoRoutine("Do Nothing", () -> List.of()) {
+    private static final AutoRoutine defaultRoutine = new AutoRoutine("Do Nothing", List.of()) {
         public Command generateCommand() {
             return Commands.idle();
         }
@@ -46,7 +46,7 @@ public class AutoSelector extends VirtualSubsystem {
     }
 
     private void populateQuestions(AutoRoutine routine) {
-        for(int i = questionPublishers.size(); i < routine.questions.get().size(); i++) {
+        for(int i = questionPublishers.size(); i < routine.questions.size(); i++) {
             var publisher =
                 NetworkTableInstance.getDefault()
                     .getStringTopic("/SmartDashboard/" + key + "/Question #" + Integer.toString(i + 1))
@@ -74,7 +74,7 @@ public class AutoSelector extends VirtualSubsystem {
         if(selectedRoutine == null) return;
         var config = new AutoConfiguration(alliance, selectedRoutine.name);
         populateQuestions(selectedRoutine);
-        var questions = selectedRoutine.questions.get();
+        var questions = selectedRoutine.questions;
         for (int i = 0; i < responseChoosers.size(); i++) {
             if(i < questions.size()) {
                 var question = questions.get(i);
@@ -151,6 +151,10 @@ public class AutoSelector extends VirtualSubsystem {
                 return new Settings<T>(map, defaultOption);
             }
 
+            public static <T> Settings<T> from(Map.Entry<String,T> defaultOption, Map<String,T> options) {
+                return new Settings<T>(options, defaultOption);
+            }
+
             public static <T> Settings<T> empty() {
                 return new Settings<T>(Map.of(), null);
             }
@@ -196,9 +200,9 @@ public class AutoSelector extends VirtualSubsystem {
 
     public static abstract class AutoRoutine {
         public final String name;
-        public final Supplier<List<AutoQuestion<?>>> questions;
+        public final List<AutoQuestion<?>> questions;
 
-        public AutoRoutine(String name, Supplier<List<AutoQuestion<?>>> questions) {
+        public AutoRoutine(String name, List<AutoQuestion<?>> questions) {
             this.name = name;
             this.questions = questions;
         }
