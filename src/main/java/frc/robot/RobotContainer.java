@@ -89,6 +89,8 @@ public class RobotContainer {
         }
         manualOverrides = new ManualOverrides();
 
+        drive.structureRoot.addChild(arm.mech.addChild(arm.uprightGamepiecePose));
+
         driveJoystick = driveController.leftStick
             .smoothRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
             .radialSensitivity(0.75)
