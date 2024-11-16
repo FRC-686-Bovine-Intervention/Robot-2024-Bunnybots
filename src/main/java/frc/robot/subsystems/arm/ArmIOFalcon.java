@@ -70,7 +70,7 @@ public class ArmIOFalcon implements ArmIO {
         updateTunables();
 
         BaseStatusSignal.setUpdateFrequencyForAll(
-            ArmConstants.IOSignalFrequency,
+            ArmConstants.MotorSignalFrequency,
             motor.getPosition(),
             motor.getVelocity(),
             motor.getClosedLoopError()
