@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -26,6 +27,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
@@ -57,20 +59,18 @@ public class RobotContainer {
             case REAL:
                 drive = new Drive(
                     new GyroIOPigeon2(),
-                    new ModuleIOFalcon550(DriveConstants.modules[0]),
-                    new ModuleIOFalcon550(DriveConstants.modules[1]),
-                    new ModuleIOFalcon550(DriveConstants.modules[2]),
-                    new ModuleIOFalcon550(DriveConstants.modules[3])
+                    Arrays.stream(DriveConstants.moduleConstants)
+                        .map(ModuleIOFalcon550::new)
+                        .toArray(ModuleIO[]::new)
                 );
                 apriltagVision = new ApriltagVision();
             break;
             case SIM:
                 drive = new Drive(
                     new GyroIO() {},
-                    new ModuleIOSim(),
-                    new ModuleIOSim(),
-                    new ModuleIOSim(),
-                    new ModuleIOSim()
+                    Arrays.stream(DriveConstants.moduleConstants)
+                        .map(ModuleIOSim::new)
+                        .toArray(ModuleIO[]::new)
                 );
                 apriltagVision = new ApriltagVision();
             break;
@@ -78,10 +78,10 @@ public class RobotContainer {
             case REPLAY:
                 drive = new Drive(
                     new GyroIO() {},
-                    new ModuleIOSim(),
-                    new ModuleIOSim(),
-                    new ModuleIOSim(),
-                    new ModuleIOSim()
+                    new ModuleIO(){},
+                    new ModuleIO(){},
+                    new ModuleIO(){},
+                    new ModuleIO(){}
                 );
                 apriltagVision = new ApriltagVision();
             break;
@@ -127,9 +127,10 @@ public class RobotContainer {
     }
 
     private void configureControls() {
-        new Trigger(() -> driveController.rightStick.magnitude() > 0.85 && drive.rotationalSubsystem.getCurrentCommand() == null).onTrue(
+        var flickStick = driveController.rightStick.roughRadialDeadband(0.85);
+        new Trigger(() -> flickStick.magnitude() > 0 && drive.rotationalSubsystem.getCurrentCommand() == null).onTrue(
             drive.rotationalSubsystem.headingFromJoystick(
-                driveController.rightStick.smoothRadialDeadband(0.85),
+                flickStick,
                 new Rotation2d[]{
                     // Cardinals
                     Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(0))),
@@ -144,7 +145,7 @@ public class RobotContainer {
                 },
                 () -> Rotation2d.kZero
             )
-            .withName("Drive Custom Flick")
+            .withName("Flick Stick")
         );
         Logger.recordOutput("Testing/bucket", new Pose3d());
     }

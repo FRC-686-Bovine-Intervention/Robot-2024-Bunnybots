@@ -11,9 +11,10 @@ import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.Robot;
+import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 
-public class ModuleIOSim implements ModuleIO {
+public class ModuleIOSim extends ModuleIOFalcon550 {
     // jKg constants unknown, stolen from Mechanical Advnatage
     private final FlywheelSim driveSim = new FlywheelSim(
         LinearSystemId.createFlywheelSystem(DCMotor.getFalcon500(1), 0.025, DriveConstants.driveWheelGearReduction),
@@ -24,51 +25,52 @@ public class ModuleIOSim implements ModuleIO {
         DCMotor.getFalcon500(1)
     );
 
+    public ModuleIOSim(ModuleConstants moduleConstants) {
+        super(moduleConstants);
+    }
+
     private final MutAngle turnRelativePosition = Radians.mutable(0);
     private final MutAngle turnAbsolutePosition = Radians.mutable(Math.random() * 2.0 * Math.PI);
-    private final MutVoltage driveAppliedVolts = Volts.mutable(0);
     private final MutVoltage turnAppliedVolts = Volts.mutable(0);
 
-    private boolean zeroEncodersFlag = false;
+    // private boolean zeroEncodersFlag = false;
 
     public void updateInputs(ModuleIOInputs inputs) {
+        var driveSimState = driveMotor.getSimState();
         if (DriverStation.isDisabled()) {
-            driveAppliedVolts.mut_setBaseUnitMagnitude(0);
             turnAppliedVolts.mut_setBaseUnitMagnitude(0);
         }
-        driveSim.setInputVoltage(driveAppliedVolts.in(Volts));
+        driveSim.setInputVoltage(driveSimState.getMotorVoltage());
         turnSim.setInputVoltage(turnAppliedVolts.in(Volts));
         
-        driveSim.update(Robot.defaultPeriodSecs);
-        turnSim.update(Robot.defaultPeriodSecs);
+        driveSim.update(RobotConstants.rioUpdatePeriodSecs);
+        turnSim.update(RobotConstants.rioUpdatePeriodSecs);
 
-        double angleDiffRad = turnSim.getAngularVelocityRadPerSec() * Robot.defaultPeriodSecs;
+        double angleDiffRad = turnSim.getAngularVelocityRadPerSec() * RobotConstants.rioUpdatePeriodSecs;
         turnRelativePosition.mut_acc(angleDiffRad);
         turnAbsolutePosition.mut_acc(angleDiffRad);
         turnAbsolutePosition.mut_setMagnitude(MathUtil.angleModulus(turnAbsolutePosition.in(Radians)));
 
-        if (zeroEncodersFlag) {
-            inputs.driveMotor.encoder.position.mut_setBaseUnitMagnitude(0.0);
-            turnAbsolutePosition.mut_minus(turnRelativePosition);
-            turnRelativePosition.mut_setMagnitude(0);
-            zeroEncodersFlag = false;
-        }
+        // if (zeroEncodersFlag) {
+        //     inputs.driveMotor.encoder.position.mut_setBaseUnitMagnitude(0.0);
+        //     turnAbsolutePosition.mut_minus(turnRelativePosition);
+        //     turnRelativePosition.mut_setMagnitude(0);
+        //     zeroEncodersFlag = false;
+        // }
         
-        inputs.driveMotor.updateFrom(driveSim, turnAppliedVolts);
+        driveSimState.setSupplyVoltage(12 - driveSimState.getSupplyCurrent() * 0.002);
+
+        super.updateInputs(inputs);
 
         inputs.turnMotor.updateFrom(turnSim, turnAppliedVolts);
         inputs.turnMotor.encoder.position.mut_replace(turnRelativePosition);
     }
     
-    public void setDriveVoltage(Voltage volts) {
-        driveAppliedVolts.mut_replace(MathUtil.clamp(volts.in(Volts), -12, 12), Volts);
-    }
-
     public void setTurnVoltage(Voltage volts) {
         turnAppliedVolts.mut_replace(MathUtil.clamp(volts.in(Volts), -12, 12), Volts);
     }
 
-    public void zeroEncoders() {
-        zeroEncodersFlag = true;        
-    }
+    // public void zeroEncoders() {
+    //     zeroEncodersFlag = true;        
+    // }
 }

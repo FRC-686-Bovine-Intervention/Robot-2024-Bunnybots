@@ -101,9 +101,15 @@ public class Joystick {
         return -radsFromNegYCCW();
     }
 
-    // public Joystick roughRadialDeadband() {
-
-    // }
+    public Joystick roughRadialDeadband(double deadband) {
+        return fromMagnitude(() -> 
+            (magnitude() >= deadband) ? (
+                magnitude()
+            ) : (
+                0
+            )
+        );
+    }
 
     private Joystick fromMagnitude(DoubleSupplier mag) {
         return fromAngleMagnitude(this::radsFromPosXCCW, mag);

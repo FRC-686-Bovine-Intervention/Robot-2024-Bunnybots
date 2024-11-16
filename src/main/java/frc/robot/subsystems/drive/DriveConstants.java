@@ -2,6 +2,7 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
@@ -23,15 +24,19 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.CANDevices;
 import frc.util.Environment;
 import frc.util.GearRatio;
+import frc.util.GearRatio.Wheel;
 import frc.util.LoggedTunableNumber;
 import frc.util.MathExtraUtil;
-import frc.util.GearRatio.Wheel;
 
 public final class DriveConstants {
+    public static final double odometryLoopFrequencyHz = 100;
+    public static final Frequency odometryLoopFrequency = Hertz.of(odometryLoopFrequencyHz);
+
     /**Distance between the front and back wheels*/
     public static final Distance trackWidthX = Inches.of(25.5);
     /**Distance between the left and right wheels*/
@@ -41,10 +46,8 @@ public final class DriveConstants {
         public final String name;
         public final int driveMotorID;
         public final int turnMotorID;
-        // motor direction to drive 'forward' (cancoders at angles given in cancoderOffsetRotations)
         public final InvertedValue driveInverted;
-        // absolute position of cancoder when drive wheel is facing 'forward'
-        public final Angle cancoderOffset;
+        public final Angle encoderOffset;
         public final Translation2d moduleTranslation;
         public final Vector<N2> positiveRotVec;
         ModuleConstants(String name, int driveMotorID, int turnMotorID, InvertedValue driveInverted, Angle cancoderOffset, Translation2d moduleTranslation) {
@@ -52,13 +55,13 @@ public final class DriveConstants {
             this.driveMotorID = driveMotorID;
             this.turnMotorID = turnMotorID;
             this.driveInverted = driveInverted;
-            this.cancoderOffset = cancoderOffset;
+            this.encoderOffset = cancoderOffset;
             this.moduleTranslation = moduleTranslation;
             this.positiveRotVec = MathExtraUtil.vectorFromRotation(this.moduleTranslation.getAngle().plus(Rotation2d.fromDegrees(90)));
         }
     }
 
-    public static final ModuleConstants[] modules = {
+    public static final ModuleConstants[] moduleConstants = {
         new ModuleConstants(
             "Front Left",
             CANDevices.frontLeftDriveMotorID, CANDevices.frontLeftTurnMotorID,
@@ -100,7 +103,7 @@ public final class DriveConstants {
             )
         ),
     };
-    public static final Translation2d[] moduleTranslations = Arrays.stream(modules).map((a) -> a.moduleTranslation).toArray(Translation2d[]::new);
+    public static final Translation2d[] moduleTranslations = Arrays.stream(moduleConstants).map((a) -> a.moduleTranslation).toArray(Translation2d[]::new);
 
     public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
 

@@ -2,6 +2,8 @@ package frc.robot.subsystems.drive;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import frc.util.loggerUtil.LoggedEncodedMotor;
 
@@ -18,9 +20,11 @@ public interface ModuleIO {
 
     /** Run the drive motor at the specified voltage. */
     public default void setDriveVoltage(Voltage volts) {}
+    public default void setDriveVelocity(AngularVelocity velocity) {}
 
     /** Run the turn motor at the specified voltage. */
     public default void setTurnVoltage(Voltage volts) {}
+    public default void setTurnAngle(Angle angle) {}
 
     /** Enable or disable brake mode on the drive motor. */
     public default void setDriveBrakeMode(boolean enable) {}
@@ -31,5 +35,5 @@ public interface ModuleIO {
     public default void stop() {}
 
     /** Zero drive encoders */
-    public default void zeroEncoders() {}
+    // public default void zeroEncoders() {}
 }
