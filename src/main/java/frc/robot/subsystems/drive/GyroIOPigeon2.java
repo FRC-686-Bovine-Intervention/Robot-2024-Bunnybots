@@ -15,14 +15,14 @@ import frc.robot.constants.CANDevices;
 
 /** IO implementation for Pigeon2 */
 public class GyroIOPigeon2 implements GyroIO {
-  private final Pigeon2 pigeon = new Pigeon2(CANDevices.pigeonCanID, CANDevices.driveCanBusName);
+  private final Pigeon2 pigeon = new Pigeon2(CANDevices.pigeonCanID, CANDevices.canivoreBusName);
 
   public GyroIOPigeon2() {
     var config = new Pigeon2Configuration();
     // change factory defaults here
-    config.MountPose.MountPoseYaw = 91.9501;    // pigeon2 oriented with x forward, y left, z up
-    config.MountPose.MountPosePitch = 0.47715;
-    config.MountPose.MountPoseRoll = -0.679168;
+    config.MountPose.MountPoseYaw = -179.67636108398438;    // pigeon2 oriented with x forward, y left, z up
+    config.MountPose.MountPosePitch = -0.25307801365852356;
+    config.MountPose.MountPoseRoll = -0.5043123960494995;
     pigeon.getConfigurator().apply(config);
 
     // set signals to an appropriate rate

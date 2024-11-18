@@ -57,7 +57,7 @@ public class Module {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Drive/Module " + config.name, inputs);
 
-        var angle = Rotation2d.fromRadians(MathUtil.angleModulus(inputs.turnMotor.encoder.position.in(Radians)));
+        var angle = Rotation2d.fromRadians(MathUtil.angleModulus(inputs.turnMotor.encoder.position.plus(config.encoderOffset).in(Radians)));
         state = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters), angle);
         modulePosition = new SwerveModulePosition(inputs.driveMotor.encoder.position.in(Radians) * wheelRadius.in(Meters), angle);
 
@@ -70,11 +70,11 @@ public class Module {
      */
     public void runSetpoint(SwerveModuleState setpoint) {
         setpoint.optimize(getAngle());
+        
+        var turnSetpoint = setpoint.angle.getMeasure();
+        io.setTurnAngle(turnSetpoint.minus(config.encoderOffset));
 
-        var turnSetpoint = setpoint.angle.getMeasure().minus(config.encoderOffset);
-        io.setTurnAngle(turnSetpoint);
-
-        setpoint.speedMetersPerSecond *= Math.cos(turnSetpoint.minus(inputs.turnMotor.encoder.position).in(Radians));
+        setpoint.speedMetersPerSecond *= Math.cos(turnSetpoint.minus(getAngle().getMeasure()).in(Radians));
 
         double velocityRadPerSec = setpoint.speedMetersPerSecond / wheelRadius.in(Meters);
         io.setDriveVelocity(RadiansPerSecond.of(velocityRadPerSec));

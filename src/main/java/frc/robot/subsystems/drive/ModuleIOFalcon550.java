@@ -3,11 +3,11 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.SlotConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
@@ -25,12 +25,13 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.constants.CANDevices;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
+import frc.util.LoggedTunableNumber;
 import frc.util.TalonFXTempAlerts;
 import frc.util.loggerUtil.LoggedTunableFF;
 import frc.util.loggerUtil.LoggedTunablePID;
@@ -54,29 +55,31 @@ public class ModuleIOFalcon550 implements ModuleIO {
     private final StaticBrake driveBrake = new StaticBrake();
     private final NeutralOut driveNeutral = new NeutralOut();
 
+
+    private static final LoggedTunableNumber driveProfilekA = new LoggedTunableNumber("Drive/Module/Drive/PID/Profile/kA", 50);
     private static final LoggedTunablePID drivePIDConsts = new LoggedTunablePID(
         "Drive/Module/Drive/PID",
-        5,
-        0,
-        0
+        5*2*Math.PI,
+        0*2*Math.PI,
+        0*2*Math.PI
     );
     private static final LoggedTunableFF driveFFConsts = new LoggedTunableFF(
         "Drive/Module/Drive/FF",
-        0.18507,
-        0,
-        0.08005,
-        0
+        0.18507*2*Math.PI,
+        0*2*Math.PI,
+        0.08005*2*Math.PI,
+        0*2*Math.PI
     );
     private static final LoggedTunablePID turnPIDConsts = new LoggedTunablePID(
         "Drive/Module/Turn/PID",
-        5,
-        0,
-        0
+        5*2*Math.PI,
+        0*2*Math.PI,
+        0*2*Math.PI
     );
     private final PIDController turnPID = new PIDController(0, 0, 0);
 
     public ModuleIOFalcon550(ModuleConstants config) {
-        driveMotor = new TalonFX(config.driveMotorID, CANDevices.driveCanBusName);
+        driveMotor = new TalonFX(config.driveMotorID, CANDevices.canivoreBusName);
         turnMotor = new SparkMax(config.turnMotorID, MotorType.kBrushless);
         turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder();
 
@@ -99,24 +102,29 @@ public class ModuleIOFalcon550 implements ModuleIO {
         ;
         driveConfig.MotionMagic
             .withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(0))
-            .withMotionMagicJerk(RadiansPerSecondPerSecond.per(Second).of(1))
+            // .withMotionMagicJerk(RadiansPerSecondPerSecond.per(Second).of(1))
         ;
 
         driveMotor.getConfigurator().apply(driveConfig);
 
         var turnConfig = new SparkMaxConfig();
-        turnConfig.idleMode(IdleMode.kBrake)
+        turnConfig.idleMode(IdleMode.kCoast)
             .inverted(false)
             .smartCurrentLimit(40)
+            .absoluteEncoder
+                .inverted(true)
+            // .signals
+            //     .absoluteEncoderPositionPeriodMs((int) RobotConstants.rioUpdatePeriod.in(Milliseconds))
         ;
         // turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
         // turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
 
         turnMotor.configure(turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         turnPID.enableContinuousInput(
-            Rotation2d.kPi.unaryMinus().getRotations(),
-            Rotation2d.kPi.getRotations()
+            0,
+            1
         );
+        SmartDashboard.putData("Drive/" + config.name, turnPID);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
             DriveConstants.odometryLoopFrequency,
@@ -139,6 +147,12 @@ public class ModuleIOFalcon550 implements ModuleIO {
         }
         if (turnPIDConsts.hasChanged(hashCode())) {
             turnPIDConsts.update(turnPID);
+        }
+        if (driveProfilekA.hasChanged(hashCode())) {
+            var motionMagic = new MotionMagicConfigs();
+            driveMotor.getConfigurator().refresh(motionMagic);
+            motionMagic.withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(driveProfilekA.get()));
+            driveMotor.getConfigurator().apply(motionMagic);
         }
         
         inputs.driveMotor.updateFrom(driveMotor);

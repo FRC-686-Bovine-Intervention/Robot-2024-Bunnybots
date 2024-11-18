@@ -19,6 +19,7 @@ public final class CANDevices {
      */
     // Drive
     public static final String driveCanBusName = "rio";
+    public static final String canivoreBusName = "canivore";
     // | Front Left
     public static final int frontLeftDriveMotorID  = 1;
     public static final int frontLeftTurnMotorID   = 1;

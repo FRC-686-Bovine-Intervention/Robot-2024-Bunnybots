@@ -65,8 +65,8 @@ public final class DriveConstants {
         new ModuleConstants(
             "Front Left",
             CANDevices.frontLeftDriveMotorID, CANDevices.frontLeftTurnMotorID,
-            InvertedValue.CounterClockwise_Positive,
-            Rotations.of(0.75),
+            InvertedValue.Clockwise_Positive,
+            Rotations.of(0.25),
             new Translation2d(
                 trackWidthX.divide(+2),
                 trackWidthY.divide(+2)
@@ -75,8 +75,8 @@ public final class DriveConstants {
         new ModuleConstants(
             "Front Right",
             CANDevices.frontRightDriveMotorID, CANDevices.frontRightTurnMotorID,
-            InvertedValue.Clockwise_Positive,
-            Rotations.of(0.5),
+            InvertedValue.CounterClockwise_Positive,
+            Rotations.of(0),
             new Translation2d(
                 trackWidthX.divide(+2),
                 trackWidthY.divide(-2)
@@ -123,7 +123,8 @@ public final class DriveConstants {
         .gear(15).gear(32).axle()
         .gear(10).gear(60).axle()
     ;
-    public static final double driveWheelGearReduction = 1.0 / (1.0/4.0);
+    // public static final double driveWheelGearReduction = 1.0 / (1.0/4.0);
+    public static final double driveWheelGearReduction = 4.71;
     public static final double turnWheelGearReduction = 1.0 / ((15.0/32.0)*(10.0/60.0));
 
     public static final double[] driveRealKps = {0.7, 0.4, 0.7, 0.7};
@@ -134,7 +135,7 @@ public final class DriveConstants {
     public static final double driveSnapKd = 0;
 
 
-    public static final LinearVelocity maxDriveSpeed = MetersPerSecond.of(6);
+    public static final LinearVelocity maxDriveSpeed = MetersPerSecond.of(1);
     /**Tangential speed (m/s) = radial speed (rad/s) * radius (m)*/
     public static final AngularVelocity maxTurnRate = RadiansPerSecond.of(maxDriveSpeed.in(MetersPerSecond) / new Translation2d(trackWidthX.divide(2), trackWidthY.divide(2)).getNorm());
     public static final DoubleSupplier maxDriveSpeedEnvCoef = Environment.switchVar(

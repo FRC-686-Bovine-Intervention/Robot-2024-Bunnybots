@@ -89,7 +89,7 @@ public class RobotContainer {
         manualOverrides = new ManualOverrides();
 
         driveJoystick = driveController.leftStick
-            .smoothRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
+            .roughRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
             .radialSensitivity(0.75)
             .radialSlewRateLimit(DriveConstants.joystickSlewRateLimit)
         ;
