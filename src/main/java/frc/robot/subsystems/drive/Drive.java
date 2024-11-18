@@ -61,6 +61,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.RobotState;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
@@ -137,6 +139,34 @@ public class Drive extends VirtualSubsystem {
             translationSubsystem,
             rotationalSubsystem
         );
+
+        var routine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> {
+                    Logger.recordOutput("SysID/Drive/State", state.toString());
+                }
+            ),
+            new SysIdRoutine.Mechanism(
+                (volts) -> {
+                    Arrays.stream(modules).forEach((module) -> module.runVoltage(volts, Rotation2d.kZero));
+                },
+                (log) -> {
+                    Arrays.stream(modules).forEach((module) -> {
+                        Logger.recordOutput("SysID/Drive/" + module.config.name + "/Velocity", module.getAngularVelocity());
+                        Logger.recordOutput("SysID/Drive/" + module.config.name + "/Voltage", module.getAppliedVoltage());
+                    });
+                },
+                this.translationSubsystem
+            )
+        );
+
+        SmartDashboard.putData("SysID/Drive/Quasi Forward", routine.quasistatic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Forward"));
+        SmartDashboard.putData("SysID/Drive/Quasi Reverse", routine.quasistatic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Reverse"));
+        SmartDashboard.putData("SysID/Drive/Dynamic Forward", routine.dynamic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Forward"));
+        SmartDashboard.putData("SysID/Drive/Dynamic Reverse", routine.dynamic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Reverse"));
     }
 
     public void periodic() {
@@ -144,7 +174,7 @@ public class Drive extends VirtualSubsystem {
         Logger.processInputs("Inputs/Drive/Gyro", gyroInputs);
         Arrays.stream(modules).forEach(Module::periodic);
 
-        measuredStates = Arrays.stream(modules).map(Module::getState).toArray(SwerveModuleState[]::new);
+        measuredStates = Arrays.stream(modules).map(Module::getModuleState).toArray(SwerveModuleState[]::new);
         Logger.recordOutput("Drive/SwerveStates/Measured", measuredStates);
 
         // Update odometry
@@ -368,7 +398,7 @@ public class Drive extends VirtualSubsystem {
     public SwerveModulePosition[] getModulePositions() {
         SwerveModulePosition[] modulePositions = new SwerveModulePosition[DriveConstants.moduleConstants.length];
         for (int i = 0; i < DriveConstants.moduleConstants.length; i++) {
-            modulePositions[i] = modules[i].getPosition();
+            modulePositions[i] = modules[i].getModulePosition();
         }
         return modulePositions;
     }
@@ -377,7 +407,7 @@ public class Drive extends VirtualSubsystem {
     public SwerveModulePosition[] getModulePositionDeltas() {
         SwerveModulePosition[] modulePositionDeltas = new SwerveModulePosition[DriveConstants.moduleConstants.length];
         for (int i = 0; i < DriveConstants.moduleConstants.length; i++) {
-            modulePositionDeltas[i] = modules[i].getPositionDelta();
+            modulePositionDeltas[i] = modules[i].getModulePositionDelta();
         }
         return modulePositionDeltas;
     }
@@ -407,7 +437,7 @@ public class Drive extends VirtualSubsystem {
 
     /** Returns the average drive velocity in radians/sec. */
     public double getCharacterizationVelocity() {
-        return Arrays.stream(modules).map(Module::getCharacterizationVelocity).mapToDouble(AngularVelocity::baseUnitMagnitude).average().orElse(0);
+        return Arrays.stream(modules).map(Module::getAngularVelocity).mapToDouble(AngularVelocity::baseUnitMagnitude).average().orElse(0);
     }
 
     // public boolean collisionDetected() {

@@ -8,6 +8,7 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -33,11 +34,12 @@ import frc.util.LoggedTunableMeasure;
 public class Module {
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
-    private final ModuleConstants config;
+    public final ModuleConstants config;
 
-    private static final LoggedTunableMeasure<DistanceUnit> wheelRadius = new LoggedTunableMeasure<>("Drive/Module/WheelRadius", Meters.of(DriveConstants.wheelRadius.in(Meters)));
+    private static final LoggedTunableMeasure<DistanceUnit> wheelRadius = new LoggedTunableMeasure<>("Drive/Module/WheelRadius", DriveConstants.wheelRadius, Inches);
     
-    private SwerveModuleState state = new SwerveModuleState();
+    private Rotation2d angle = Rotation2d.kZero;
+    private SwerveModuleState moduleState = new SwerveModuleState();
     private SwerveModulePosition modulePosition = new SwerveModulePosition();
     private SwerveModulePosition prevModulePosition = new SwerveModulePosition();
 
@@ -52,13 +54,13 @@ public class Module {
 
     /** Updates inputs and checks tunable numbers. */
     public void periodic() {
-        prevModulePosition = getPosition();
+        prevModulePosition = getModulePosition();
 
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Drive/Module " + config.name, inputs);
 
-        var angle = Rotation2d.fromRadians(MathUtil.angleModulus(inputs.turnMotor.encoder.position.plus(config.encoderOffset).in(Radians)));
-        state = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters), angle);
+        angle = Rotation2d.fromRadians(MathUtil.angleModulus(inputs.turnMotor.encoder.position.plus(config.encoderOffset).in(Radians)));
+        moduleState = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters), angle);
         modulePosition = new SwerveModulePosition(inputs.driveMotor.encoder.position.in(Radians) * wheelRadius.in(Meters), angle);
 
         driveCurrentSpikeDetector.update(getDriveCurrent());
@@ -102,7 +104,7 @@ public class Module {
 
     /** Returns the current turn angle of the module. */
     public Rotation2d getAngle() {
-        return modulePosition.angle;
+        return angle;
     }
 
     /** Returns the current drive position of the module in radians. */
@@ -119,18 +121,18 @@ public class Module {
     }
 
     /** Returns the module position (turn angle and drive position). */
-    public SwerveModulePosition getPosition() {
+    public SwerveModulePosition getModulePosition() {
         return modulePosition;
     }
 
     /** Returns the module state (turn angle and drive velocity). */
-    public SwerveModuleState getState() {
-        return state;
+    public SwerveModuleState getModuleState() {
+        return moduleState;
     }
 
     /** Returns change in module position since last tick */
-    public SwerveModulePosition getPositionDelta() {
-        var currentModulePosition = getPosition();
+    public SwerveModulePosition getModulePositionDelta() {
+        var currentModulePosition = getModulePosition();
         return new SwerveModulePosition(
             currentModulePosition.distanceMeters - prevModulePosition.distanceMeters,
             currentModulePosition.angle
@@ -138,13 +140,12 @@ public class Module {
     }
 
     /** Returns the drive velocity in radians/sec. */
-    public AngularVelocity getCharacterizationVelocity() {
+    public AngularVelocity getAngularVelocity() {
         return inputs.driveMotor.encoder.velocity;
     }
-
-    /** Returns the drive wheel radius. */
-    public static double getWheelRadius() {
-        return wheelRadius.in(Meters);
+    /** Returns the drive velocity in radians/sec. */
+    public Voltage getAppliedVoltage() {
+        return inputs.driveMotor.motor.appliedVoltage;
     }
 
     /** Zeros module encoders. */

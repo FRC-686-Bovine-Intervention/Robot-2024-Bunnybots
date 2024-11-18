@@ -24,8 +24,6 @@ import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
 
 public class Robot extends LoggedRobot {
-    private RobotContainer robotContainer;
-
     @Override
     public void robotInit() {
         Leds.getInstance();
@@ -113,7 +111,7 @@ public class Robot extends LoggedRobot {
         ;
 
         System.out.println("[Init Robot] Instantiating RobotContainer");
-        robotContainer = new RobotContainer();
+        new RobotContainer();
 
         SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
         Perspective.getCurrent();
@@ -124,7 +122,6 @@ public class Robot extends LoggedRobot {
         GameState.getInstance().periodic();
         VirtualSubsystem.periodicAll();
         CommandScheduler.getInstance().run();
-        // robotContainer.robotPeriodic();
         VirtualSubsystem.postCommandPeriodicAll();
         RobotState.getInstance().log();
     }

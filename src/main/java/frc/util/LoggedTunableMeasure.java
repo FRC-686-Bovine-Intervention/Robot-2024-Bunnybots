@@ -37,8 +37,11 @@ public class LoggedTunableMeasure<U extends Unit> implements Supplier<Measure<U>
      * @param defaultValue Default value
      */
     public LoggedTunableMeasure(String dashboardKey, Measure<U> defaultValue) {
+        this(dashboardKey, defaultValue, defaultValue.unit());
+    }
+    public LoggedTunableMeasure(String dashboardKey, Measure<U> defaultValue, U dashboardUnit) {
         this.key = tableKey + "/" + dashboardKey;
-        this.dashboardMeasure = new GenericMutableMeasureImpl<U>(defaultValue.magnitude(), defaultValue.baseUnitMagnitude(), defaultValue.unit());
+        this.dashboardMeasure = new GenericMutableMeasureImpl<U>(defaultValue.in(dashboardUnit), defaultValue.baseUnitMagnitude(), dashboardUnit);
         if(RobotConstants.tuningMode) {
             dashboardNumber = new LoggedDashboardNumber(key, dashboardMeasure.magnitude());
         }

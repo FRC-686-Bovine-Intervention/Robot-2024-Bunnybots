@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
@@ -18,6 +19,8 @@ public final class RobotConstants {
     public static final Distance robotLength = Centimeters.of(90);
     /**Distance between left bumper and right bumper, aka in the Y axis */
     public static final Distance robotWidth = Centimeters.of(90);
+
+    public static final Rotation2d intakeForward = Rotation2d.kZero;
 
     public static final Distance centerToBumperCorner = Meters.of(new Translation2d(robotLength, robotWidth).getNorm());
 

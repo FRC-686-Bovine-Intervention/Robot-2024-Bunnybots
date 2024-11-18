@@ -10,11 +10,9 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
@@ -52,8 +50,7 @@ public class RobotContainer {
     private final CommandJoystick simJoystick = new CommandJoystick(2);
 
     public RobotContainer() {
-        System.out.println(
-                "[Init RobotContainer] Creating " + RobotType.getMode().name() + " " + RobotType.getRobot().name());
+        System.out.println("[Init RobotContainer] Creating " + RobotType.getMode().name() + " " + RobotType.getRobot().name());
 
         switch (RobotType.getMode()) {
             case REAL:
@@ -91,7 +88,7 @@ public class RobotContainer {
         driveJoystick = driveController.leftStick
             .roughRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
             .radialSensitivity(0.75)
-            .radialSlewRateLimit(DriveConstants.joystickSlewRateLimit)
+            // .radialSlewRateLimit(DriveConstants.joystickSlewRateLimit)
         ;
 
         joystickTranslational = Drive.Translational.joystickSpectatorToFieldRelative(
@@ -133,17 +130,12 @@ public class RobotContainer {
                 flickStick,
                 new Rotation2d[]{
                     // Cardinals
-                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(0))),
-                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(90))),
-                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(180))),
-                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(270))),
-                    // Subwoofer
-                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(120))),
-                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(240))),
-                    // Source
-                    Rotation2d.fromRadians(MathUtil.angleModulus(Units.degreesToRadians(300))),
+                    Rotation2d.kZero,
+                    Rotation2d.kCCW_90deg,
+                    Rotation2d.k180deg,
+                    Rotation2d.kCW_90deg,
                 },
-                () -> Rotation2d.kZero
+                () -> RobotConstants.intakeForward
             )
             .withName("Flick Stick")
         );
