@@ -10,8 +10,8 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
-import frc.robot.Robot;
 import frc.robot.constants.CANDevices;
+import frc.robot.constants.RobotConstants;
 
 /** IO implementation for Pigeon2 */
 public class GyroIOPigeon2 implements GyroIO {
@@ -26,7 +26,7 @@ public class GyroIOPigeon2 implements GyroIO {
     pigeon.getConfigurator().apply(config);
 
     // set signals to an appropriate rate
-    pigeon.getYaw().setUpdateFrequency(Robot.defaultPeriodSecs);
+    pigeon.getYaw().setUpdateFrequency(RobotConstants.rioUpdateFrequency);
 
     pigeon.setYaw(0);
   }

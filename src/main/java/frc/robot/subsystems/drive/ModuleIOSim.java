@@ -17,11 +17,11 @@ import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 public class ModuleIOSim extends ModuleIOFalcon550 {
     // jKg constants unknown, stolen from Mechanical Advnatage
     private final FlywheelSim driveSim = new FlywheelSim(
-        LinearSystemId.createFlywheelSystem(DCMotor.getFalcon500(1), 0.025, DriveConstants.driveWheelGearReduction),
+        LinearSystemId.createFlywheelSystem(DCMotor.getFalcon500(1), 0.025, 1/DriveConstants.driveWheelGearReduction),
         DCMotor.getFalcon500(1)
     );
     private final FlywheelSim turnSim = new FlywheelSim(
-        LinearSystemId.createFlywheelSystem(DCMotor.getFalcon500(1), 0.004, DriveConstants.turnWheelGearReduction),
+        LinearSystemId.createFlywheelSystem(DCMotor.getNeo550(1), 0.004, DriveConstants.turnWheelGearReduction),
         DCMotor.getFalcon500(1)
     );
 

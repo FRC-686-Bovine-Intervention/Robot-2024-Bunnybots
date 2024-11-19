@@ -14,7 +14,6 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -38,7 +37,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -50,11 +49,10 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.MutVoltage;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -94,8 +92,7 @@ public class Drive extends VirtualSubsystem {
     private ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
     private ChassisSpeeds fieldRelativeSpeeds = new ChassisSpeeds();
 
-    private boolean isCharacterizing = false;
-    private final MutVoltage characterizationVolts = Volts.mutable(0);
+    private boolean usingChassisSpeeds = true;
     private final LoggedTunableNumber rotationCorrection = new LoggedTunableNumber("Drive/Rotation Correction", 0.125);
 
     private ChassisSpeeds setpointSpeeds = new ChassisSpeeds();
@@ -118,12 +115,13 @@ public class Drive extends VirtualSubsystem {
             System.out.println("[Init Drive] Instantiating Module " + config.name + " with Module IO: " + moduleIOs[i].getClass().getSimpleName());
             var module = new Module(moduleIOs[i], config);
             module.setBrakeMode(false);
+            module.periodic();
             modules[i] = module;
         }
 
         // initialize pose estimator
-        Pose2d initialPoseMeters = new Pose2d();
-        RobotState.getInstance().initializePoseEstimator(DriveConstants.kinematics, getGyroRotation(), getModulePositions(), initialPoseMeters);
+        Pose2d initialPose = new Pose2d();
+        RobotState.getInstance().initializePoseEstimator(DriveConstants.kinematics, getGyroRotation(), getModulePositions(), initialPose);
         gyroAngle = getPose().getRotation();
 
         this.translationSubsystem = new Translational(this);
@@ -151,10 +149,12 @@ public class Drive extends VirtualSubsystem {
             ),
             new SysIdRoutine.Mechanism(
                 (volts) -> {
+                    usingChassisSpeeds = false;
                     Arrays.stream(modules).forEach((module) -> module.runVoltage(volts, Rotation2d.kZero));
                 },
                 (log) -> {
                     Arrays.stream(modules).forEach((module) -> {
+                        Logger.recordOutput("SysID/Drive/" + module.config.name + "/Position", module.getAngularPosition());
                         Logger.recordOutput("SysID/Drive/" + module.config.name + "/Velocity", module.getAngularVelocity());
                         Logger.recordOutput("SysID/Drive/" + module.config.name + "/Voltage", module.getAppliedVoltage());
                     });
@@ -163,10 +163,10 @@ public class Drive extends VirtualSubsystem {
             )
         );
 
-        SmartDashboard.putData("SysID/Drive/Quasi Forward", routine.quasistatic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Forward"));
-        SmartDashboard.putData("SysID/Drive/Quasi Reverse", routine.quasistatic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Reverse"));
-        SmartDashboard.putData("SysID/Drive/Dynamic Forward", routine.dynamic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Forward"));
-        SmartDashboard.putData("SysID/Drive/Dynamic Reverse", routine.dynamic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Reverse"));
+        SmartDashboard.putData("SysID/Drive/Quasi Forward", routine.quasistatic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Forward").asProxy());
+        SmartDashboard.putData("SysID/Drive/Quasi Reverse", routine.quasistatic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Reverse").asProxy());
+        SmartDashboard.putData("SysID/Drive/Dynamic Forward", routine.dynamic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Forward").asProxy());
+        SmartDashboard.putData("SysID/Drive/Dynamic Reverse", routine.dynamic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Reverse").asProxy());
     }
 
     public void periodic() {
@@ -234,9 +234,7 @@ public class Drive extends VirtualSubsystem {
             // for (var module : modules) {
             //     module.stop();
             // }
-        } else if (isCharacterizing) {
-            IntStream.range(0, DriveConstants.moduleConstants.length).forEach((i) -> modules[i].runVoltage(characterizationVolts, setpointStates[i].angle));
-        } else {
+        } else if (usingChassisSpeeds) {
             // Set to last angles if zero
             // if (MathExtraUtil.isNear(new ChassisSpeeds(), correctedSpeeds, 0.05, DriveConstants.headingTolerance.in(Radians))) {
             //     for (int i = 0; i < DriveConstants.modules.length; i++) {
@@ -252,7 +250,7 @@ public class Drive extends VirtualSubsystem {
     }
 
     public void driveVelocity(double vx, double vy, double omega) {
-        isCharacterizing = false;
+        usingChassisSpeeds = true;
         setpointSpeeds.vxMetersPerSecond = vx;
         setpointSpeeds.vyMetersPerSecond = vy;
         setpointSpeeds.omegaRadiansPerSecond = omega;
@@ -396,20 +394,12 @@ public class Drive extends VirtualSubsystem {
 
     /** Returns an array of module positions. */
     public SwerveModulePosition[] getModulePositions() {
-        SwerveModulePosition[] modulePositions = new SwerveModulePosition[DriveConstants.moduleConstants.length];
-        for (int i = 0; i < DriveConstants.moduleConstants.length; i++) {
-            modulePositions[i] = modules[i].getModulePosition();
-        }
-        return modulePositions;
+        return Arrays.stream(modules).map(Module::getModulePosition).toArray(SwerveModulePosition[]::new);
     }
 
     /** Returns an array of module positions. */
     public SwerveModulePosition[] getModulePositionDeltas() {
-        SwerveModulePosition[] modulePositionDeltas = new SwerveModulePosition[DriveConstants.moduleConstants.length];
-        for (int i = 0; i < DriveConstants.moduleConstants.length; i++) {
-            modulePositionDeltas[i] = modules[i].getModulePositionDelta();
-        }
-        return modulePositionDeltas;
+        return Arrays.stream(modules).map(Module::getModulePositionDelta).toArray(SwerveModulePosition[]::new);
     }
 
     /** Returns the average drive distance in radians */
@@ -427,12 +417,6 @@ public class Drive extends VirtualSubsystem {
 
     public ChassisSpeeds getFieldRelativeSpeeds() {
         return fieldRelativeSpeeds;
-    }
-
-    /** Runs forwards at the commanded voltage. */
-    public void runCharacterizationVolts(Voltage volts) {
-        isCharacterizing = true;
-        characterizationVolts.mut_replace(volts);
     }
 
     /** Returns the average drive velocity in radians/sec. */
@@ -646,11 +630,19 @@ public class Drive extends VirtualSubsystem {
         public Command pidControlledHeading(Supplier<Optional<Rotation2d>> headingSupplier) {
             var subsystem = this;
             return new Command() {
-                private final PIDController headingPID = new PIDController(DriveConstants.headingKp, DriveConstants.headingKi, DriveConstants.headingKd);
+                private final ProfiledPIDController headingPID = new ProfiledPIDController(
+                    DriveConstants.headingKp,
+                    DriveConstants.headingKi,
+                    DriveConstants.headingKd,
+                    new Constraints(
+                        DriveConstants.maxTurnRate.in(RadiansPerSecond),
+                        5000
+                    )
+                );
                 {
                     addRequirements(subsystem);
                     setName("PID Controlled Heading");
-                    headingPID.enableContinuousInput(-Math.PI, Math.PI);  // since gyro angle is not limited to [-pi, pi]
+                    headingPID.enableContinuousInput(-Math.PI, Math.PI);
                     headingPID.setTolerance(DriveConstants.headingTolerance.in(Radians), DriveConstants.omegaTolerance.in(RadiansPerSecond));
                 }
                 private Rotation2d desiredHeading;
@@ -658,6 +650,7 @@ public class Drive extends VirtualSubsystem {
                 @Override
                 public void initialize() {
                     desiredHeading = drive.getPose().getRotation();
+                    headingPID.reset(drive.getRotation().getRadians());
                 }
                 @Override
                 public void execute() {
@@ -665,7 +658,7 @@ public class Drive extends VirtualSubsystem {
                     headingSet = heading.isPresent();
                     heading.ifPresent((r) -> desiredHeading = r);
                     double turnInput = headingPID.calculate(drive.getRotation().getRadians(), desiredHeading.getRadians());
-                    turnInput = headingPID.atSetpoint() ? 0 : turnInput;
+                    turnInput = headingPID.atSetpoint() ? 0 : turnInput + headingPID.getSetpoint().velocity;
                     turnInput = MathUtil.clamp(
                         turnInput, 
                         -0.5 * DriveConstants.maxTurnRateEnvCoef.getAsDouble(), 

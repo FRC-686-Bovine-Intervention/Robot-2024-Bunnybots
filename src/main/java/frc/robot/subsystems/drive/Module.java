@@ -60,8 +60,8 @@ public class Module {
         Logger.processInputs("Inputs/Drive/Module " + config.name, inputs);
 
         angle = Rotation2d.fromRadians(MathUtil.angleModulus(inputs.turnMotor.encoder.position.plus(config.encoderOffset).in(Radians)));
-        moduleState = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) * wheelRadius.in(Meters), angle);
-        modulePosition = new SwerveModulePosition(inputs.driveMotor.encoder.position.in(Radians) * wheelRadius.in(Meters), angle);
+        moduleState = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) / DriveConstants.driveWheelGearReduction * wheelRadius.in(Meters), angle);
+        modulePosition = new SwerveModulePosition(inputs.driveMotor.encoder.position.in(Radians) / DriveConstants.driveWheelGearReduction * wheelRadius.in(Meters), angle);
 
         driveCurrentSpikeDetector.update(getDriveCurrent());
     }
@@ -78,7 +78,7 @@ public class Module {
 
         setpoint.speedMetersPerSecond *= Math.cos(turnSetpoint.minus(getAngle().getMeasure()).in(Radians));
 
-        double velocityRadPerSec = setpoint.speedMetersPerSecond / wheelRadius.in(Meters);
+        double velocityRadPerSec = setpoint.speedMetersPerSecond / wheelRadius.in(Meters) * DriveConstants.driveWheelGearReduction;
         io.setDriveVelocity(RadiansPerSecond.of(velocityRadPerSec));
     }
 

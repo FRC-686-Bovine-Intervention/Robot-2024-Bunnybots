@@ -135,9 +135,9 @@ public final class DriveConstants {
     public static final double driveSnapKd = 0;
 
 
-    public static final LinearVelocity maxDriveSpeed = MetersPerSecond.of(1);
+    public static final LinearVelocity maxDriveSpeed = MetersPerSecond.of(6);
     /**Tangential speed (m/s) = radial speed (rad/s) * radius (m)*/
-    public static final AngularVelocity maxTurnRate = RadiansPerSecond.of(maxDriveSpeed.in(MetersPerSecond) / new Translation2d(trackWidthX.divide(2), trackWidthY.divide(2)).getNorm());
+    public static final AngularVelocity maxTurnRate = RadiansPerSecond.of(maxDriveSpeed.in(MetersPerSecond) / driveBaseRadius.in(Meters));
     public static final DoubleSupplier maxDriveSpeedEnvCoef = Environment.switchVar(
         () -> 1,
         new LoggedTunableNumber("Demo Constraints/Max Translational Percentage", 0.25)
@@ -148,7 +148,7 @@ public final class DriveConstants {
     );
     /**full speed in 0.25 sec*/
     public static final double joystickSlewRateLimit = 1.0 / 0.25;
-    public static final double driveJoystickDeadbandPercent = 0.2;
+    public static final double driveJoystickDeadbandPercent = 0.1;
     public static final double driveMaxJerk = 200.0;
 
     public static final double precisionLinearMultiplier = 0.2;

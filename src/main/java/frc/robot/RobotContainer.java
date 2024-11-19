@@ -8,11 +8,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.Logger;
-
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
@@ -121,9 +121,14 @@ public class RobotContainer {
             drive.translationSubsystem.fieldRelative(joystickTranslational)
                 .withName("Driver Control Field Relative")
         );
+        // drive.rotationalSubsystem.setDefaultCommand(
+        //     drive.rotationalSubsystem.spin(driveController.rightStick.x().smoothDeadband(0.05).multiply(DriveConstants.maxTurnRate.in(RadiansPerSecond)))
+        //         .withName("Robot spin")
+        // );
     }
 
     private void configureControls() {
+        driveController.leftStickButton().onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero)));
         var flickStick = driveController.rightStick.roughRadialDeadband(0.85);
         new Trigger(() -> flickStick.magnitude() > 0 && drive.rotationalSubsystem.getCurrentCommand() == null).onTrue(
             drive.rotationalSubsystem.headingFromJoystick(
@@ -139,7 +144,6 @@ public class RobotContainer {
             )
             .withName("Flick Stick")
         );
-        Logger.recordOutput("Testing/bucket", new Pose3d());
     }
 
     private void configureNotifications() {}
@@ -166,5 +170,52 @@ public class RobotContainer {
         new AutoManager(selector);
     }
 
-    private void configureSystemCheck() {}
+    private void configureSystemCheck() {
+        SmartDashboard.putData("System Check/Drive/Spin", 
+            new Command() {
+                private final Drive.Rotational rotationalSubsystem = drive.rotationalSubsystem;
+                private final Timer timer = new Timer();
+                {
+                    addRequirements(rotationalSubsystem);
+                    setName("TEST Spin");
+                }
+                public void initialize() {
+                    timer.restart();
+                }
+                public void execute() {
+                    rotationalSubsystem.driveVelocity(Math.sin(timer.get()) * 3);
+                }
+                public void end(boolean interrupted) {
+                    timer.stop();
+                    rotationalSubsystem.stop();
+                }
+            }
+        );
+        SmartDashboard.putData("System Check/Drive/Circle", 
+            new Command() {
+                private final Drive.Translational translationSubsystem = drive.translationSubsystem;
+                private final Timer timer = new Timer();
+                {
+                    addRequirements(translationSubsystem);
+                    setName("TEST Circle");
+                }
+                public void initialize() {
+                    timer.restart();
+                }
+                public void execute() {
+                    translationSubsystem.driveVelocity(
+                        new ChassisSpeeds(
+                            Math.cos(timer.get()) * 0.01,
+                            Math.sin(timer.get()) * 0.01,
+                            0
+                        )
+                    );
+                }
+                public void end(boolean interrupted) {
+                    timer.stop();
+                    translationSubsystem.stop();
+                }
+            }
+        );
+    }
 }

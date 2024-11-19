@@ -50,25 +50,25 @@ public class ModuleIOFalcon550 implements ModuleIO {
     private final MotionMagicVelocityVoltage driveVelocity = 
         new MotionMagicVelocityVoltage(0)
         .withAcceleration(0)
-        .withOverrideBrakeDurNeutral(true)
+        // .withOverrideBrakeDurNeutral(true)
     ;
     private final StaticBrake driveBrake = new StaticBrake();
     private final NeutralOut driveNeutral = new NeutralOut();
 
 
-    private static final LoggedTunableNumber driveProfilekA = new LoggedTunableNumber("Drive/Module/Drive/PID/Profile/kA", 50);
+    private static final LoggedTunableNumber driveProfilekA = new LoggedTunableNumber("Drive/Module/Drive/PID/Profile/kA", 5000);
     private static final LoggedTunablePID drivePIDConsts = new LoggedTunablePID(
         "Drive/Module/Drive/PID",
-        5*2*Math.PI,
+        0.025928*2*Math.PI,
         0*2*Math.PI,
         0*2*Math.PI
     );
     private static final LoggedTunableFF driveFFConsts = new LoggedTunableFF(
         "Drive/Module/Drive/FF",
-        0.18507*2*Math.PI,
+        0.059813*2*Math.PI,
         0*2*Math.PI,
-        0.08005*2*Math.PI,
-        0*2*Math.PI
+        0.017472*2*Math.PI,
+        0.0015521*2*Math.PI
     );
     private static final LoggedTunablePID turnPIDConsts = new LoggedTunablePID(
         "Drive/Module/Turn/PID",
@@ -89,9 +89,12 @@ public class ModuleIOFalcon550 implements ModuleIO {
             .withNeutralMode(NeutralModeValue.Coast)
             .withDutyCycleNeutralDeadband(0)
         ;
-        driveConfig.OpenLoopRamps
-            .withVoltageOpenLoopRampPeriod(Seconds.of(0.1875))
+        driveConfig.ClosedLoopRamps
+            .withVoltageClosedLoopRampPeriod(Seconds.of(0.075))
         ;
+        // driveConfig.OpenLoopRamps
+        //     .withVoltageOpenLoopRampPeriod(Seconds.of(0.1875))
+        // ;
         driveConfig.CurrentLimits
             .withSupplyCurrentLimit(Amps.of(55))
             .withSupplyCurrentLowerLimit(Amps.of(55))
