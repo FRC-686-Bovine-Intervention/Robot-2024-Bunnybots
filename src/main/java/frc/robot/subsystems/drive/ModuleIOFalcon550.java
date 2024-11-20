@@ -3,6 +3,7 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -25,9 +26,10 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.constants.CANDevices;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
@@ -173,17 +175,17 @@ public class ModuleIOFalcon550 implements ModuleIO {
     //     // turnRelativeEncoder.setPosition(turnAbsoluteEncoder.getPosition());
     // }
 
-    public void setDriveVoltage(Voltage volts) {
-        driveMotor.setControl(driveVolts.withOutput(volts));
+    public void setDriveVoltage(Measure<VoltageUnit> volts) {
+        driveMotor.setControl(driveVolts.withOutput(volts.in(Volts)));
     }
-    public void setDriveVelocity(AngularVelocity velocity) {
-        driveMotor.setControl(driveVelocity.withVelocity(velocity));
+    public void setDriveVelocity(Measure<AngularVelocityUnit> velocity) {
+        driveMotor.setControl(driveVelocity.withVelocity(velocity.in(RotationsPerSecond)));
     }
 
-    public void setTurnVoltage(Voltage volts) {
+    public void setTurnVoltage(Measure<VoltageUnit> volts) {
         turnMotor.setVoltage(volts.in(Volts));
     }
-    public void setTurnAngle(Angle angle) {
+    public void setTurnAngle(Measure<AngleUnit> angle) {
         turnMotor.setVoltage(
             turnPID.calculate(
                 turnAbsoluteEncoder.getPosition(),

@@ -38,7 +38,7 @@ public class AutoCommons {
     }
 
     public static Command followPathFlipped(PathPlannerPath path, Drive drive) {
-        return new FollowPathCommand(path, drive::getPose, drive::getRobotRelativeSpeeds, drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive.translationSubsystem, drive.rotationalSubsystem)
+        return new FollowPathCommand(path, drive::getPose, drive::getRobotMeasuredSpeeds, drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive.translationSubsystem, drive.rotationalSubsystem)
             .deadlineFor(Commands.startEnd(
                 () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)
@@ -46,7 +46,7 @@ public class AutoCommons {
         ;
     }
     public static Command followPathFlipped(PathPlannerPath path, Drive.Translational drive) {
-        return new FollowPathCommand(path, drive.drive::getPose, drive.drive::getRobotRelativeSpeeds, drive.drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive)
+        return new FollowPathCommand(path, drive.drive::getPose, drive.drive::getRobotMeasuredSpeeds, drive.drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive)
             .deadlineFor(Commands.startEnd(
                 () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)

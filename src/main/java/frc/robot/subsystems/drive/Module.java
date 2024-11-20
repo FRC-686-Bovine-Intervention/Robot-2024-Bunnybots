@@ -10,6 +10,7 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
@@ -22,10 +23,18 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.TimeUnit;
+import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutDistance;
+import edu.wpi.first.units.measure.MutLinearVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.util.CurrentSpikeDetector;
@@ -39,9 +48,13 @@ public class Module {
     private static final LoggedTunableMeasure<DistanceUnit> wheelRadius = new LoggedTunableMeasure<>("Drive/Module/WheelRadius", DriveConstants.wheelRadius, Inches);
     
     private Rotation2d angle = Rotation2d.kZero;
-    private SwerveModuleState moduleState = new SwerveModuleState();
-    private SwerveModulePosition modulePosition = new SwerveModulePosition();
-    private SwerveModulePosition prevModulePosition = new SwerveModulePosition();
+    private final MutAngle wheelAngularPosition = Radians.mutable(0);
+    private final MutAngularVelocity wheelAngularVelocity = RadiansPerSecond.mutable(0);
+    private final MutDistance wheelLinearPosition = Meters.mutable(0);
+    private final MutLinearVelocity wheelLinearVelocity = MetersPerSecond.mutable(0);
+    private final SwerveModuleState moduleState = new SwerveModuleState();
+    private final SwerveModulePosition modulePosition = new SwerveModulePosition();
+    private final SwerveModulePosition prevModulePosition = new SwerveModulePosition();
 
     private static final LoggedTunableMeasure<CurrentUnit> currentSpikeThreshold = new LoggedTunableMeasure<>("Drive/Current Spike Threshold", Amps.of(0)); 
     private static final LoggedTunableMeasure<TimeUnit> currentSpikeTime = new LoggedTunableMeasure<>("Drive/Current Spike Time", Seconds.of(0));
@@ -54,14 +67,23 @@ public class Module {
 
     /** Updates inputs and checks tunable numbers. */
     public void periodic() {
-        prevModulePosition = getModulePosition();
+        prevModulePosition.distanceMeters = modulePosition.distanceMeters;
+        prevModulePosition.angle = modulePosition.angle;
 
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Drive/Module " + config.name, inputs);
 
         angle = Rotation2d.fromRadians(MathUtil.angleModulus(inputs.turnMotor.encoder.position.plus(config.encoderOffset).in(Radians)));
-        moduleState = new SwerveModuleState(inputs.driveMotor.encoder.velocity.in(RadiansPerSecond) / DriveConstants.driveWheelGearReduction * wheelRadius.in(Meters), angle);
-        modulePosition = new SwerveModulePosition(inputs.driveMotor.encoder.position.in(Radians) / DriveConstants.driveWheelGearReduction * wheelRadius.in(Meters), angle);
+        moduleState.angle = angle;
+        modulePosition.angle = angle;
+
+        wheelAngularPosition.mut_replace(inputs.driveMotor.encoder.position.divide(DriveConstants.driveWheelGearReduction));
+        wheelAngularVelocity.mut_replace(inputs.driveMotor.encoder.velocity.divide(DriveConstants.driveWheelGearReduction));
+        wheelLinearPosition.mut_replace(wheelAngularPosition.in(Radians) * wheelRadius.in(Meters), Meters);
+        wheelLinearVelocity.mut_replace(wheelAngularVelocity.in(RadiansPerSecond) * wheelRadius.in(Meters), MetersPerSecond);
+
+        modulePosition.distanceMeters = wheelLinearPosition.in(Meters);
+        moduleState.speedMetersPerSecond = wheelLinearVelocity.in(MetersPerSecond);
 
         driveCurrentSpikeDetector.update(getDriveCurrent());
     }
@@ -86,7 +108,7 @@ public class Module {
      * Runs the module with the specified voltage while controlling to zero degrees.
      * Must be called periodically.
      */
-    public void runVoltage(Voltage volts, Rotation2d moduleAngle) {
+    public void runVoltage(Measure<VoltageUnit> volts, Rotation2d moduleAngle) {
         io.setTurnAngle(moduleAngle.getMeasure().minus(config.encoderOffset));
         io.setDriveVoltage(volts);
     }
@@ -108,8 +130,25 @@ public class Module {
     }
 
     /** Returns the current drive position of the module in radians. */
-    public Angle getAngularPosition() {
-        return inputs.driveMotor.encoder.position;
+    public Angle getWheelAngularPosition() {
+        return wheelAngularPosition;
+    }
+    /** Returns the drive velocity in radians/sec. */
+    public AngularVelocity getWheelAngularVelocity() {
+        return wheelAngularVelocity;
+    }
+    /** Returns the current drive position of the module in radians. */
+    public Distance getWheelLinearPosition() {
+        return wheelLinearPosition;
+    }
+    /** Returns the drive velocity in radians/sec. */
+    public LinearVelocity getWheelLinearVelocity() {
+        return wheelLinearVelocity;
+    }
+
+    /** Returns the drive velocity in radians/sec. */
+    public Voltage getAppliedVoltage() {
+        return inputs.driveMotor.motor.appliedVoltage;
     }
 
     public Current getDriveCurrent() {
@@ -132,22 +171,12 @@ public class Module {
 
     /** Returns change in module position since last tick */
     public SwerveModulePosition getModulePositionDelta() {
-        var currentModulePosition = getModulePosition();
         return new SwerveModulePosition(
-            currentModulePosition.distanceMeters - prevModulePosition.distanceMeters,
-            currentModulePosition.angle
+            modulePosition.distanceMeters - prevModulePosition.distanceMeters,
+            angle
         );
     }
-
-    /** Returns the drive velocity in radians/sec. */
-    public AngularVelocity getAngularVelocity() {
-        return inputs.driveMotor.encoder.velocity;
-    }
-    /** Returns the drive velocity in radians/sec. */
-    public Voltage getAppliedVoltage() {
-        return inputs.driveMotor.motor.appliedVoltage;
-    }
-
+    
     /** Zeros module encoders. */
     // public void zeroEncoders() {
     //     io.zeroEncoders();
