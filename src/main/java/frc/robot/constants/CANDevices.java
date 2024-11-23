@@ -20,6 +20,10 @@ public final class CANDevices {
     public static final int armMotorID = 0;
     public static final int armEncoderID = 0;
 
+    // Puncher
+    public static final int leftSolenoidChannel = 0;
+    public static final int rightSolenoidChannel = 1;
+
     // Misc
     public static final int pigeonCanID = 0;
 

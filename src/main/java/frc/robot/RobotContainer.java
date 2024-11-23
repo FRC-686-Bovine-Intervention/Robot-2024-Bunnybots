@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
@@ -26,6 +27,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
+import frc.robot.subsystems.puncher.Puncher;
+import frc.robot.subsystems.puncher.PuncherIO;
+import frc.robot.subsystems.puncher.PuncherIOReal;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.util.Alert;
 import frc.util.Alert.AlertType;
@@ -39,6 +43,7 @@ public class RobotContainer {
     public final Arm arm;
     public final ApriltagVision apriltagVision;
     public final ManualOverrides manualOverrides;
+    public final Puncher puncher;
 
     // Controllers
     private final XboxController driveController = new XboxController(0);
@@ -62,6 +67,7 @@ public class RobotContainer {
                 );
                 apriltagVision = new ApriltagVision();
                 arm = new Arm(new ArmIOFalcon(), buttonBoard.povUp(), buttonBoard.povDown());
+                puncher = new Puncher(new PuncherIOReal());
             break;
             case SIM:
                 drive = new Drive(
@@ -72,6 +78,7 @@ public class RobotContainer {
                     new ModuleIOSim()
                 );
                 apriltagVision = new ApriltagVision();
+                puncher = new Puncher(new PuncherIO() {});
                 arm = new Arm(new ArmIOSim(), () -> false, () -> false);
             break;
             default:
@@ -85,11 +92,13 @@ public class RobotContainer {
                 );
                 apriltagVision = new ApriltagVision();
                 arm = new Arm(new ArmIO() {}, () -> false, () -> false);
+                puncher = new Puncher(new PuncherIO() {});
             break;
         }
         manualOverrides = new ManualOverrides();
 
         drive.structureRoot.addChild(arm.mech.addChild(arm.uprightGamepiecePose));
+        drive.structureRoot.addChild(puncher.mech);
 
         driveJoystick = driveController.leftStick
             .smoothRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
@@ -127,6 +136,8 @@ public class RobotContainer {
             drive.translationSubsystem.fieldRelative(joystickTranslational)
                 .withName("Driver Control Field Relative")
         );
+
+        puncher.setDefaultCommand(puncher.retract());
     }
 
     private void configureControls() {}
@@ -155,5 +166,8 @@ public class RobotContainer {
         new AutoManager(selector);
     }
 
-    private void configureSystemCheck() {}
+    private void configureSystemCheck() {
+        SmartDashboard.putData("System Check/Puncher/Retract", puncher.getDefaultCommand());
+        SmartDashboard.putData("System Check/Puncher/Punch", puncher.extend());
+    }
 }
