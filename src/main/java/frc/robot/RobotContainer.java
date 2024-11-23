@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,6 +29,7 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.util.Alert;
@@ -216,6 +218,17 @@ public class RobotContainer {
                     translationSubsystem.stop();
                 }
             }
+        );
+        
+        SmartDashboard.putData("Wheel Calibration", Commands.defer(() -> 
+            new WheelRadiusCalibration(
+                drive,
+                (int)WheelRadiusCalibration.MAX_SAMPLES.get(),
+                WheelRadiusCalibration.SAMPLE_PERIOD.get(),
+                WheelRadiusCalibration.VOLTAGE_RAMP_RATE.get(),
+                WheelRadiusCalibration.MAX_VOLTAGE.get()
+            ).withName("Wheel Calibration"),
+            Set.of(drive.translationSubsystem, drive.rotationalSubsystem))
         );
     }
 }

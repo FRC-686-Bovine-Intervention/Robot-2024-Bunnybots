@@ -238,9 +238,9 @@ public class Drive extends VirtualSubsystem {
 
     public void runSetpoints(SwerveModuleState... states) {
         setpointStates = states;
-        Logger.recordOutput("Drive/SwerveStates/Setpoints", setpointStates);
+        Logger.recordOutput("Drive/Swerve States/Setpoints", setpointStates);
         IntStream.range(0, modules.length).forEach((i) -> modules[i].runSetpoint(setpointStates[i]));
-        Logger.recordOutput("Drive/SwerveStates/Setpoints Optimized", setpointStates);
+        Logger.recordOutput("Drive/Swerve States/Setpoints Optimized", setpointStates);
     }
 
     public void runSpeeds(ChassisSpeeds chassisSpeeds) {

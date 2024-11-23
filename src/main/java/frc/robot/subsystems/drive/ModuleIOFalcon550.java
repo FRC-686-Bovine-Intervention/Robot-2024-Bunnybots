@@ -78,7 +78,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
         0*2*Math.PI,
         0*2*Math.PI
     );
-    private final PIDController turnPID = new PIDController(0, 0, 0);
+    protected final PIDController turnPID = new PIDController(0, 0, 0);
 
     public ModuleIOFalcon550(ModuleConstants config) {
         driveMotor = new TalonFX(config.driveMotorID, CANDevices.canivoreBusName);
@@ -106,7 +106,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
             .withStatorCurrentLimitEnable(true)
         ;
         driveConfig.MotionMagic
-            .withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(0))
+            .withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(driveProfilekA.get()))
             // .withMotionMagicJerk(RadiansPerSecondPerSecond.per(Second).of(1))
         ;
 
@@ -182,11 +182,14 @@ public class ModuleIOFalcon550 implements ModuleIO {
         driveMotor.setControl(driveVelocity.withVelocity(velocity.in(RotationsPerSecond)));
     }
 
+    protected void setTurnVolts(double volts) {
+        turnMotor.setVoltage(volts);
+    }
     public void setTurnVoltage(Measure<VoltageUnit> volts) {
-        turnMotor.setVoltage(volts.in(Volts));
+        setTurnVolts(volts.in(Volts));
     }
     public void setTurnAngle(Measure<AngleUnit> angle) {
-        turnMotor.setVoltage(
+        setTurnVolts(
             turnPID.calculate(
                 turnAbsoluteEncoder.getPosition(),
                 angle.in(Rotations)
