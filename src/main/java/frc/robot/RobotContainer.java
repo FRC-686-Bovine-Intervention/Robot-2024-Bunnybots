@@ -68,7 +68,7 @@ public class RobotContainer {
                         .toArray(ModuleIO[]::new)
                 );
                 apriltagVision = new ApriltagVision();
-                arm = new Arm(new ArmIOFalcon(), buttonBoard.povUp(), buttonBoard.povDown());
+                arm = new Arm(new ArmIOFalcon());
             break;
             case SIM:
                 drive = new Drive(
@@ -78,7 +78,7 @@ public class RobotContainer {
                         .toArray(ModuleIO[]::new)
                 );
                 apriltagVision = new ApriltagVision();
-                arm = new Arm(new ArmIOSim(), () -> false, () -> false);
+                arm = new Arm(new ArmIOSim());
             break;
             default:
             case REPLAY:
@@ -90,7 +90,7 @@ public class RobotContainer {
                     new ModuleIO(){}
                 );
                 apriltagVision = new ApriltagVision();
-                arm = new Arm(new ArmIO() {}, () -> false, () -> false);
+                arm = new Arm(new ArmIO(){});
             break;
         }
         manualOverrides = new ManualOverrides();
@@ -240,5 +240,9 @@ public class RobotContainer {
             ).withName("Wheel Calibration"),
             Set.of(drive.translationSubsystem, drive.rotationalSubsystem))
         );
+        SmartDashboard.putData("Arm/Coast", arm.coast());
+        SmartDashboard.putData("Arm/Voltage", arm.voltage(
+            () -> 2 * (driveController.leftTrigger.getAsDouble() - driveController.rightTrigger.getAsDouble())
+        ));
     }
 }

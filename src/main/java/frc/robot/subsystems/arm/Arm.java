@@ -6,13 +6,14 @@ package frc.robot.subsystems.arm;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -22,10 +23,12 @@ import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.util.Cooldown;
 import frc.util.LoggedInternalButton;
 import frc.util.LoggedTunableMeasure;
-import frc.util.SuppliedEdgeDetector;
+import frc.util.MathExtraUtil;
 import frc.util.robotStructure.GamepiecePose;
 import frc.util.robotStructure.Mechanism3d;
 import frc.util.robotStructure.angle.ArmMech;
@@ -65,48 +68,57 @@ public class Arm extends SubsystemBase {
         )
     );
 
-    public static final LoggedTunableMeasure<AngleUnit> setPoint1 = new LoggedTunableMeasure<>("Arm/Angles/Set Point 1", Degrees.of(0));
-    public static final LoggedTunableMeasure<AngleUnit> setPoint2 = new LoggedTunableMeasure<>("Arm/Angles/Set Point 2", Degrees.of(90));
+    public static final LoggedTunableMeasure<AngleUnit> floorSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Floor", Degrees.of(0));
+    public static final LoggedTunableMeasure<AngleUnit> puncherSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Puncher", Degrees.of(90));
     
-    private final SuppliedEdgeDetector increaseEdgeDetector;
-    private final SuppliedEdgeDetector decreaseEdgeDetector;
+    private final LoggedTunableMeasure<AngleUnit> customAngleIncrement = new LoggedTunableMeasure<>("Arm/Setpoints/Custom/Increment", Degrees.of(5));
 
-    private final MutAngle offset = Degrees.mutable(0);
-    private final Cooldown cooldown = new Cooldown(0.25);
-    private final LoggedTunableMeasure<AngleUnit> offsetAdjustment = new LoggedTunableMeasure<>("Arm/Offset Adjustment", Degrees.of(0));
-    private final LoggedTunableMeasure<AngleUnit> variablePosAdjustment = new LoggedTunableMeasure<>("Arm/Variable Position Adjustment", Degrees.of(0));
-
-    public static final LoggedTunableMeasure<AngleUnit> tolerance = new LoggedTunableMeasure<>("Arm/Tolerance", Degrees.of(2));
     public final LoggedInternalButton atPos = new LoggedInternalButton("Arm/At Position");
 
-    public Arm(ArmIO io, BooleanSupplier increaseRuntimeOffset, BooleanSupplier decreaseRuntimeOffset) {
+    public Arm(ArmIO io) {
         System.out.println("[Init Arm] Instantiating Arm");
         this.io = io;
         System.out.println("[Init Arm] Arm IO: " + this.io.getClass().getSimpleName());
         SmartDashboard.putData("Subsystems/Arm", this);
-        this.increaseEdgeDetector = new SuppliedEdgeDetector(increaseRuntimeOffset);
-        this.decreaseEdgeDetector = new SuppliedEdgeDetector(decreaseRuntimeOffset);
+
+        var routine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> {
+                    Logger.recordOutput("SysID/Arm/State", state.toString());
+                }
+            ),
+            new SysIdRoutine.Mechanism(
+                (volts) -> {
+                    io.setVoltage(volts);
+                },
+                (log) -> {
+                    Logger.recordOutput("SysID/Arm/Position", inputs.encoder.position);
+                    Logger.recordOutput("SysID/Arm/Velocity", inputs.encoder.velocity);
+                    Logger.recordOutput("SysID/Arm/Voltage", inputs.motor.appliedVoltage);
+                    // Arrays.stream(modules).forEach((module) -> {
+                    //     Logger.recordOutput("SysID/Arm/" + module.config.name + "/Position", module.getWheelAngularPosition());
+                    //     Logger.recordOutput("SysID/Ar,/" + module.config.name + "/Velocity", module.getWheelAngularVelocity());
+                    //     Logger.recordOutput("SysID/Drive/" + module.config.name + "/Voltage", module.getAppliedVoltage());
+                    // });
+                },
+                this
+            )
+        );
+
+        SmartDashboard.putData("SysID/Arm/Quasi Forward", routine.quasistatic(Direction.kForward).withName("SysID Quasistatic Forward").asProxy());
+        SmartDashboard.putData("SysID/Arm/Quasi Reverse", routine.quasistatic(Direction.kReverse).withName("SysID Quasistatic Reverse").asProxy());
+        SmartDashboard.putData("SysID/Arm/Dynamic Forward", routine.dynamic(Direction.kForward).withName("SysID Dynamic Forward").asProxy());
+        SmartDashboard.putData("SysID/Arm/Dynamic Reverse", routine.dynamic(Direction.kReverse).withName("SysID Dynamic Reverse").asProxy());
     }
 
     @Override
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Arm", inputs);
-        if (cooldown.hasExpired()) {
-            if (increaseEdgeDetector.risingEdge()) {
-                cooldown.reset();
-                offset.mut_acc(offsetAdjustment.in(Degrees));
-            }
-            if(decreaseEdgeDetector.risingEdge()) {
-                cooldown.reset();
-                offset.mut_acc(-offsetAdjustment.in(Degrees));
-            }
-        }
 
-        if(increaseEdgeDetector.risingEdge() || decreaseEdgeDetector.risingEdge()) {
-            io.setOffset(offset);
-        }
-        
         mech.log(Mechanism3d.KEY + "/Arm");
     }
 
@@ -125,12 +137,12 @@ public class Arm extends SubsystemBase {
 
             @Override
             public void execute() {
-                atPos.setPressed(MathUtil.isNear(
-                    posSupplier.get().in(Degrees),
-                    inputs.encoder.position.in(Degrees),
-                    tolerance.in(Degrees)
+                atPos.setPressed(MathExtraUtil.isNear(
+                    posSupplier.get(),
+                    inputs.encoder.position,
+                    ArmConstants.tolerance.get()
                 ));
-                io.setPos(posSupplier.get()); 
+                io.setAngle(posSupplier.get()); 
             }
 
             @Override
@@ -140,26 +152,40 @@ public class Arm extends SubsystemBase {
         };
     }
 
+    public Command floor() {
+        return genCommand(
+            "Floor",
+            floorSetpoint
+        );
+    }
+
+    public Command puncher() {
+        return genCommand(
+            "Puncher",
+            puncherSetpoint
+        );
+    }
+
     public Command customVariable(BooleanSupplier increase, BooleanSupplier decrease) {
         return genCommand("Custom", new Supplier<Measure<AngleUnit>>() {
             private final MutAngle pos = Degrees.mutable(0);
             private final Cooldown cooldown = new Cooldown(0.125);
+            
             public Measure<AngleUnit> get() {
-                    Logger.recordOutput("Custom Shoot/Pivot Angle", pos);
-                    if(!cooldown.hasExpired()) {
-                        return pos;
-                    }
-                    if(increase.getAsBoolean()) {
-                        cooldown.reset();
-                        pos.mut_acc(variablePosAdjustment.in(Degrees));
-                    }
-                    if(decrease.getAsBoolean() && pos.gt(Degrees.zero())) {
-                        cooldown.reset();
-                        pos.mut_acc(-variablePosAdjustment.in(Degrees));
-                    }
-
+                if(!cooldown.hasExpired()) {
                     return pos;
                 }
+                if(increase.getAsBoolean()) {
+                    cooldown.reset();
+                    pos.mut_acc(customAngleIncrement.in(Degrees));
+                }
+                if(decrease.getAsBoolean() && pos.gt(Degrees.zero())) {
+                    cooldown.reset();
+                    pos.mut_acc(-customAngleIncrement.in(Degrees));
+                }
+                Logger.recordOutput("Arm/Custom Setpoint", pos);
+                return pos;
+            }
         });
     }
 
@@ -174,6 +200,36 @@ public class Arm extends SubsystemBase {
             @Override
             public void initialize() {
                 io.setCoast(true);
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+                io.setCoast(false);
+            }
+
+            @Override
+            public boolean runsWhenDisabled() {
+                return true;
+            }
+        };
+    }
+
+    public Command voltage(DoubleSupplier voltage) {
+        var subsystem = this;
+        return new Command() {
+            {
+                setName("Voltage");
+                addRequirements(subsystem);
+            }
+
+            @Override
+            public void initialize() {
+
+            }
+
+            @Override
+            public void execute() {
+                io.setVoltage(Volts.of(voltage.getAsDouble()));
             }
 
             @Override

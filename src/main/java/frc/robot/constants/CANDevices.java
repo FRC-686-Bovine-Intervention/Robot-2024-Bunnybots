@@ -34,11 +34,11 @@ public final class CANDevices {
     public static final int backRightTurnMotorID   = 4;
 
     // Arm
-    public static final int armMotorID = 0;
-    public static final int armEncoderID = 0;
+    public static final int armMotorID = 5;
+    public static final int armEncoderID = 5;
 
     // Misc
     public static final int pigeonCanID = 0;
 
-    public static final double minCanUpdateRate = 4.0;
+    // public static final double minCanUpdateRate = 4.0;
 }

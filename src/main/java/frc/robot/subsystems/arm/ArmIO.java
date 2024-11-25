@@ -19,13 +19,9 @@ public interface ArmIO {
 
     public default void setVoltage(Measure<VoltageUnit> volts) {}
 
-    public default void setPos(Measure<AngleUnit> pos) {}
-
-    public default void setOffset(Measure<AngleUnit> offset) {}
+    public default void setAngle(Measure<AngleUnit> pos) {}
 
     public default void setCoast(boolean coast) {}
 
     public default void stop() {}
-
-    public default void zero() {}
 }
