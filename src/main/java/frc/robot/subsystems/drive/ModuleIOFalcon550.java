@@ -31,7 +31,6 @@ import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.constants.CANDevices;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.util.LoggedTunableNumber;
 import frc.util.TalonFXTempAlerts;
@@ -81,8 +80,8 @@ public class ModuleIOFalcon550 implements ModuleIO {
     protected final PIDController turnPID = new PIDController(0, 0, 0);
 
     public ModuleIOFalcon550(ModuleConstants config) {
-        driveMotor = new TalonFX(config.driveMotorID, CANDevices.canivoreBusName);
-        turnMotor = new SparkMax(config.turnMotorID, MotorType.kBrushless);
+        driveMotor = config.driveMotorID.talonFX();
+        turnMotor = config.turnMotorID.sparkMax(MotorType.kBrushless);
         turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder();
 
         var driveConfig = new TalonFXConfiguration();

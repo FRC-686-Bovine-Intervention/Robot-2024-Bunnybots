@@ -34,7 +34,13 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOTalon;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
+import frc.robot.subsystems.puncher.Puncher;
+import frc.robot.subsystems.puncher.PuncherIO;
+import frc.robot.subsystems.puncher.PuncherIOSolenoid;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.util.Alert;
 import frc.util.Alert.AlertType;
@@ -46,6 +52,8 @@ public class RobotContainer {
     // Subsystems
     public final Drive drive;
     public final Arm arm;
+    public final Intake intake;
+    public final Puncher puncher;
     public final ApriltagVision apriltagVision;
     public final ManualOverrides manualOverrides;
 
@@ -69,6 +77,8 @@ public class RobotContainer {
                 );
                 apriltagVision = new ApriltagVision();
                 arm = new Arm(new ArmIOFalcon());
+                intake = new Intake(new IntakeIOTalon());
+                puncher = new Puncher(new PuncherIOSolenoid());
             break;
             case SIM:
                 drive = new Drive(
@@ -79,6 +89,8 @@ public class RobotContainer {
                 );
                 apriltagVision = new ApriltagVision();
                 arm = new Arm(new ArmIOSim());
+                intake = new Intake(new IntakeIO() {});
+                puncher = new Puncher(new PuncherIO() {});
             break;
             default:
             case REPLAY:
@@ -91,11 +103,20 @@ public class RobotContainer {
                 );
                 apriltagVision = new ApriltagVision();
                 arm = new Arm(new ArmIO(){});
+                intake = new Intake(new IntakeIO() {});
+                puncher = new Puncher(new PuncherIO() {});
             break;
         }
         manualOverrides = new ManualOverrides();
 
-        drive.structureRoot.addChild(arm.mech.addChild(arm.uprightGamepiecePose));
+        drive.structureRoot
+            .addChild(arm.mech
+                .addChild(intake.gamepiecePose)
+            )
+            .addChild(puncher.mech
+                .addChild(puncher.gamepiecePunch)
+            )
+        ;
 
         driveJoystick = driveController.leftStick
             .roughRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
@@ -137,6 +158,15 @@ public class RobotContainer {
         //     drive.rotationalSubsystem.spin(driveController.rightStick.x().smoothDeadband(0.05).multiply(DriveConstants.maxTurnRate.in(RadiansPerSecond)))
         //         .withName("Robot spin")
         // );
+        arm.setDefaultCommand(
+            arm.puncher()
+        );
+        intake.setDefaultCommand(
+            intake.idle()
+        );
+        puncher.setDefaultCommand(
+            puncher.retract()
+        );
     }
 
     private void configureControls() {
@@ -156,6 +186,27 @@ public class RobotContainer {
             )
             .withName("Flick Stick")
         );
+
+
+        driveController.a().toggleOnTrue(
+            Commands.parallel(
+                arm.floor(),
+                intake.intake()
+            )
+            .until(intake.hasBucket)
+        );
+        driveController.x().whileTrue(
+            Commands.parallel(
+                // arm.puncher(),
+                intake.eject(),
+                puncher.punch()
+            )
+        );
+
+        SmartDashboard.putData("Arm/Coast", arm.coast());
+        SmartDashboard.putData("Arm/Voltage", arm.voltage(
+            () -> 2 * (driveController.leftTrigger.getAsDouble() - driveController.rightTrigger.getAsDouble())
+        ));
     }
 
     private void configureNotifications() {}
@@ -183,6 +234,16 @@ public class RobotContainer {
     }
 
     private void configureSystemCheck() {
+        SmartDashboard.putData("System Check/Arm/Puncher", arm.getDefaultCommand());
+        SmartDashboard.putData("System Check/Arm/Floor", arm.floor());
+        
+        SmartDashboard.putData("System Check/Intake/Hold", intake.getDefaultCommand());
+        SmartDashboard.putData("System Check/Intake/Intake", intake.intake());
+        SmartDashboard.putData("System Check/Intake/Eject", intake.eject());
+        
+        SmartDashboard.putData("System Check/Puncher/Reject", puncher.getDefaultCommand());
+        SmartDashboard.putData("System Check/Puncher/Punch", puncher.punch());
+
         SmartDashboard.putData("System Check/Drive/Spin", 
             new Command() {
                 private final Drive.Rotational rotationalSubsystem = drive.rotationalSubsystem;
@@ -240,9 +301,5 @@ public class RobotContainer {
             ).withName("Wheel Calibration"),
             Set.of(drive.translationSubsystem, drive.rotationalSubsystem))
         );
-        SmartDashboard.putData("Arm/Coast", arm.coast());
-        SmartDashboard.putData("Arm/Voltage", arm.voltage(
-            () -> 2 * (driveController.leftTrigger.getAsDouble() - driveController.rightTrigger.getAsDouble())
-        ));
     }
 }

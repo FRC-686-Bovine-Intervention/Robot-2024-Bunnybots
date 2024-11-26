@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.Robot;
+import frc.robot.constants.HardwareDevices;
 import frc.util.VirtualSubsystem;
 import frc.util.led.animation.AllianceColorAnimation;
 import frc.util.led.animation.AutonomousFinishedAnimation;
@@ -25,21 +26,7 @@ public class Leds extends VirtualSubsystem {
 
     public Leds() {
         System.out.println("[Init Leds] Instantiating Leds");
-        // if(RobotType.getMode() == Mode.REAL) {
-            var addressableStrip = new AddressableStrip(0, 57);
-            hardwareStrip = addressableStrip;
-        // } else {
-        //     hardwareStrip = new HardwareStrip() {
-        //         @Override
-        //         public int getLength() {
-        //             return 0;
-        //         }
-        //         @Override
-        //         public void setLED(int ledIndex, Color color) {}
-        //         @Override
-        //         public void refresh() {}
-        //     };
-        // }
+        hardwareStrip = new AddressableStrip(HardwareDevices.ledPort, 57);
 
         var rightStrip = hardwareStrip.substrip(0, 19);
         var backStrip = hardwareStrip.substrip(19, 38);

@@ -8,13 +8,14 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.util.hardwareID.RIOPort;
 
 public class AddressableStrip implements HardwareStrip {
     private final AddressableLED strip;
     private final AddressableLEDBuffer buffer;
 
-    public AddressableStrip(int PWMPort, int length) {
-        this.strip = new AddressableLED(PWMPort);
+    public AddressableStrip(RIOPort port, int length) {
+        this.strip = port.addressableLED();
         this.buffer = new AddressableLEDBuffer(length);
         this.strip.setLength(this.buffer.getLength());
         this.strip.setData(this.buffer);

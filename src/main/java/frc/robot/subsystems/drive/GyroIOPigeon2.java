@@ -10,12 +10,12 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
-import frc.robot.constants.CANDevices;
+import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
 
 /** IO implementation for Pigeon2 */
 public class GyroIOPigeon2 implements GyroIO {
-  private final Pigeon2 pigeon = new Pigeon2(CANDevices.pigeonCanID, CANDevices.canivoreBusName);
+  private final Pigeon2 pigeon = HardwareDevices.pigeonID.pigeon2();
 
   public GyroIOPigeon2() {
     var config = new Pigeon2Configuration();

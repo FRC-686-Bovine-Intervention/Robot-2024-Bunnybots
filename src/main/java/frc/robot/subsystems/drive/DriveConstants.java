@@ -26,12 +26,13 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearVelocity;
-import frc.robot.constants.CANDevices;
+import frc.robot.constants.HardwareDevices;
 import frc.util.Environment;
 import frc.util.GearRatio;
 import frc.util.GearRatio.Wheel;
 import frc.util.LoggedTunableNumber;
 import frc.util.MathExtraUtil;
+import frc.util.hardwareID.CANDevice;
 
 public final class DriveConstants {
     public static final double odometryLoopFrequencyHz = 100;
@@ -44,13 +45,13 @@ public final class DriveConstants {
 
     public static class ModuleConstants {
         public final String name;
-        public final int driveMotorID;
-        public final int turnMotorID;
+        public final CANDevice driveMotorID;
+        public final CANDevice turnMotorID;
         public final InvertedValue driveInverted;
         public final Angle encoderOffset;
         public final Translation2d moduleTranslation;
         public final Vector<N2> positiveRotVec;
-        ModuleConstants(String name, int driveMotorID, int turnMotorID, InvertedValue driveInverted, Angle cancoderOffset, Translation2d moduleTranslation) {
+        ModuleConstants(String name, CANDevice driveMotorID, CANDevice turnMotorID, InvertedValue driveInverted, Angle cancoderOffset, Translation2d moduleTranslation) {
             this.name = name;
             this.driveMotorID = driveMotorID;
             this.turnMotorID = turnMotorID;
@@ -64,7 +65,7 @@ public final class DriveConstants {
     public static final ModuleConstants[] moduleConstants = {
         new ModuleConstants(
             "Front Left",
-            CANDevices.frontLeftDriveMotorID, CANDevices.frontLeftTurnMotorID,
+            HardwareDevices.frontLeftDriveMotorID, HardwareDevices.frontLeftTurnMotorID,
             InvertedValue.Clockwise_Positive,
             Rotations.of(0.25),
             new Translation2d(
@@ -74,7 +75,7 @@ public final class DriveConstants {
         ),
         new ModuleConstants(
             "Front Right",
-            CANDevices.frontRightDriveMotorID, CANDevices.frontRightTurnMotorID,
+            HardwareDevices.frontRightDriveMotorID, HardwareDevices.frontRightTurnMotorID,
             InvertedValue.CounterClockwise_Positive,
             Rotations.of(0),
             new Translation2d(
@@ -84,7 +85,7 @@ public final class DriveConstants {
         ),
         new ModuleConstants(
             "Back Left",
-            CANDevices.backLeftDriveMotorID, CANDevices.backLeftTurnMotorID,
+            HardwareDevices.backLeftDriveMotorID, HardwareDevices.backLeftTurnMotorID,
             InvertedValue.CounterClockwise_Positive,
             Rotations.of(0.5),
             new Translation2d(
@@ -94,7 +95,7 @@ public final class DriveConstants {
         ),
         new ModuleConstants(
             "Back Right",
-            CANDevices.backRightDriveMotorID, CANDevices.backRightTurnMotorID,
+            HardwareDevices.backRightDriveMotorID, HardwareDevices.backRightTurnMotorID,
             InvertedValue.Clockwise_Positive,
             Rotations.of(0.75),
             new Translation2d(

@@ -13,7 +13,7 @@ import edu.wpi.first.units.measure.MomentOfInertia;
 import frc.util.GearRatio;
 import frc.util.LoggedTunableMeasure;
 
-public class ArmConstants {
+public final class ArmConstants {
     public static final Frequency MotorSignalFrequency = Hertz.of(50);
 
     public static final GearRatio motorToMechanismRatio = new GearRatio()

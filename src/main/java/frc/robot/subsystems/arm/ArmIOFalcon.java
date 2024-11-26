@@ -28,14 +28,14 @@ import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.VoltageUnit;
-import frc.robot.constants.CANDevices;
+import frc.robot.constants.HardwareDevices;
 import frc.util.LoggedTunableMeasure;
 import frc.util.loggerUtil.LoggedTunableFF;
 import frc.util.loggerUtil.LoggedTunablePID;
 
 public class ArmIOFalcon implements ArmIO {
-    protected final TalonFX motor = new TalonFX(CANDevices.armMotorID, CANDevices.canivoreBusName);
-    protected final CANcoder encoder = new CANcoder(CANDevices.armEncoderID, CANDevices.canivoreBusName);
+    protected final TalonFX motor = HardwareDevices.armMotorID.talonFX();
+    protected final CANcoder encoder = HardwareDevices.armEncoderID.cancoder();
     
     private final LoggedTunableMeasure<AngularVelocityUnit> profilekV = new LoggedTunableMeasure<>("Arm/Falcon/PID/Profile/kV", RadiansPerSecond.of(0));
     private final LoggedTunableMeasure<AngularAccelerationUnit> profilekA = new LoggedTunableMeasure<>("Arm/Falcon/PID/Profile/kA", RadiansPerSecondPerSecond.of(0));
