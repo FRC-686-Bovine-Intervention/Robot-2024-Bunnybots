@@ -1,12 +1,22 @@
 package frc.robot.subsystems.claw;
 
-public class ClawIO {
-    public static class ManipulatorIOInputs {
-        public double manipAppliedVolts = 0.0;
-        public double manipCurrentAmps = 0.0;
+import org.littletonrobotics.junction.AutoLog;
+
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.VoltageUnit;
+import frc.robot.util.loggerUtil.LoggedMotor;
+
+public interface ClawIO {
+    @AutoLog
+    public static class ClawIOInputs {
+        LoggedMotor motor = new LoggedMotor();
     }
 
-    public default void updateInputs(ManipulatorIOInputs inputs) {}
+    public default void updateInputs(ClawIOInputs inputs) {}
 
-    public default void setVoltage(double volts) {}
+    public default void setMotorVoltage(Measure<VoltageUnit> volts) {}
+
+    public default void open() {}
+
+    public default void close() {}
 }

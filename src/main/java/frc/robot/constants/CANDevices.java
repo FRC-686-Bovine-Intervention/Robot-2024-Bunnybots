@@ -16,6 +16,10 @@ public final class CANDevices {
     public static final int backRightDriveMotorID  = 4;
     public static final int backRightTurnMotorID   = 4;
 
+    // Claw
+    public static final int clawMotorID = 0;
+    public static final int clawSolenoidChannel = 0;
+
     // Misc
     public static final int pigeonCanID = 0;
 
