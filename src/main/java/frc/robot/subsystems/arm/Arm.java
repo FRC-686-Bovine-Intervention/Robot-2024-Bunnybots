@@ -69,7 +69,7 @@ public class Arm extends SubsystemBase {
     );
 
     public static final LoggedTunableMeasure<AngleUnit> floorSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Floor", Degrees.of(0));
-    public static final LoggedTunableMeasure<AngleUnit> puncherSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Puncher", Degrees.of(90));
+    public static final LoggedTunableMeasure<AngleUnit> puncherSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Puncher", Degrees.of(95));
     
     private final LoggedTunableMeasure<AngleUnit> customAngleIncrement = new LoggedTunableMeasure<>("Arm/Setpoints/Custom/Increment", Degrees.of(5));
 
@@ -98,20 +98,15 @@ public class Arm extends SubsystemBase {
                     Logger.recordOutput("SysID/Arm/Position", inputs.encoder.position);
                     Logger.recordOutput("SysID/Arm/Velocity", inputs.encoder.velocity);
                     Logger.recordOutput("SysID/Arm/Voltage", inputs.motor.appliedVoltage);
-                    // Arrays.stream(modules).forEach((module) -> {
-                    //     Logger.recordOutput("SysID/Arm/" + module.config.name + "/Position", module.getWheelAngularPosition());
-                    //     Logger.recordOutput("SysID/Ar,/" + module.config.name + "/Velocity", module.getWheelAngularVelocity());
-                    //     Logger.recordOutput("SysID/Drive/" + module.config.name + "/Voltage", module.getAppliedVoltage());
-                    // });
                 },
                 this
             )
         );
 
-        SmartDashboard.putData("SysID/Arm/Quasi Forward", routine.quasistatic(Direction.kForward).withName("SysID Quasistatic Forward").asProxy());
-        SmartDashboard.putData("SysID/Arm/Quasi Reverse", routine.quasistatic(Direction.kReverse).withName("SysID Quasistatic Reverse").asProxy());
-        SmartDashboard.putData("SysID/Arm/Dynamic Forward", routine.dynamic(Direction.kForward).withName("SysID Dynamic Forward").asProxy());
-        SmartDashboard.putData("SysID/Arm/Dynamic Reverse", routine.dynamic(Direction.kReverse).withName("SysID Dynamic Reverse").asProxy());
+        SmartDashboard.putData("SysID/Arm/Quasi Forward", routine.quasistatic(Direction.kForward).until(() -> inputs.encoder.position.gte(ArmConstants.maxAngle)).withName("SysID Quasistatic Forward").asProxy());
+        SmartDashboard.putData("SysID/Arm/Quasi Reverse", routine.quasistatic(Direction.kReverse).until(() -> inputs.encoder.position.lte(ArmConstants.minAngle)).withName("SysID Quasistatic Reverse").asProxy());
+        SmartDashboard.putData("SysID/Arm/Dynamic Forward", routine.dynamic(Direction.kForward).until(() -> inputs.encoder.position.gte(ArmConstants.maxAngle)).withName("SysID Dynamic Forward").asProxy());
+        SmartDashboard.putData("SysID/Arm/Dynamic Reverse", routine.dynamic(Direction.kReverse).until(() -> inputs.encoder.position.lte(ArmConstants.minAngle)).withName("SysID Dynamic Reverse").asProxy());
     }
 
     @Override
@@ -119,6 +114,7 @@ public class Arm extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Arm", inputs);
 
+        mech.set(inputs.encoder.position);
         mech.log(Mechanism3d.KEY + "/Arm");
     }
 

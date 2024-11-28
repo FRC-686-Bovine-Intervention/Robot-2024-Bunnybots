@@ -11,13 +11,13 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
-import frc.util.Alert;
 import frc.util.AllianceFlipUtil;
-import frc.util.Alert.AlertType;
 import frc.util.AllianceFlipUtil.FlippedPose2d;
 
 public class AutoCommons {
@@ -82,7 +82,7 @@ public class AutoCommons {
             if(loadedPaths.containsKey(name)) {
                 return loadedPaths.get(name);
             } else {
-                if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.WARNING).set(true);
+                if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.kWarning).set(true);
                 try {
                     var path = PathPlannerPath.fromPathFile(name);
                     loadedPaths.put(name, path);

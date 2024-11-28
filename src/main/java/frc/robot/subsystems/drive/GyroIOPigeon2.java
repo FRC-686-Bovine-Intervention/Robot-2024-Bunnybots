@@ -7,9 +7,13 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.Measure;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
 
@@ -39,5 +43,10 @@ public class GyroIOPigeon2 implements GyroIO {
     inputs.yawVelocity = pigeon.getAngularVelocityZWorld().getValue();   // ccw+
     inputs.pitchVelocity = pigeon.getAngularVelocityYWorld().getValue().unaryMinus();   // up+
     inputs.rollVelocity = pigeon.getAngularVelocityXWorld().getValue().unaryMinus();   // ccw+
+  }
+
+  @Override
+  public void resetYaw(Measure<AngleUnit> yaw) {
+      pigeon.setYaw(yaw.in(Degrees));
   }
 }

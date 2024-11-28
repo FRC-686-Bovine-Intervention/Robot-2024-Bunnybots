@@ -374,6 +374,7 @@ public class Drive extends VirtualSubsystem {
 
     /** Resets the current odometry pose. */
     public void setPose(Pose2d newPose) {
+        gyroIO.resetYaw(newPose.getRotation().getMeasure());
         RobotState.getInstance().setPose(getGyroRotation(), getModulePositions(), newPose);
     }
 

@@ -27,8 +27,8 @@ public final class ArmConstants {
 
     public static final Distance length = Inches.of(0);
     public static final Angle startAngle = Degrees.of(0);
-    public static final Angle minAngle = Degrees.of(-10);
-    public static final Angle maxAngle = Degrees.of(120);
+    public static final Angle minAngle = Degrees.of(0);
+    public static final Angle maxAngle = Degrees.of(105);
     public static final MomentOfInertia momentOfInertia = KilogramSquareMeters.of(0.1);
 
     public static final LoggedTunableMeasure<AngleUnit> tolerance = new LoggedTunableMeasure<>("Arm/Tolerance", Degrees.of(2));

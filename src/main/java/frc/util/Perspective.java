@@ -13,8 +13,9 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import frc.util.Alert.AlertType;
 
 public class Perspective {
 	private Matrix<N2,N2> spectatorToField;
@@ -43,7 +44,7 @@ public class Perspective {
 		map.put("Red Alliance (-X)", negX);
 		map.put("Custom", custom);
 		chooser = new MappedSwitchableChooser<>(
-			"Perspective Type",
+			"Perspective",
 			map,
 			posY
 		);
@@ -52,7 +53,7 @@ public class Perspective {
     static {
         Logger.registerDashboardInput(new LoggedDashboardInput() {
 			private static final SuppliedEdgeDetector FMS_edge_detector = new SuppliedEdgeDetector(DriverStation::isFMSAttached);
-			private static final Alert comp_wrong_perspective_alert = new Alert("Competition Environment detected, but selected Perspective does not match the Alliance", AlertType.WARNING);
+			private static final Alert comp_wrong_perspective_alert = new Alert("Competition Environment detected, but selected Perspective does not match the Alliance", AlertType.kWarning);
             public void periodic() {
                 FMS_edge_detector.update();
 				if (FMS_edge_detector.risingEdge()) {

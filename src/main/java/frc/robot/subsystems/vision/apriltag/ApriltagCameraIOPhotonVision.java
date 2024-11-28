@@ -8,11 +8,11 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
-import frc.util.Alert;
-import frc.util.Alert.AlertType;
 
 public class ApriltagCameraIOPhotonVision implements ApriltagCameraIO {
 
@@ -27,7 +27,7 @@ public class ApriltagCameraIOPhotonVision implements ApriltagCameraIO {
         photonPoseEstimator = new PhotonPoseEstimator(FieldConstants.apriltagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, photonCam, cam.getRobotToCam());
         photonPoseEstimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
 
-        notConnectedAlert = new Alert(cam.hardwareName + " is not connected", AlertType.ERROR);
+        notConnectedAlert = new Alert(cam.hardwareName + " is not connected", AlertType.kError);
     }
 
     private final Alert notConnectedAlert;

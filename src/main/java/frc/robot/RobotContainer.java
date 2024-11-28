@@ -12,6 +12,8 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -42,8 +44,6 @@ import frc.robot.subsystems.puncher.Puncher;
 import frc.robot.subsystems.puncher.PuncherIO;
 import frc.robot.subsystems.puncher.PuncherIOSolenoid;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
-import frc.util.Alert;
-import frc.util.Alert.AlertType;
 import frc.util.controllers.ButtonBoard3x3;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
@@ -145,7 +145,7 @@ public class RobotContainer {
         configureSystemCheck();
 
         if (RobotConstants.tuningMode) {
-            new Alert("Tuning mode active, do not use in competition.", AlertType.INFO).set(true);
+            new Alert("Tuning mode active.", AlertType.kInfo).set(true);
         }
     }
 
