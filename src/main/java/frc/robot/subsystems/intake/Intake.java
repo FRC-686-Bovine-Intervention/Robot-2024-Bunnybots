@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -72,6 +73,16 @@ public class Intake extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Intake", inputs);
+
+        Logger.recordOutput("Intake/Gamepiece",
+            (hasBucket.getAsBoolean()) ? (
+                new Pose3d[]{
+                    gamepiecePose.getFieldRelative()
+                }
+            ) : (
+                new Pose3d[]{}
+            )
+        );
     }
 
     private void setClawOpen(boolean open) {

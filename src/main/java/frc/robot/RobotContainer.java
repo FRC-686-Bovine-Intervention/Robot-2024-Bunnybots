@@ -38,6 +38,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOTalon;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
 import frc.robot.subsystems.puncher.Puncher;
@@ -90,7 +91,7 @@ public class RobotContainer {
                 );
                 apriltagVision = new ApriltagVision();
                 arm = new Arm(new ArmIOSim());
-                intake = new Intake(new IntakeIO() {});
+                intake = new Intake(new IntakeIOSim());
                 puncher = new Puncher(new PuncherIO() {});
             break;
             default:

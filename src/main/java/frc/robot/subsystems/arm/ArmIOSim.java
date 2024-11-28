@@ -4,10 +4,9 @@ import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.RobotConstants;
 
@@ -18,25 +17,25 @@ public class ArmIOSim extends ArmIOFalcon {
         ArmConstants.momentOfInertia.in(KilogramSquareMeters),
         ArmConstants.length.in(Meters),
         ArmConstants.minAngle.in(Radians),
-        ArmConstants.minAngle.in(Radians),
+        ArmConstants.maxAngle.in(Radians),
         false,
         ArmConstants.startAngle.in(Radians)
     );
     
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        var simState = motor.getSimState();
+        var motorSimState = motor.getSimState();
         var encoderSimState = encoder.getSimState();
-        armSim.setInputVoltage(-simState.getMotorVoltage());
-        armSim.update(RobotConstants.dtSeconds);
+        armSim.setInputVoltage(motorSimState.getMotorVoltage());
+        armSim.update(RobotConstants.rioUpdatePeriodSecs);
 
-        var position = Rotations.convertFrom(armSim.getAngleRads(), Radians);
-        var velocity = RotationsPerSecond.convertFrom(armSim.getVelocityRadPerSec(), RadiansPerSecond);
+        var position = Radians.of(armSim.getAngleRads());
+        var velocity = RadiansPerSecond.of(armSim.getVelocityRadPerSec());
 
         encoderSimState.setRawPosition(position);
         encoderSimState.setVelocity(velocity);
 
-        simState.setSupplyVoltage(12 - simState.getSupplyCurrent() * 0.002);
+        motorSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
         super.updateInputs(inputs);
     }

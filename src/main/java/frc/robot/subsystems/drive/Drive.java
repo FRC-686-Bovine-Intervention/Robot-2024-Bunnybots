@@ -191,6 +191,7 @@ public class Drive extends VirtualSubsystem {
         }
         Logger.recordOutput("Drive/Chassis Speeds/Measured", robotMeasuredSpeeds);
         RobotState.getInstance().addDriveMeasurement(gyroAngle, getModulePositions());
+        structureRoot.setPose(getPose());
         fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(robotMeasuredSpeeds, gyroAngle);
 
         // Skid Detection
