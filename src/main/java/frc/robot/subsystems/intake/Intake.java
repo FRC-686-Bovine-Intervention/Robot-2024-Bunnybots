@@ -1,5 +1,8 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
@@ -17,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.util.LoggedTunableMeasure;
 import frc.util.robotStructure.GamepiecePose;
+import frc.util.robotStructure.angle.TurretMech;
 
 public class Intake extends SubsystemBase {
     private final IntakeIO io;
@@ -25,12 +29,35 @@ public class Intake extends SubsystemBase {
     public static final LoggedTunableMeasure<VoltageUnit> intakeVoltage = new LoggedTunableMeasure<>("Intake/Voltages/Intake", Volts.of(4));
     public static final LoggedTunableMeasure<VoltageUnit> holdVoltage = new LoggedTunableMeasure<>("Intake/Voltages/Hold", Volts.of(2));
 
+    public final TurretMech leftClaw = new TurretMech(
+        new Transform3d(
+            new Translation3d(
+                Meters.of(+0.334556),
+                Meters.of(+0.267493),
+                Meters.of(-0.102273)
+            ),
+            Rotation3d.kZero
+        )
+    );
+    public final TurretMech rightClaw = new TurretMech(
+        new Transform3d(
+            new Translation3d(
+                Meters.of(+0.334556),
+                Meters.of(-0.267493),
+                Meters.of(-0.102273)
+            ),
+            Rotation3d.kZero
+        )
+    );
+
     public final GamepiecePose gamepiecePose = new GamepiecePose(
         new Transform3d(
             new Translation3d(
-
+                Inches.of(20.750000),
+                Inches.of(0),
+                Inches.of(0.250000)
             ),
-            Rotation3d.kZero
+            new Rotation3d(Math.PI, 0, 0)
         )
     );
 
@@ -45,8 +72,24 @@ public class Intake extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Intake", inputs);
+    }
 
-
+    private void setClawOpen(boolean open) {
+        io.setOpen(open);
+        leftClaw.set(
+            (open) ? (
+                Radians.zero()
+            ) : (
+                IntakeConstants.clawMotion.unaryMinus()
+            )
+        );
+        rightClaw.set(
+            (open) ? (
+                Radians.zero()
+            ) : (
+                IntakeConstants.clawMotion
+            )
+        );
     }
 
     private Command genCommand(
@@ -63,7 +106,7 @@ public class Intake extends SubsystemBase {
 
             @Override
             public void initialize() {
-                io.setOpen(open);
+                setClawOpen(open);
             }
 
             @Override
@@ -74,7 +117,7 @@ public class Intake extends SubsystemBase {
             @Override
             public void end(boolean interrupted) {
                 io.setMotorVoltage(Volts.zero());
-                io.setOpen(false);
+                setClawOpen(false);
             }
         };
     }

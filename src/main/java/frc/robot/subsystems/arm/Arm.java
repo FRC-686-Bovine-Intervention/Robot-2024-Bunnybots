@@ -29,7 +29,6 @@ import frc.util.Cooldown;
 import frc.util.LoggedInternalButton;
 import frc.util.LoggedTunableMeasure;
 import frc.util.MathExtraUtil;
-import frc.util.robotStructure.GamepiecePose;
 import frc.util.robotStructure.Mechanism3d;
 import frc.util.robotStructure.angle.ArmMech;
 
@@ -45,26 +44,6 @@ public class Arm extends SubsystemBase {
                 Inches.of(14.250000)
             ),
             Rotation3d.kZero
-        )
-    );
-    public final GamepiecePose uprightGamepiecePose = new GamepiecePose(
-        new Transform3d(
-            new Translation3d(
-                Inches.of(20.750000),
-                Inches.of(0),
-                Inches.of(0.250000).minus(Inches.of(14.500000))
-            ),
-            Rotation3d.kZero
-        )
-    );
-    public final GamepiecePose invertedGamepiecePose = new GamepiecePose(
-        new Transform3d(
-            new Translation3d(
-                Inches.of(20.750000),
-                Inches.of(0),
-                Inches.of(0.250000)
-            ),
-            new Rotation3d(Math.PI, 0, 0)
         )
     );
 

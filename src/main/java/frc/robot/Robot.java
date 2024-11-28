@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.subsystems.leds.Leds;
 import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
+import frc.util.robotStructure.Mechanism3d;
 
 public class Robot extends LoggedRobot {
     @Override
@@ -124,6 +125,7 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().run();
         VirtualSubsystem.postCommandPeriodicAll();
         RobotState.getInstance().log();
+        Mechanism3d.logAscopeComponents();
     }
 
     @Override

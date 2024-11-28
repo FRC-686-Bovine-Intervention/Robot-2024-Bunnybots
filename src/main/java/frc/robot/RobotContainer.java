@@ -47,6 +47,7 @@ import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.util.controllers.ButtonBoard3x3;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
     // Subsystems
@@ -112,11 +113,14 @@ public class RobotContainer {
         drive.structureRoot
             .addChild(arm.mech
                 .addChild(intake.gamepiecePose)
+                .addChild(intake.leftClaw)
+                .addChild(intake.rightClaw)
             )
             .addChild(puncher.mech
                 .addChild(puncher.gamepiecePunch)
             )
         ;
+        Mechanism3d.registerMechs(arm.mech, puncher.mech, intake.leftClaw, intake.rightClaw);
 
         driveJoystick = driveController.leftStick
             .roughRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)

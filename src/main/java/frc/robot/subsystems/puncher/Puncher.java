@@ -19,7 +19,9 @@ public class Puncher extends SubsystemBase {
     public final ExtenderMech mech = new ExtenderMech(
         new Transform3d(
             new Translation3d(
-
+                Meters.of(-0.206375),
+                Meters.of(+0),
+                Meters.of(+0.469900)
             ),
             Rotation3d.kZero
         )
@@ -27,9 +29,11 @@ public class Puncher extends SubsystemBase {
     public final GamepiecePose gamepiecePunch = new GamepiecePose(
         new Transform3d(
             new Translation3d(
-
+                Meters.of(+0.333375),
+                Meters.of(+0),
+                Meters.of(+0.419100)
             ),
-            Rotation3d.kZero
+            new Rotation3d(0, Math.PI / 2, 0)
         )
     );
 
@@ -41,6 +45,17 @@ public class Puncher extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Puncher", inputs);
+    }
+
+    private void setDeployed(boolean deployed) {
+        io.setDeployed(deployed);
+        mech.set(
+            (deployed) ? (
+                PuncherConstants.punchDistance
+            ) : (
+                Meters.zero()
+            )
+        );
     }
 
     public Command genCommand(
@@ -56,20 +71,12 @@ public class Puncher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                io.setDeployed(deployed);
-                mech.set(
-                    (deployed) ? (
-                        PuncherConstants.punchDistance
-                    ) : (
-                        Meters.zero()
-                    )
-                );
+                setDeployed(deployed);
             }
 
             @Override
             public void end(boolean interrupted) {
-                io.setDeployed(false);
-                mech.set(Meters.zero());
+                setDeployed(false);
             }
         };
     }
