@@ -2,6 +2,7 @@ package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
 import java.util.Arrays;
@@ -13,8 +14,11 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.Measure;
 import edu.wpi.first.util.function.BooleanConsumer;
 import frc.robot.RobotState;
 import frc.robot.subsystems.leds.Leds;
@@ -26,7 +30,7 @@ public final class VisionConstants {
         LeftApriltag(
             "Left Apriltag Cam",
             0.6,
-            5,
+            Meters.of(5),
             new Transform3d(
                 new Translation3d(
                     Inches.of(+12.225),
@@ -71,7 +75,7 @@ public final class VisionConstants {
         RightApriltag(
             "Right Apriltag Cam",
             1,
-            4,
+            Meters.of(4),
             new Transform3d(
                 new Translation3d(
                     Inches.of(+12.225),
@@ -91,10 +95,14 @@ public final class VisionConstants {
             ),
             Leds.getInstance().rAprilConnection::setStatus
         ),
-        NoteVision(
-            "Note Cam",
-            0,
-            0,
+        CanisterVision(
+            "Canister Cam",
+            new Translation2d(1, 1),
+            new Rotation3d(
+                Degrees.zero(),
+                Degrees.of(100),
+                Degrees.of(10)
+            ),
             new Transform3d(
                 new Translation3d(
                     Inches.of(-14.047),
@@ -114,15 +122,52 @@ public final class VisionConstants {
         private final Transform3d intermediateToCamera;
         public final double cameraStdCoef;
         public final double trustDistance;
+        public final Translation2d imageSize;
+        public final Rotation3d fov;
         public final BooleanConsumer connectedConsumer;
         private Supplier<Transform3d> robotToIntermediate;
-        Camera(String hardwareName, double cameraStdCoef, double trustDistance, Transform3d finalToCamera, BooleanConsumer connectedConsumer) {
+        Camera(
+            String hardwareName,
+            Transform3d finalToCamera,
+            BooleanConsumer connectedConsumer
+        ) {
+            this(hardwareName, 0, Meters.of(0), finalToCamera, connectedConsumer);
+        }
+        Camera(
+            String hardwareName,
+            double cameraStdCoef,
+            Measure<DistanceUnit> trustDistance,
+            Transform3d finalToCamera,
+            BooleanConsumer connectedConsumer
+        ) {
+            this(hardwareName, cameraStdCoef, trustDistance, Translation2d.kZero, Rotation3d.kZero, finalToCamera, connectedConsumer);
+        }
+        Camera(
+            String hardwareName,
+            Translation2d imageSize,
+            Rotation3d fov,
+            Transform3d finalToCamera,
+            BooleanConsumer connectedConsumer
+        ) {
+            this(hardwareName, 0, Meters.of(0), imageSize, fov, finalToCamera, connectedConsumer);
+        }
+        Camera(
+            String hardwareName,
+            double cameraStdCoef,
+            Measure<DistanceUnit> trustDistance,
+            Translation2d imageSize,
+            Rotation3d fov,
+            Transform3d finalToCamera,
+            BooleanConsumer connectedConsumer
+        ) {
             this.hardwareName = hardwareName;
             this.cameraStdCoef = cameraStdCoef;
-            this.trustDistance = trustDistance;
+            this.trustDistance = trustDistance.in(Meters);
             this.intermediateToCamera = finalToCamera;
             this.connectedConsumer = connectedConsumer;
-            this.robotToIntermediate = Transform3d::new;
+            this.robotToIntermediate = Transform3d::new; 
+            this.imageSize = imageSize;
+            this.fov = fov;
         }
         @SuppressWarnings("unused")
         private static Transform3d robotToCameraFromCalibTag(Transform3d robotToCalibTag, Transform3d cameraToCalibTag) {
