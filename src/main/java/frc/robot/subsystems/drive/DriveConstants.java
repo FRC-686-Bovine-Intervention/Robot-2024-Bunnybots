@@ -149,7 +149,7 @@ public final class DriveConstants {
     );
     /**full speed in 0.25 sec*/
     public static final double joystickSlewRateLimit = 1.0 / 0.25;
-    public static final double driveJoystickDeadbandPercent = 0.1;
+    public static final double driveJoystickDeadbandPercent = 0.2;
     public static final double driveMaxJerk = 200.0;
 
     public static final double precisionLinearMultiplier = 0.2;

@@ -26,10 +26,12 @@ import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.math.MatBuilder;
@@ -233,7 +235,7 @@ public class Drive extends VirtualSubsystem {
         //     // }
         // } else
         if (!Objects.equals(translationSubsystem.getCurrentCommand(), rotationalSubsystem.getCurrentCommand())) {
-            runSpeeds(setpointSpeeds);
+            runRobotSpeeds(setpointSpeeds);
         }
     }
 
@@ -244,27 +246,45 @@ public class Drive extends VirtualSubsystem {
         Logger.recordOutput("Drive/Swerve States/Setpoints Optimized", setpointStates);
     }
 
-    public void runSpeeds(ChassisSpeeds chassisSpeeds) {
-        setpointSpeeds = chassisSpeeds;
+    public void runRobotSpeeds(ChassisSpeeds robotSpeeds) {
+        setpointSpeeds = robotSpeeds;
         Logger.recordOutput("Drive/Chassis Speeds/Setpoint", setpointSpeeds);
         ChassisSpeeds correctedSpeeds = ChassisSpeeds.discretize(setpointSpeeds, rotationCorrection.get());
         setpointStates = DriveConstants.kinematics.toSwerveModuleStates(correctedSpeeds, centerOfRotation);
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.maxDriveSpeed);
         runSetpoints(setpointStates);
     }
+    public void runFieldSpeeds(ChassisSpeeds fieldSpeeds) {
+        runRobotSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(fieldSpeeds, getRotation()));
+    }
 
+    @Deprecated
     public void driveVelocity(double vx, double vy, double omega) {
         setpointSpeeds.vxMetersPerSecond = vx;
         setpointSpeeds.vyMetersPerSecond = vy;
         setpointSpeeds.omegaRadiansPerSecond = omega;
     }
+    @Deprecated
     public void driveVelocity(ChassisSpeeds speeds) {
         driveVelocity(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
     }
 
+    public Command followPath(PathPlannerPath path) {
+        return new FollowPathCommand(
+            path,
+            this::getPose,
+            this::getRobotMeasuredSpeeds,
+            this::drivePPVelocity,
+            autoConfig(),
+            robotConfig(),
+            AllianceFlipUtil::shouldFlip,
+            this.translationSubsystem, this.rotationalSubsystem
+        );
+    }
+
     public void drivePPVelocity(ChassisSpeeds speeds, DriveFeedforwards ff) {
         //TODO: Actually do something with PP ff
-        driveVelocity(speeds);
+        runRobotSpeeds(speeds);
     }
 
     public void setCenterOfRotation(Translation2d cor) {
@@ -441,7 +461,20 @@ public class Drive extends VirtualSubsystem {
         );
     }
     public static RobotConfig robotConfig() {
-        return new RobotConfig(Pounds.of(0), KilogramSquareMeters.of(0), new com.pathplanner.lib.config.ModuleConfig(DriveConstants.wheelRadius, DriveConstants.maxDriveSpeed, 0, DCMotor.getFalcon500(1), Amps.of(0), 1), DriveConstants.driveBaseRadius);
+        return new RobotConfig(
+            RobotConstants.robotWeight,
+            RobotConstants.robotMOI,
+            new com.pathplanner.lib.config.ModuleConfig(
+                DriveConstants.wheelRadius,
+                DriveConstants.maxDriveSpeed,
+                1.0,
+                DCMotor.getFalcon500(1),
+                Amps.of(55),
+                1
+            ),
+            DriveConstants.trackWidthX,
+            DriveConstants.trackWidthY
+        );
     }
 
     private static final LoggedTunableNumber kAutoDriveMaxVelocity = new LoggedTunableNumber("Drive/kAutoDriveMaxVelocity", 3);

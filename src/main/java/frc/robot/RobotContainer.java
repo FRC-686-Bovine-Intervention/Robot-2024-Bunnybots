@@ -22,7 +22,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.auto.AutoCommons.AutoPaths;
 import frc.robot.auto.AutoSelector.AutoRoutine;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -35,6 +37,8 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.drive.commands.AutoDrive;
+import frc.robot.subsystems.drive.commands.DriveToPose;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
@@ -124,7 +128,7 @@ public class RobotContainer {
         Mechanism3d.registerMechs(arm.mech, puncher.mech, intake.leftClaw, intake.rightClaw);
 
         driveJoystick = driveController.leftStick
-            .roughRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
+            .smoothRadialDeadband(DriveConstants.driveJoystickDeadbandPercent)
             .radialSensitivity(0.75)
             // .radialSlewRateLimit(DriveConstants.joystickSlewRateLimit)
         ;
@@ -199,15 +203,40 @@ public class RobotContainer {
                 intake.intake()
             )
             .until(intake.hasBucket)
+            .andThen(
+                Commands.parallel(
+                    arm.floor(),
+                    intake.idle()
+                )
+                .withTimeout(0.5)
+            )
         );
         driveController.x().whileTrue(
             Commands.parallel(
-                // arm.puncher(),
                 intake.eject(),
                 puncher.punch()
             )
         );
+        driveController.b().toggleOnTrue(
+            Commands.parallel(
+                arm.floor()
+                // intake.eject()
+            )
+        );
+        driveController.y().whileTrue(
+            Commands.parallel(
+                intake.eject()
+            )
+        );
 
+        driveController.leftStickButton().onTrue(Commands.runOnce(() -> {
+            drive.setPose(FieldConstants.highGoalScoreStackingSide.getOurs());
+        }));
+        // driveController.rightBumper().whileTrue(new DriveToPose(drive, FieldConstants.highGoalStackingSide::getOurs));
+        driveController.rightBumper().whileTrue(AutoDrive.autoDriveToHighGoal(drive));
+        SmartDashboard.putData("Reset Pose", Commands.runOnce(() -> {
+            drive.setPose(new Pose2d());
+        }));
         SmartDashboard.putData("Arm/Coast", arm.coast());
         SmartDashboard.putData("Arm/Voltage", arm.voltage(
             () -> 2 * (driveController.leftTrigger.getAsDouble() - driveController.rightTrigger.getAsDouble())
@@ -217,6 +246,7 @@ public class RobotContainer {
     private void configureNotifications() {}
 
     private void configureAutos() {
+        AutoPaths.preload();
         var selector = new AutoSelector("AutoSelector");
 
         selector.addRoutine(new AutoRoutine("Finish in 5", List.of()) {

@@ -9,6 +9,6 @@ public class IntakeIOSim implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        inputs.proximity.mut_replace(10*(1-a.getRawAxis(2)), Inches);
+        // inputs.proximity.mut_replace(10*(1-a.getRawAxis(2)), Inches);
     }
 }

@@ -4,6 +4,7 @@ import com.ctre.phoenix6.configs.SlotConfigs;
 
 import edu.wpi.first.math.controller.PIDController;
 import frc.util.LoggedTunableNumber;
+import frc.util.wpilib.ProfiledPIDController;
 
 public class LoggedTunablePID {
     private final LoggedTunableNumber kP;
@@ -21,6 +22,13 @@ public class LoggedTunablePID {
     }
 
     public void update(PIDController pid) {
+        pid.setPID(
+            kP.get(),
+            kI.get(),
+            kD.get()
+        );
+    }
+    public void update(ProfiledPIDController pid) {
         pid.setPID(
             kP.get(),
             kI.get(),

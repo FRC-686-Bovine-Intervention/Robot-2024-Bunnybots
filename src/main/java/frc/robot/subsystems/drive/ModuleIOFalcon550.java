@@ -66,7 +66,8 @@ public class ModuleIOFalcon550 implements ModuleIO {
     );
     private static final LoggedTunableFF driveFFConsts = new LoggedTunableFF(
         "Drive/Module/Drive/FF",
-        0.059813*2*Math.PI,
+        // 0.059813*2*Math.PI,
+        0,
         0*2*Math.PI,
         0.017472*2*Math.PI,
         0.0015521*2*Math.PI

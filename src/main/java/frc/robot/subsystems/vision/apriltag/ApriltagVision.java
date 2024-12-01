@@ -5,8 +5,7 @@ import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -14,6 +13,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.RobotState;
+import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIO.ApriltagCameraResult;
 import frc.util.LoggedTunableNumber;
 import frc.util.VirtualSubsystem;
@@ -25,11 +25,11 @@ public class ApriltagVision extends VirtualSubsystem {
     public ApriltagVision(ApriltagCamera... cameras) {
         System.out.println("[Init ApriltagVision] Instantiating ApriltagVision");
         this.cameras = cameras;
+        Logger.recordOutput("Field/Tag Poses", FieldConstants.apriltagLayout.getTags().stream().map((tag) -> tag.pose).toArray(Pose3d[]::new));
+        Logger.recordOutput("Field/Tag IDs", FieldConstants.apriltagLayout.getTags().stream().mapToInt((tag) -> tag.ID).toArray());
     }
 
     // private static final LoggedTunableNumber rejectDist = new LoggedTunableNumber("Vision/Apriltags/Reject Distance", 4);
-    private final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
-
     @Override
     public void periodic() {
         var results = Arrays.stream(cameras).map(ApriltagCamera::periodic).filter(Optional::isPresent).map(Optional::get).toArray(ApriltagCameraResult[]::new);
@@ -37,7 +37,7 @@ public class ApriltagVision extends VirtualSubsystem {
         var rejected = Arrays.stream(results).filter((r) -> !trustResult(r)).toArray(ApriltagCameraResult[]::new);
         var tagsSeen = Arrays.stream(results).flatMapToInt((r) -> Arrays.stream(r.tagsSeen)).toArray();
         Logger.recordOutput("Vision/Apriltags/Tags Seen", tagsSeen);
-        Logger.recordOutput("Vision/Apriltags/Tags Seen Poses", Arrays.stream(tagsSeen).mapToObj(fieldLayout::getTagPose).filter(Optional::isPresent).map(Optional::get).toArray(Pose3d[]::new));
+        Logger.recordOutput("Vision/Apriltags/Tags Seen Poses", Arrays.stream(tagsSeen).mapToObj(FieldConstants.apriltagLayout::getTagPose).filter(Optional::isPresent).map(Optional::get).toArray(Pose3d[]::new));
         Logger.recordOutput("Vision/Apriltags/Accepted Poses", Arrays.stream(accepted).map((r) -> r.estimatedRobotPose).toArray(Pose3d[]::new));
         Logger.recordOutput("Vision/Apriltags/Rejected Poses", Arrays.stream(rejected).map((r) -> r.estimatedRobotPose).toArray(Pose3d[]::new));
         Arrays.stream(accepted).forEach((r) -> 

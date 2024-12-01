@@ -14,7 +14,8 @@ public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
         public LoggedMotor motor = new LoggedMotor();
-        public MutDistance proximity = Millimeters.mutable(5000);
+        // public MutDistance proximity = Millimeters.mutable(5000);
+        public boolean sensorDetect = false;
     }
 
     public default void updateInputs(IntakeIOInputs inputs) {}

@@ -62,7 +62,7 @@ public class Intake extends SubsystemBase {
         )
     );
 
-    public final Trigger hasBucket = new Trigger(() -> inputs.proximity.lte(IntakeConstants.sensorThreshold));
+    public final Trigger hasBucket = new Trigger(() -> inputs.sensorDetect);
 
     public Intake(IntakeIO io) {
         this.io = io;
