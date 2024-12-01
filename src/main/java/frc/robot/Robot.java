@@ -20,14 +20,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.subsystems.leds.Leds;
+import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
+import frc.util.robotStructure.Mechanism3d;
 
 public class Robot extends LoggedRobot {
-    private RobotContainer robotContainer;
-
     @Override
     public void robotInit() {
-        Leds.getInstance();
+        // Leds.getInstance();
         System.out.println("[Init Robot] Recording AdvantageKit Metadata");
         Logger.recordMetadata("Robot", RobotType.getRobot().name());
         Logger.recordMetadata("Mode", RobotType.getMode().name());
@@ -55,7 +55,7 @@ public class Robot extends LoggedRobot {
 
             // Running a physics simulator, log to local folder
             case SIM:
-                Logger.addDataReceiver(new WPILOGWriter("sim_logs"));
+                Logger.addDataReceiver(new WPILOGWriter("logs"));
                 Logger.addDataReceiver(new NT4Publisher());
             break;
 
@@ -92,29 +92,30 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance()
             .onCommandInitialize(
                 (Command command) -> {
-                logCommandFunction.accept(command, true);
+                    logCommandFunction.accept(command, true);
                 }
             )
         ;
         CommandScheduler.getInstance()
             .onCommandFinish(
                 (Command command) -> {
-                logCommandFunction.accept(command, false);
+                    logCommandFunction.accept(command, false);
                 }
             )
         ;
         CommandScheduler.getInstance()
             .onCommandInterrupt(
                 (Command command) -> {
-                logCommandFunction.accept(command, false);
+                    logCommandFunction.accept(command, false);
                 }
             )
         ;
 
         System.out.println("[Init Robot] Instantiating RobotContainer");
-        robotContainer = new RobotContainer();
+        new RobotContainer();
 
         SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
+        Perspective.getCurrent();
     }
 
     @Override
@@ -122,8 +123,9 @@ public class Robot extends LoggedRobot {
         GameState.getInstance().periodic();
         VirtualSubsystem.periodicAll();
         CommandScheduler.getInstance().run();
-        // robotContainer.robotPeriodic();
         VirtualSubsystem.postCommandPeriodicAll();
+        RobotState.getInstance().log();
+        Mechanism3d.logAscopeComponents();
     }
 
     @Override

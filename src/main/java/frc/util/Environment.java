@@ -7,8 +7,9 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardInput;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import frc.util.Alert.AlertType;
 
 public enum Environment {
     PRACTICE,
@@ -30,9 +31,9 @@ public enum Environment {
 
         Logger.registerDashboardInput(new LoggedDashboardInput() {
             private static final SuppliedEdgeDetector fms_detector = new SuppliedEdgeDetector(DriverStation::isFMSAttached);
-            private static final Alert fms_alert = new Alert("FMS detected, Competition Environment selected", AlertType.INFO);
-            private static final Alert fms_no_comp_alert = new Alert("FMS detected but selected Environment is not Competition", AlertType.WARNING);
-            private static final Alert demo_alert = new Alert("Demo Environment selected, Robot functionality restricted", AlertType.WARNING);
+            private static final Alert fms_alert = new Alert("FMS detected, Competition Environment selected", AlertType.kInfo);
+            private static final Alert fms_no_comp_alert = new Alert("FMS detected but selected Environment is not Competition", AlertType.kWarning);
+            private static final Alert demo_alert = new Alert("Demo Environment selected, Robot functionality restricted", AlertType.kWarning);
             public void periodic() {
                 fms_detector.update();
                 if(fms_detector.risingEdge()) {

@@ -1,143 +1,216 @@
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.Celsius;
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.SlotConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.CANSparkBase.IdleMode;
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.SparkAbsoluteEncoder;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Robot;
-import frc.robot.constants.CANDevices;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
-import frc.util.Alert;
-import frc.util.Alert.AlertType;
+import frc.util.LoggedTunableNumber;
+import frc.util.TalonFXTempAlerts;
+import frc.util.loggerUtil.LoggedTunableFF;
+import frc.util.loggerUtil.LoggedTunablePID;
 
 public class ModuleIOFalcon550 implements ModuleIO {
-    private final TalonFX  driveMotor;
-    private final CANSparkMax turnMotor;
-    private final AbsoluteEncoder turnAbsoluteEncoder;
-    private final Angle initialTurnOffset;
+    protected final TalonFX driveMotor;
+    protected final SparkMax turnMotor;
+    protected final AbsoluteEncoder turnAbsoluteEncoder;
+
+    private final TalonFXTempAlerts tempAlerts;
+
+    private final VoltageOut driveVolts = 
+        new VoltageOut(0)
+        .withOverrideBrakeDurNeutral(true)
+    ;
+    private final MotionMagicVelocityVoltage driveVelocity = 
+        new MotionMagicVelocityVoltage(0)
+        .withAcceleration(0)
+        // .withOverrideBrakeDurNeutral(true)
+    ;
+    private final StaticBrake driveBrake = new StaticBrake();
+    private final NeutralOut driveNeutral = new NeutralOut();
+
+
+    private static final LoggedTunableNumber driveProfilekA = new LoggedTunableNumber("Drive/Module/Drive/PID/Profile/kA", 5000);
+    private static final LoggedTunablePID drivePIDConsts = new LoggedTunablePID(
+        "Drive/Module/Drive/PID",
+        0.025928*2*Math.PI,
+        0*2*Math.PI,
+        0*2*Math.PI
+    );
+    private static final LoggedTunableFF driveFFConsts = new LoggedTunableFF(
+        "Drive/Module/Drive/FF",
+        // 0.059813*2*Math.PI,
+        0,
+        0*2*Math.PI,
+        0.017472*2*Math.PI,
+        0.0015521*2*Math.PI
+    );
+    private static final LoggedTunablePID turnPIDConsts = new LoggedTunablePID(
+        "Drive/Module/Turn/PID",
+        5*2*Math.PI,
+        0*2*Math.PI,
+        0*2*Math.PI
+    );
+    protected final PIDController turnPID = new PIDController(0, 0, 0);
 
     public ModuleIOFalcon550(ModuleConstants config) {
-        driveMotor = new TalonFX(config.driveMotorID, CANDevices.driveCanBusName);
-        turnMotor = new CANSparkMax(config.turnMotorID, MotorType.kBrushless);
-        turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
-        initialTurnOffset = config.cancoderOffset;
+        driveMotor = config.driveMotorID.talonFX();
+        turnMotor = config.turnMotorID.sparkMax(MotorType.kBrushless);
+        turnAbsoluteEncoder = turnMotor.getAbsoluteEncoder();
 
-        /** Configure Drive Motors */
         var driveConfig = new TalonFXConfiguration();
-        // change factory defaults here
-        driveConfig.MotorOutput.Inverted = config.driveInverted;
-        driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveConfig.MotorOutput.DutyCycleNeutralDeadband = 0.0;
-        driveConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.1875;
-        driveConfig.CurrentLimits.SupplyCurrentLimit = 55;
-        driveConfig.CurrentLimits.SupplyCurrentLowerLimit = 55;
-        driveConfig.CurrentLimits.SupplyCurrentLowerTime = 0;
-        driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        driveConfig.CurrentLimits.StatorCurrentLimit = 55;
-        driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        driveConfig.MotorOutput
+            .withInverted(config.driveInverted)
+            .withNeutralMode(NeutralModeValue.Coast)
+            .withDutyCycleNeutralDeadband(0)
+        ;
+        driveConfig.ClosedLoopRamps
+            .withVoltageClosedLoopRampPeriod(Seconds.of(0.075))
+        ;
+        // driveConfig.OpenLoopRamps
+        //     .withVoltageOpenLoopRampPeriod(Seconds.of(0.1875))
+        // ;
+        driveConfig.CurrentLimits
+            .withSupplyCurrentLimit(Amps.of(55))
+            .withSupplyCurrentLowerLimit(Amps.of(55))
+            .withSupplyCurrentLowerTime(Seconds.of(0))
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(Amps.of(55))
+            .withStatorCurrentLimitEnable(true)
+        ;
+        driveConfig.MotionMagic
+            .withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(driveProfilekA.get()))
+            // .withMotionMagicJerk(RadiansPerSecondPerSecond.per(Second).of(1))
+        ;
+
         driveMotor.getConfigurator().apply(driveConfig);
 
-        /** Configure Turn Motors */
-        turnMotor.setInverted(false);
-        turnMotor.setIdleMode(IdleMode.kBrake);
-        turnMotor.setSmartCurrentLimit(40);
-        turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        var turnConfig = new SparkMaxConfig();
+        turnConfig.idleMode(IdleMode.kCoast)
+            .inverted(false)
+            .smartCurrentLimit(40)
+            .absoluteEncoder
+                .inverted(true)
+            // .signals
+            //     .absoluteEncoderPositionPeriodMs((int) RobotConstants.rioUpdatePeriod.in(Milliseconds))
+        ;
+        // turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        // turnMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
 
-        setFramePeriods(driveMotor, true);
+        turnMotor.configure(turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        turnPID.enableContinuousInput(
+            0,
+            1
+        );
+        SmartDashboard.putData("Drive/" + config.name, turnPID);
 
-        zeroEncoders();
+        BaseStatusSignal.setUpdateFrequencyForAll(
+            DriveConstants.odometryLoopFrequency,
+            driveMotor.getPosition(),
+            driveMotor.getVelocity()
+        );
 
-        tempWarning = new Alert(config.name + " Module has exceeded 70C", AlertType.WARNING);
-        tempAlert = new Alert(config.name + " Module has exceeded 100C", AlertType.ERROR);
+        // zeroEncoders();
+
+        tempAlerts = new TalonFXTempAlerts(driveMotor, config.name + " Module");
     }
-
-    private final Alert tempWarning;
-    private final Alert tempAlert;
 
     public void updateInputs(ModuleIOInputs inputs) {
+        if (drivePIDConsts.hasChanged(hashCode()) | driveFFConsts.hasChanged(hashCode())) {
+            var slotConfig = new SlotConfigs();
+            driveMotor.getConfigurator().refresh(slotConfig);
+            drivePIDConsts.update(slotConfig);
+            driveFFConsts.update(slotConfig);
+            driveMotor.getConfigurator().apply(slotConfig);
+        }
+        if (turnPIDConsts.hasChanged(hashCode())) {
+            turnPIDConsts.update(turnPID);
+        }
+        if (driveProfilekA.hasChanged(hashCode())) {
+            var motionMagic = new MotionMagicConfigs();
+            driveMotor.getConfigurator().refresh(motionMagic);
+            motionMagic.withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(driveProfilekA.get()));
+            driveMotor.getConfigurator().apply(motionMagic);
+        }
+        
         inputs.driveMotor.updateFrom(driveMotor);
-        inputs.driveMotor.encoder.position.mut_divide(DriveConstants.driveWheelGearReduction);
-        inputs.driveMotor.encoder.velocity.mut_divide(DriveConstants.driveWheelGearReduction);
+        // inputs.driveMotor.encoder.position.mut_divide(DriveConstants.driveWheelGearReduction);
+        // inputs.driveMotor.encoder.velocity.mut_divide(DriveConstants.driveWheelGearReduction);
 
         inputs.turnMotor.updateFrom(turnMotor);
-        inputs.turnMotor.encoder.position.mut_replace(MathUtil.angleModulus(Units.rotationsToRadians(turnAbsoluteEncoder.getPosition())) - initialTurnOffset.in(Radians), Radians);
+        // inputs.turnMotor.encoder.position.mut_replace(MathUtil.angleModulus(Units.rotationsToRadians(turnAbsoluteEncoder.getPosition())) - initialTurnOffset.in(Radians), Radians);
 
-        tempWarning.set(inputs.driveMotor.motor.temperature.in(Celsius) > 70);
-        tempAlert.set(driveMotor.getFault_DeviceTemp().getValue());
+        tempAlerts.update();
     }
 
-    public void zeroEncoders() {
-        driveMotor.setPosition(0.0);
-        // turnRelativeEncoder.setPosition(turnAbsoluteEncoder.getPosition());
+    // public void zeroEncoders() {
+    //     driveMotor.setPosition(0.0);
+    //     // turnRelativeEncoder.setPosition(turnAbsoluteEncoder.getPosition());
+    // }
+
+    public void setDriveVoltage(Measure<VoltageUnit> volts) {
+        driveMotor.setControl(driveVolts.withOutput(volts.in(Volts)));
+    }
+    public void setDriveVelocity(Measure<AngularVelocityUnit> velocity) {
+        driveMotor.setControl(driveVelocity.withVelocity(velocity.in(RotationsPerSecond)));
     }
 
-    public void setDriveVoltage(Voltage volts) {
-        driveMotor.setVoltage(volts.in(Volts));
+    protected void setTurnVolts(double volts) {
+        turnMotor.setVoltage(volts);
     }
-
-    public void setTurnVoltage(Voltage volts) {
-        turnMotor.setVoltage(volts.in(Volts));
+    public void setTurnVoltage(Measure<VoltageUnit> volts) {
+        setTurnVolts(volts.in(Volts));
     }
-
-    private static void setFramePeriods(TalonFX talon, boolean needMotorSensor) {
-        // reduce rates of most status frames
-
-        // TODO: revisit figuring out what getters to slow down
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 255, 1000);
-        // if (!needMotorSensor) {
-        //    talon.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 255, 1000);
-        // }
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_3_Quadrature, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_4_AinTempVbat, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_6_Misc, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_7_CommStatus, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_8_PulseWidth, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_12_Feedback1, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 255, 1000);
-        // talon.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 255, 1000);
-
-        talon.getPosition().setUpdateFrequency(Robot.defaultPeriodSecs);
+    public void setTurnAngle(Measure<AngleUnit> angle) {
+        setTurnVolts(
+            turnPID.calculate(
+                turnAbsoluteEncoder.getPosition(),
+                angle.in(Rotations)
+            )
+        );
+    }
+    
+    @Override
+    public void setDriveBrakeMode(boolean enable) {
+        driveMotor.setControl(enable ? driveBrake : driveNeutral);
     }
 
     @Override
-    public void setDriveBrakeMode(Boolean enable) {
-        driveMotor.setControl(enable == null ? new NeutralOut() : (enable.booleanValue() ? new StaticBrake() : new CoastOut()));
-    }
-
-    @Override
-    public void setTurnBrakeMode(Boolean enable) {
-        if(enable == null) return;
-        turnMotor.setIdleMode(enable.booleanValue() ? IdleMode.kBrake : IdleMode.kCoast);
+    public void setTurnBrakeMode(boolean enable) {
+        //TODO Reimplement module turn brake mode
+        // turnMotor.setIdleMode(enable ? IdleMode.kBrake : IdleMode.kCoast);
     }
 
     @Override
     public void stop() {
-        var driveRequest = driveMotor.getAppliedControl();
-        if(driveRequest instanceof VoltageOut) {
-            driveMotor.setControl(new NeutralOut());
-        }
+        driveMotor.stopMotor();
         setTurnVoltage(Volts.zero());
     }
 }

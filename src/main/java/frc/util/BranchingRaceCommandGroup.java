@@ -3,10 +3,12 @@ package frc.util;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Optional;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 
 public class BranchingRaceCommandGroup extends Command {
     private final HashMap<Command, Command> m_commands = new HashMap<>();
@@ -14,22 +16,21 @@ public class BranchingRaceCommandGroup extends Command {
     private Optional<Command> finishingCommand = Optional.empty();
     private InterruptionBehavior m_interruptBehavior = InterruptionBehavior.kCancelIncoming;
 
-    /**
-     * Creates a new ParallelCommandRace. The given commands will be executed simultaneously, and will
-     * "race to the finish" - the first command to finish ends the entire command, with all other
-     * commands being interrupted.
-     *
-     * @param commands the commands to include in this composition.
-     */
+    // /**
+    //  * Creates a new BranchingRaceCommandGroup. The given key commands will be executed simultaneously, and will
+    //  * "race to the finish" - the first command to finish interrupts the other key commands, and will have its associated value command executed to finish
+    //  *
+    //  * @param commands the commands to include in this composition.
+    //  */
     public BranchingRaceCommandGroup(HashMap<Command, Command> commands) {
         addCommands(commands);
     }
 
-    /**
-     * Adds the given commands to the group.
-     *
-     * @param commands Commands to add to the group.
-     */
+    // /**
+    //  * Adds the given commands to the group.
+    //  *
+    //  * @param commands Commands to add to the group.
+    //  */
     public final void addCommands(HashMap<Command, Command> commands) {
         // if (!m_finished) {
         //     throw new IllegalStateException(
@@ -39,11 +40,16 @@ public class BranchingRaceCommandGroup extends Command {
 
         CommandScheduler.getInstance().registerComposedCommands(flatCommands);
 
-        for (Command command : flatCommands) {
-            if (!Collections.disjoint(command.getRequirements(), getRequirements())) {
-                throw new IllegalArgumentException(
-                    "Multiple commands in a parallel composition cannot require the same subsystems");
+        var keyRequirements = new HashSet<Subsystem>();
+
+        for (Command command : commands.keySet()) {
+            if (!Collections.disjoint(command.getRequirements(), keyRequirements)) {
+                throw new IllegalArgumentException("Multiple commands in a parallel composition cannot require the same subsystems");
             }
+            keyRequirements.addAll(command.getRequirements());
+        }
+
+        for (Command command : flatCommands) {
             getRequirements().addAll(command.getRequirements());
             m_runWhenDisabled &= command.runsWhenDisabled();
             if (command.getInterruptionBehavior() == InterruptionBehavior.kCancelSelf) {

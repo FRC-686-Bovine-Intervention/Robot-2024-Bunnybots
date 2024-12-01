@@ -11,13 +11,13 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
-import frc.util.Alert;
 import frc.util.AllianceFlipUtil;
-import frc.util.Alert.AlertType;
 import frc.util.AllianceFlipUtil.FlippedPose2d;
 
 public class AutoCommons {
@@ -38,7 +38,7 @@ public class AutoCommons {
     }
 
     public static Command followPathFlipped(PathPlannerPath path, Drive drive) {
-        return new FollowPathCommand(path, drive::getPose, drive::getRobotRelativeSpeeds, drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive.translationSubsystem, drive.rotationalSubsystem)
+        return new FollowPathCommand(path, drive::getPose, drive::getRobotMeasuredSpeeds, drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive.translationSubsystem, drive.rotationalSubsystem)
             .deadlineFor(Commands.startEnd(
                 () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)
@@ -46,7 +46,7 @@ public class AutoCommons {
         ;
     }
     public static Command followPathFlipped(PathPlannerPath path, Drive.Translational drive) {
-        return new FollowPathCommand(path, drive.drive::getPose, drive.drive::getRobotRelativeSpeeds, drive.drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive)
+        return new FollowPathCommand(path, drive.drive::getPose, drive.drive::getRobotMeasuredSpeeds, drive.drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive)
             .deadlineFor(Commands.startEnd(
                 () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)
@@ -82,7 +82,7 @@ public class AutoCommons {
             if(loadedPaths.containsKey(name)) {
                 return loadedPaths.get(name);
             } else {
-                if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.WARNING).set(true);
+                if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.kWarning).set(true);
                 try {
                     var path = PathPlannerPath.fromPathFile(name);
                     loadedPaths.put(name, path);
