@@ -1,7 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Inches;
-
 import edu.wpi.first.wpilibj.Joystick;
 
 public class IntakeIOSim implements IntakeIO {
@@ -9,6 +7,6 @@ public class IntakeIOSim implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        // inputs.proximity.mut_replace(10*(1-a.getRawAxis(2)), Inches);
+        inputs.sensorDetect = a.getRawAxis(2) > 0.5;
     }
 }

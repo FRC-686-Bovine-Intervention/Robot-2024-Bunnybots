@@ -114,7 +114,7 @@ public final class FieldConstants {
     // Stacking Score
     public static final Distance stackingScoreX = stackingGridOuterEdgeX.plus(RobotConstants.centerToFrontBumper);
     public static final Distance stackingMinY = stackingGridInnerEdgeY.plus(bucketRadius);
-    public static final Distance stackingMaxY = fieldWidth.minus(bucketRadius);
+    public static final Distance stackingMaxY = fieldWidth.minus(RobotConstants.centerToSideBumper);
     
     // Yard Score
     public static final FlippedPose2d yardFieldScore = FlippedPose2d.fromRed(new Pose2d(

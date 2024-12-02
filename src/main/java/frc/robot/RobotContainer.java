@@ -45,6 +45,8 @@ import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOTalon;
 import frc.robot.subsystems.manualOverrides.ManualOverrides;
+import frc.robot.subsystems.objectiveTracker.ObjectiveTracker;
+import frc.robot.subsystems.objectiveTracker.ObjectiveTracker.Objective;
 import frc.robot.subsystems.puncher.Puncher;
 import frc.robot.subsystems.puncher.PuncherIO;
 import frc.robot.subsystems.puncher.PuncherIOSolenoid;
@@ -62,6 +64,7 @@ public class RobotContainer {
     public final Puncher puncher;
     public final ApriltagVision apriltagVision;
     public final ManualOverrides manualOverrides;
+    public final ObjectiveTracker objectiveTracker;
 
     // Controllers
     private final XboxController driveController = new XboxController(0);
@@ -114,6 +117,7 @@ public class RobotContainer {
             break;
         }
         manualOverrides = new ManualOverrides();
+        objectiveTracker = new ObjectiveTracker();
 
         drive.structureRoot
             .addChild(arm.mech
@@ -196,6 +200,9 @@ public class RobotContainer {
             .withName("Flick Stick")
         );
 
+        driveController.povUp().onTrue(objectiveTracker.set(Objective.HighGoal));
+        driveController.povDown().onTrue(objectiveTracker.set(Objective.StackingGrid));
+
 
         driveController.a().toggleOnTrue(
             Commands.parallel(
@@ -211,10 +218,15 @@ public class RobotContainer {
                 .withTimeout(0.5)
             )
         );
-        driveController.x().whileTrue(
+        driveController.x().and(objectiveTracker.highGoal).whileTrue(
             Commands.parallel(
                 intake.eject(),
                 puncher.punch()
+            )
+        );
+        driveController.x().and(objectiveTracker.highGoal.negate()).whileTrue(
+            Commands.parallel(
+                intake.eject()
             )
         );
         driveController.b().toggleOnTrue(
@@ -223,17 +235,18 @@ public class RobotContainer {
                 // intake.eject()
             )
         );
-        driveController.y().whileTrue(
-            Commands.parallel(
-                intake.eject()
-            )
+        driveController.rightBumper().and(objectiveTracker.highGoal).whileTrue(
+            AutoDrive.autoDriveToHighGoal(drive)
+            .withName("Auto Drive to High Goal")
+        );
+        driveController.rightBumper().and(objectiveTracker.stackingGrid).whileTrue(
+            AutoDrive.autoDriveToStackingGrid(drive)
+            .withName("Auto Drive to Stacking Grid")
         );
 
         driveController.leftStickButton().onTrue(Commands.runOnce(() -> {
             drive.setPose(FieldConstants.highGoalScoreStackingSide.getOurs());
         }));
-        // driveController.rightBumper().whileTrue(new DriveToPose(drive, FieldConstants.highGoalStackingSide::getOurs));
-        driveController.rightBumper().whileTrue(AutoDrive.autoDriveToHighGoal(drive));
         SmartDashboard.putData("Reset Pose", Commands.runOnce(() -> {
             drive.setPose(new Pose2d());
         }));
