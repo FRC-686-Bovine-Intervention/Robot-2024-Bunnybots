@@ -1,8 +1,11 @@
 package frc.robot.subsystems.vision.apriltag;
 
+import java.util.Arrays;
+
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.vision.VisionConstants.ApriltagCameraConstants;
 
+@Deprecated
 public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
 
     private final String cameraName; 
@@ -16,9 +19,7 @@ public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
     }
 
     public void updateInputs(ApriltagCameraIOInputs inputs) {
-        // set default values
         inputs.isConnected = false;
-        inputs.hasResult = false;
 
         // get parsed results from JSON on NetworkTables.  
         // Use this JSON results to make sure all values are from the same snapshot
@@ -29,12 +30,11 @@ public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
 
         if (!inputs.isConnected || LimelightHelpers.getFiducialID(cameraName) < 0) return;
 
-        var cameraToTargetDist = LimelightHelpers.getTargetPose3d_CameraSpace(cameraName).getTranslation().getNorm();
-        var visionPose = result.getBotPose3d_wpiBlue();
         double latencySeconds = (result.latency_capture + result.latency_pipeline + result.latency_jsonParse) / 1000.0;
         var timestamp = Timer.getFPGATimestamp() - latencySeconds;
+        inputs.timestamp = timestamp;
 
-        inputs.hasResult = true;
-        // inputs.result = new ApriltagCameraResult(timestamp, cameraToTargetDist, visionPose);
+        inputs.targets = Arrays.stream(result.targets_Fiducials).map(ApriltagCameraTarget::fromLLTarget).toArray(ApriltagCameraTarget[]::new);
+        inputs.estimatedRobotPose = result.getBotPose3d_wpiBlue();
     }
 }

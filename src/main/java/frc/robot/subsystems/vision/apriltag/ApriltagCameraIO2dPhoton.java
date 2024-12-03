@@ -12,6 +12,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.vision.VisionConstants.ApriltagCameraConstants;
 
+@Deprecated
 public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
     private final PhotonCamera photonCam;
     private final ApriltagCameraConstants camMeta;
@@ -22,13 +23,9 @@ public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
     }
 
     public void updateInputs(ApriltagCameraIOInputs inputs) {
-        // set default values
         inputs.isConnected = photonCam.isConnected();
-        inputs.hasResult = false;
 
-        if (!inputs.isConnected) {
-            return;
-        }
+        if (!inputs.isConnected) return;
         var result = photonCam.getLatestResult();
         Logger.recordOutput("DEBUG/Tag Field Poses", FieldConstants.apriltagLayout.getTags().stream().map((tag) -> tag.pose).toArray(Pose3d[]::new));
         Logger.recordOutput("DEBUG/photonresult", result);
