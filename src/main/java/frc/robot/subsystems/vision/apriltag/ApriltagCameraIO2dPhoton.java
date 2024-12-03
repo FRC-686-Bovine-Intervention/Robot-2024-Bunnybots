@@ -10,13 +10,13 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.FieldConstants;
-import frc.robot.subsystems.vision.VisionConstants.Camera;
+import frc.robot.subsystems.vision.VisionConstants.ApriltagCameraConstants;
 
 public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
     private final PhotonCamera photonCam;
-    private final Camera camMeta;
+    private final ApriltagCameraConstants camMeta;
 
-    public ApriltagCameraIO2dPhoton(Camera camMeta) {
+    public ApriltagCameraIO2dPhoton(ApriltagCameraConstants camMeta) {
         this.camMeta = camMeta;
         this.photonCam = new PhotonCamera(camMeta.hardwareName);
     }
@@ -42,7 +42,7 @@ public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
         var tagPos = FieldConstants.apriltagLayout.getTagPose(target.getFiducialId()).get();
         var pitch = -target.getYaw();
         var yaw = target.getPitch();
-        var targetCamViewTransform = camMeta.getRobotToCam().plus(
+        var targetCamViewTransform = camMeta.mount.getRobotRelative().plus(
             new Transform3d(
                 new Translation3d(),
                 new Rotation3d(
@@ -54,8 +54,8 @@ public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
         );
         var distOut = (tagPos.getZ() - targetCamViewTransform.getTranslation().getZ()) / Math.tan(targetCamViewTransform.getRotation().getY());
         var distOff = distOut * Math.tan(targetCamViewTransform.getRotation().getZ());
-        var camToTargetTranslation = new Translation3d(distOut, distOff, tagPos.getZ()-camMeta.getRobotToCam().getZ());
-        var fieldPos = tagPos.transformBy(new Transform3d(camToTargetTranslation, new Rotation3d()).inverse()).transformBy(new Transform3d(camMeta.getRobotToCam().getTranslation(), new Rotation3d()).inverse());
+        var camToTargetTranslation = new Translation3d(distOut, distOff, tagPos.getZ()-camMeta.mount.getRobotRelative().getZ());
+        var fieldPos = tagPos.transformBy(new Transform3d(camToTargetTranslation, new Rotation3d()).inverse()).transformBy(new Transform3d(camMeta.mount.getRobotRelative().getTranslation(), new Rotation3d()).inverse());
         // var fieldPos = new Pose3d(RobotState.getInstance().getPose())
         //     .transformBy(new Transform3d(camToTargetTranslation, new Rotation3d()))
         //     .transformBy(camMeta.getRobotToCam())

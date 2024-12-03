@@ -6,10 +6,31 @@
     "position": [0, 0, 0],
     "cameras": [
         {
-            "name": "Front",
-            "rotations": [{ "axis": "x", "degrees": 0 }],
-            "position": [0, 0, 0],
-            "resolution": [1920, 1080],
+            "name": "Front Left",
+            "rotations": [{ "axis": "z", "degrees": 135 },{ "axis": "y", "degrees": 20 }],
+            "position": [0.220594,0.280635,0.234983],
+            "resolution": [1280, 800],
+            "fov": 90
+        },
+        {
+            "name": "Front Right",
+            "rotations": [{ "axis": "z", "degrees": -135 },{ "axis": "y", "degrees": 20 }],
+            "position": [0.220594,-0.280635,0.234983],
+            "resolution": [1280, 800],
+            "fov": 90
+        },
+        {
+            "name": "Back Left",
+            "rotations": [{ "axis": "z", "degrees": 5 },{ "axis": "y", "degrees": -20 }],
+            "position": [-0.208321,0.254315,0.234983],
+            "resolution": [1280, 800],
+            "fov": 90
+        },
+        {
+            "name": "Back Right",
+            "rotations": [{ "axis": "z", "degrees": -5 },{ "axis": "y", "degrees": -20 }],
+            "position": [-0.209274,-0.255268,0.234983],
+            "resolution": [1280, 800],
             "fov": 90
         }
     ],

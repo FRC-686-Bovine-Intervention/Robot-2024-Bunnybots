@@ -1,13 +1,13 @@
 package frc.robot.subsystems.vision.apriltag;
 
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.subsystems.vision.VisionConstants.Camera;
+import frc.robot.subsystems.vision.VisionConstants.ApriltagCameraConstants;
 
 public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
 
     private final String cameraName; 
 
-    public ApriltagCameraIOLimelight(Camera cameraData) {
+    public ApriltagCameraIOLimelight(ApriltagCameraConstants cameraData) {
         // Important: need to configure robotToCamera pose using Limelight webUI
         // Important: need to configure AprilTag field map using Limelight webUI
         // https://docs.limelightvision.io/en/latest/apriltags_in_3d.html#robot-localization-botpose-and-megatag

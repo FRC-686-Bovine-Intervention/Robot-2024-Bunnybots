@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.math.geometry.Pose3d;
-import frc.robot.subsystems.vision.VisionConstants.Camera;
+import frc.robot.subsystems.vision.VisionConstants.ApriltagCameraConstants;
 
 public interface ApriltagCameraIO {
 
@@ -33,9 +33,9 @@ public interface ApriltagCameraIO {
         public final int[] tagsSeen;
         public final double[] cameraToTagDist;
         public final Pose3d estimatedRobotPose;
-        public final Camera cameraMeta;
+        public final ApriltagCameraConstants cameraMeta;
 
-        public ApriltagCameraResult(Camera cameraMeta, double timestamp, int[] tagsSeen, double[] cameraToTagDist, Pose3d estimatedRobotPose) {
+        public ApriltagCameraResult(ApriltagCameraConstants cameraMeta, double timestamp, int[] tagsSeen, double[] cameraToTagDist, Pose3d estimatedRobotPose) {
             this.cameraMeta = cameraMeta;
             this.timestamp = timestamp;
             this.tagsSeen = tagsSeen;
@@ -43,7 +43,7 @@ public interface ApriltagCameraIO {
             this.estimatedRobotPose = estimatedRobotPose;
         }
 
-        public static Optional<ApriltagCameraResult> from(Camera meta, ApriltagCameraIOInputs inputs) {
+        public static Optional<ApriltagCameraResult> from(ApriltagCameraConstants meta, ApriltagCameraIOInputs inputs) {
             if(!inputs.hasResult) return Optional.empty();
             return Optional.of(new ApriltagCameraResult(
                 meta,

@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -50,6 +53,9 @@ import frc.robot.subsystems.objectiveTracker.ObjectiveTracker.Objective;
 import frc.robot.subsystems.puncher.Puncher;
 import frc.robot.subsystems.puncher.PuncherIO;
 import frc.robot.subsystems.puncher.PuncherIOSolenoid;
+import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.apriltag.ApriltagCamera;
+import frc.robot.subsystems.vision.apriltag.ApriltagCameraIOPhotonVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.util.controllers.ButtonBoard3x3;
 import frc.util.controllers.Joystick;
@@ -84,7 +90,24 @@ public class RobotContainer {
                         .map(ModuleIOFalcon550::new)
                         .toArray(ModuleIO[]::new)
                 );
-                apriltagVision = new ApriltagVision();
+                apriltagVision = new ApriltagVision(
+                    new ApriltagCamera(
+                        VisionConstants.frontLeftApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(VisionConstants.frontLeftApriltagCamera)
+                    ),
+                    new ApriltagCamera(
+                        VisionConstants.frontRightApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(VisionConstants.frontRightApriltagCamera)
+                    ),
+                    new ApriltagCamera(
+                        VisionConstants.backLeftApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(VisionConstants.backLeftApriltagCamera)
+                    ),
+                    new ApriltagCamera(
+                        VisionConstants.backRightApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(VisionConstants.backRightApriltagCamera)
+                    )
+                );
                 arm = new Arm(new ArmIOFalcon());
                 intake = new Intake(new IntakeIOTalon());
                 puncher = new Puncher(new PuncherIOSolenoid());
@@ -128,6 +151,10 @@ public class RobotContainer {
             .addChild(puncher.mech
                 .addChild(puncher.gamepiecePunch)
             )
+            .addChild(VisionConstants.frontLeftApriltagCamera.mount)
+            .addChild(VisionConstants.frontRightApriltagCamera.mount)
+            .addChild(VisionConstants.backLeftApriltagCamera.mount)
+            .addChild(VisionConstants.backRightApriltagCamera.mount)
         ;
         Mechanism3d.registerMechs(arm.mech, puncher.mech, intake.leftClaw, intake.rightClaw);
 

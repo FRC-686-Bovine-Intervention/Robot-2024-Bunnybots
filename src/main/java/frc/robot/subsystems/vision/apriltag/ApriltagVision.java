@@ -1,11 +1,12 @@
 package frc.robot.subsystems.vision.apriltag;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.Arrays;
 import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -14,6 +15,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIO.ApriltagCameraResult;
 import frc.util.LoggedTunableNumber;
 import frc.util.VirtualSubsystem;
@@ -33,6 +35,16 @@ public class ApriltagVision extends VirtualSubsystem {
     @Override
     public void periodic() {
         var results = Arrays.stream(cameras).map(ApriltagCamera::periodic).filter(Optional::isPresent).map(Optional::get).toArray(ApriltagCameraResult[]::new);
+        Logger.recordOutput("Apriltag Cam Poses", Arrays.stream(
+            new VisionConstants.ApriltagCameraConstants[]{
+                VisionConstants.frontLeftApriltagCamera,
+                VisionConstants.frontRightApriltagCamera,
+                VisionConstants.backLeftApriltagCamera,
+                VisionConstants.backRightApriltagCamera
+            })
+            .map((constants) -> constants.mount.getFieldRelative())
+            .toArray(Pose3d[]::new)
+        );
         var accepted = Arrays.stream(results).filter(ApriltagVision::trustResult).toArray(ApriltagCameraResult[]::new);
         var rejected = Arrays.stream(results).filter((r) -> !trustResult(r)).toArray(ApriltagCameraResult[]::new);
         var tagsSeen = Arrays.stream(results).flatMapToInt((r) -> Arrays.stream(r.tagsSeen)).toArray();
@@ -50,7 +62,7 @@ public class ApriltagVision extends VirtualSubsystem {
     }
 
     private static boolean trustResult(ApriltagCameraResult result) {
-        return result.getAverageDist() < result.cameraMeta.trustDistance && result.tagsSeen.length >= 2;
+        return result.getAverageDist() < result.cameraMeta.trustDistance.in(Meters) && result.tagsSeen.length >= 2;
     }
 
     private static final LoggedTunableNumber kTransA = new LoggedTunableNumber("Vision/Apriltags/StdDevs/Translational/aCoef", 2);
