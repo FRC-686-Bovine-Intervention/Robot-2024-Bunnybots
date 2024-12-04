@@ -10,7 +10,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.FieldConstants;
-import frc.robot.subsystems.vision.VisionConstants.ApriltagCameraConstants;
+import frc.robot.subsystems.vision.apriltag.ApriltagVisionConstants.ApriltagCameraConstants;
 
 @Deprecated
 public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
@@ -22,6 +22,7 @@ public class ApriltagCameraIO2dPhoton implements ApriltagCameraIO {
         this.photonCam = new PhotonCamera(camMeta.hardwareName);
     }
 
+    @Override
     public void updateInputs(ApriltagCameraIOInputs inputs) {
         inputs.isConnected = photonCam.isConnected();
 

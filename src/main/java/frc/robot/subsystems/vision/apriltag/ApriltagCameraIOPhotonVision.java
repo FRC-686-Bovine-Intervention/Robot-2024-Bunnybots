@@ -3,6 +3,7 @@ package frc.robot.subsystems.vision.apriltag;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.RobotState;
@@ -22,12 +23,13 @@ public class ApriltagCameraIOPhotonVision implements ApriltagCameraIO {
         photonPoseEstimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
     }
 
+    @Override
     public void updateInputs(ApriltagCameraIOInputs inputs) {
         inputs.isConnected = photonCam.isConnected();
 
         if (!inputs.isConnected) return;
         var result = photonCam.getLatestResult();
-        inputs.targets = result.getTargets().stream().map(ApriltagCameraTarget::fromPhotonTarget).toArray(ApriltagCameraTarget[]::new);
+        inputs.targets = result.getTargets().stream().map(ApriltagCameraIOPhotonVision::targetFromPhotonTarget).toArray(ApriltagCameraTarget[]::new);
 
         if (photonPoseEstimator == null) return;
         photonPoseEstimator.setRobotToCameraTransform(camMeta.mount.getRobotRelative());
@@ -38,5 +40,14 @@ public class ApriltagCameraIOPhotonVision implements ApriltagCameraIO {
             inputs.timestamp = e.timestampSeconds;
             inputs.estimatedRobotPose = e.estimatedPose;
         });
+    }
+
+    private static ApriltagCameraTarget targetFromPhotonTarget(PhotonTrackedTarget photonTarget) {
+        return new ApriltagCameraTarget(
+            photonTarget.getFiducialId(),
+            photonTarget.getBestCameraToTarget(),
+            photonTarget.getAlternateCameraToTarget(),
+            photonTarget.getPoseAmbiguity()
+        );
     }
 }

@@ -12,7 +12,6 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
-import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagCamera.ApriltagCameraResult;
 import frc.util.LoggedTunableNumber;
 import frc.util.VirtualSubsystem;
@@ -34,11 +33,11 @@ public class ApriltagVision extends VirtualSubsystem {
     @Override
     public void periodic() {
         Logger.recordOutput("Apriltag Cam Poses", Arrays.stream(
-            new VisionConstants.ApriltagCameraConstants[]{
-                VisionConstants.frontLeftApriltagCamera,
-                VisionConstants.frontRightApriltagCamera,
-                VisionConstants.backLeftApriltagCamera,
-                VisionConstants.backRightApriltagCamera
+            new ApriltagVisionConstants.ApriltagCameraConstants[]{
+                ApriltagVisionConstants.frontLeftApriltagCamera,
+                ApriltagVisionConstants.frontRightApriltagCamera,
+                ApriltagVisionConstants.backLeftApriltagCamera,
+                ApriltagVisionConstants.backRightApriltagCamera
             })
             .map((constants) -> constants.mount.getFieldRelative())
             .toArray(Pose3d[]::new)
@@ -102,8 +101,8 @@ public class ApriltagVision extends VirtualSubsystem {
             Logger.recordOutput(loggingKey + "/Poses/Camera3d", cameraPose3d);
 
             // Filtering
-            var inField = VisionConstants.acceptableFieldBox.withinBounds(robotPose2d.getTranslation());
-            var closeToFloor = robotPose3d.getTranslation().getMeasureZ().isNear(Meters.zero(), VisionConstants.zMargin);
+            var inField = ApriltagVisionConstants.acceptableFieldBox.withinBounds(robotPose2d.getTranslation());
+            var closeToFloor = robotPose3d.getTranslation().getMeasureZ().isNear(Meters.zero(), ApriltagVisionConstants.zMargin);
 
             Logger.recordOutput(loggingKey + "/Filtering/In Field", inField);
             Logger.recordOutput(loggingKey + "/Filtering/Close to Floor", closeToFloor);

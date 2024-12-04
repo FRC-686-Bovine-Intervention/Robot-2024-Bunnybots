@@ -9,10 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -23,9 +20,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.auto.AutoCommons.AutoPaths;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.auto.AutoCommons.AutoPaths;
 import frc.robot.auto.AutoSelector.AutoRoutine;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
@@ -41,7 +38,6 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.commands.AutoDrive;
-import frc.robot.subsystems.drive.commands.DriveToPose;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
@@ -57,6 +53,7 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagCamera;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIOPhotonVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
+import frc.robot.subsystems.vision.apriltag.ApriltagVisionConstants;
 import frc.util.controllers.ButtonBoard3x3;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
@@ -92,20 +89,20 @@ public class RobotContainer {
                 );
                 apriltagVision = new ApriltagVision(
                     new ApriltagCamera(
-                        VisionConstants.frontLeftApriltagCamera,
-                        new ApriltagCameraIOPhotonVision(VisionConstants.frontLeftApriltagCamera)
+                        ApriltagVisionConstants.frontLeftApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(ApriltagVisionConstants.frontLeftApriltagCamera)
                     ),
                     new ApriltagCamera(
-                        VisionConstants.frontRightApriltagCamera,
-                        new ApriltagCameraIOPhotonVision(VisionConstants.frontRightApriltagCamera)
+                        ApriltagVisionConstants.frontRightApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(ApriltagVisionConstants.frontRightApriltagCamera)
                     ),
                     new ApriltagCamera(
-                        VisionConstants.backLeftApriltagCamera,
-                        new ApriltagCameraIOPhotonVision(VisionConstants.backLeftApriltagCamera)
+                        ApriltagVisionConstants.backLeftApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(ApriltagVisionConstants.backLeftApriltagCamera)
                     ),
                     new ApriltagCamera(
-                        VisionConstants.backRightApriltagCamera,
-                        new ApriltagCameraIOPhotonVision(VisionConstants.backRightApriltagCamera)
+                        ApriltagVisionConstants.backRightApriltagCamera,
+                        new ApriltagCameraIOPhotonVision(ApriltagVisionConstants.backRightApriltagCamera)
                     )
                 );
                 arm = new Arm(new ArmIOFalcon());
@@ -151,10 +148,11 @@ public class RobotContainer {
             .addChild(puncher.mech
                 .addChild(puncher.gamepiecePunch)
             )
-            .addChild(VisionConstants.frontLeftApriltagCamera.mount)
-            .addChild(VisionConstants.frontRightApriltagCamera.mount)
-            .addChild(VisionConstants.backLeftApriltagCamera.mount)
-            .addChild(VisionConstants.backRightApriltagCamera.mount)
+            .addChild(VisionConstants.frontLeftModuleMount)
+            .addChild(VisionConstants.frontRightModuleMount)
+            .addChild(VisionConstants.backLeftModuleMount)
+            .addChild(VisionConstants.backRightModuleMount)
+            .addChild(VisionConstants.flagStickMount)
         ;
         Mechanism3d.registerMechs(arm.mech, puncher.mech, intake.leftClaw, intake.rightClaw);
 

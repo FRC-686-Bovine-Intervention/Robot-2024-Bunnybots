@@ -7,9 +7,9 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.subsystems.vision.VisionConstants.ApriltagCameraConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIO.ApriltagCameraIOInputs;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIO.ApriltagCameraTarget;
+import frc.robot.subsystems.vision.apriltag.ApriltagVisionConstants.ApriltagCameraConstants;
 
 public class ApriltagCamera {
     private final ApriltagCameraConstants camMeta;

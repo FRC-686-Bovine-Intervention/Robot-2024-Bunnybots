@@ -27,6 +27,7 @@ public final class FieldConstants {
     }
 
     public static final Distance bucketRadius = Inches.of(6);
+    public static final Distance bucketHeight = Inches.of(14.5);
 
     public static final Distance stackingGridOuterEdgeX = Inches.of(27.5);
     public static final Distance stackingGridInnerEdgeY = Inches.of(186);

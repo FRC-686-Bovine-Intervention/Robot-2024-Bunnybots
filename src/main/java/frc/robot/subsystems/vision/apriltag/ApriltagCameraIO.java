@@ -3,14 +3,11 @@ package frc.robot.subsystems.vision.apriltag;
 import java.nio.ByteBuffer;
 
 import org.littletonrobotics.junction.AutoLog;
-import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
-import frc.robot.subsystems.vision.apriltag.LimelightHelpers.LimelightTarget_Fiducial;
-import frc.util.GeomUtil;
 
 public interface ApriltagCameraIO {
 
@@ -21,6 +18,8 @@ public interface ApriltagCameraIO {
         public ApriltagCameraTarget[] targets = new ApriltagCameraTarget[0];
         public Pose3d estimatedRobotPose = new Pose3d();
     }
+
+    public default void updateInputs(ApriltagCameraIOInputs inputs) {}
 
     public static class ApriltagCameraTarget implements StructSerializable {
         public final int tagID;
@@ -33,23 +32,6 @@ public interface ApriltagCameraIO {
             this.bestCameraToTag = bestCameraToTag;
             this.altCameraToTag = altCameraToTag;
             this.poseAmbiguity = poseAmbiguity;
-        }
-
-        public static ApriltagCameraTarget fromPhotonTarget(PhotonTrackedTarget photonTarget) {
-            return new ApriltagCameraTarget(
-                photonTarget.getFiducialId(),
-                photonTarget.getBestCameraToTarget(),
-                photonTarget.getAlternateCameraToTarget(),
-                photonTarget.getPoseAmbiguity()
-            );
-        }
-        public static ApriltagCameraTarget fromLLTarget(LimelightTarget_Fiducial limelightTarget) {
-            return new ApriltagCameraTarget(
-                (int) limelightTarget.fiducialID,
-                GeomUtil.toTransform3d(limelightTarget.getTargetPose_CameraSpace()),
-                GeomUtil.toTransform3d(limelightTarget.getTargetPose_CameraSpace()),
-                0
-            );
         }
 
         public static final ApriltagCameraTargetStruct struct = new ApriltagCameraTargetStruct();
@@ -97,6 +79,4 @@ public interface ApriltagCameraIO {
             }
         }
     }
-    
-    public default void updateInputs(ApriltagCameraIOInputs inputs) {}
 }
