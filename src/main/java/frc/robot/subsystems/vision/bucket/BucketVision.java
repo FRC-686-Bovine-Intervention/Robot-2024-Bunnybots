@@ -22,7 +22,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.DistanceUnit;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,7 +31,6 @@ import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.leds.Leds;
-import frc.robot.subsystems.vision.bucket.BucketCamera.BucketCameraResult;
 import frc.util.LazyOptional;
 import frc.util.LoggedTunableMeasure;
 import frc.util.LoggedTunableNumber;
@@ -70,62 +68,64 @@ public class BucketVision extends VirtualSubsystem {
             .map((constants) -> constants.mount.getFieldRelative())
             .toArray(Pose3d[]::new)
         );
-        var results = Arrays.stream(cameras).map(BucketCamera::periodic).filter(Optional::isPresent).map(Optional::get).toArray(BucketCameraResult[]::new);
-        for (var result : results) {
-            if (result.targets.length == 0) continue; // Just in case the filtering above doesn't catch no target frames
-
-            var loggingKey = "Vision/BucketVision/Results/" + result.camMeta.hardwareName;
-            var frameTargets = Arrays.stream(result.targets).map((a) -> new TrackedBucket(null, 0)).toList();
-            var connections = new ArrayList<TargetMemoryConnection>();
-            bucketMemories.forEach(
-                (memory) -> frameTargets.forEach(
-                    (target) -> {
-                        if(memory.fieldPos.getDistance(target.fieldPos) < updateDistanceThreshold.in(Meters)) {
-                            connections.add(new TargetMemoryConnection(memory, target));
-                        }
+        var frameTargets = Arrays
+            .stream(cameras)
+            .map(BucketCamera::periodic)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .flatMap((result) -> Arrays.stream(result.targets))
+            .map((target) -> new TrackedBucket(null, 0))
+            .toList()
+        ;
+        var connections = new ArrayList<TargetMemoryConnection>();
+        bucketMemories.forEach(
+            (memory) -> frameTargets.forEach(
+                (target) -> {
+                    if(memory.fieldPos.getDistance(target.fieldPos) < updateDistanceThreshold.in(Meters)) {
+                        connections.add(new TargetMemoryConnection(memory, target));
                     }
-                )
-            );
-            connections.sort((a, b) -> (int) Math.signum(a.getDistance() - b.getDistance()));
-            var unusedMemories = new ArrayList<>(bucketMemories);
-            var unusedTargets = new ArrayList<>(frameTargets);
-            while(!connections.isEmpty()) {
-                var confirmedConnection = connections.get(0);
-                confirmedConnection.memory.updatePosWithFiltering(confirmedConnection.cameraTarget);
-                confirmedConnection.memory.updateConfidence();
-                unusedMemories.remove(confirmedConnection.memory);
-                unusedTargets.remove(confirmedConnection.cameraTarget);
-                connections.removeIf((connection) -> 
-                    connection.memory == confirmedConnection.memory
-                    || connection.cameraTarget == confirmedConnection.cameraTarget
-                );
-            }
-            unusedMemories.forEach((memory) -> {
-                if(RobotState.getInstance().getPose().getTranslation().getDistance(memory.fieldPos) > RobotConstants.robotLength.in(Meters)*0.5) {
-                    memory.decayConfidence(1);
                 }
-            });
-            unusedTargets.forEach(bucketMemories::add);
-            bucketMemories.removeIf((memory) -> memory.confidence <= 0);
-            bucketMemories.removeIf((memory) -> Double.isNaN(memory.fieldPos.getX()));
-            bucketMemories.removeIf((memory) -> RobotState.getInstance().getPose().getTranslation().getDistance(memory.fieldPos) <= 0.07);
-
-            if(optIntakeTarget.isPresent() && (optIntakeTarget.get().confidence < detargetConfidenceThreshold.get() || !bucketMemories.contains(optIntakeTarget.get()))) {
-                optIntakeTarget = Optional.empty();
-            }
-            if(optIntakeTarget.isEmpty() || !intakeTargetLocked) {
-                optIntakeTarget = bucketMemories.stream().filter((target) -> target.getPriority() >= acquireConfidenceThreshold.get()).sorted((a,b) -> (int)Math.signum(b.getPriority() - a.getPriority())).findFirst();
-            }
-            
-            Leds.getInstance().visionAcquired.setFlag(hasTarget());
-            Leds.getInstance().visionLocked.setFlag(targetLocked());
-            
-            Logger.recordOutput("Vision/Note/Note Memories", bucketMemories.stream().map(TrackedBucket::toASPose).toArray(Pose3d[]::new));
-            Logger.recordOutput("Vision/Note/Note Confidence", bucketMemories.stream().mapToDouble((note) -> note.confidence).toArray());
-            Logger.recordOutput("Vision/Note/Note Priority", bucketMemories.stream().mapToDouble(TrackedBucket::getPriority).toArray());
-            Logger.recordOutput("Vision/Note/Target", optIntakeTarget.map(TrackedBucket::toASPose).map((a) -> new Pose3d[]{a}).orElse(new Pose3d[0]));
-            Logger.recordOutput("Vision/Note/Locked Target", optIntakeTarget.filter((a) -> intakeTargetLocked).map(TrackedBucket::toASPose).map((a) -> new Pose3d[]{a}).orElse(new Pose3d[0]));
+            )
+        );
+        connections.sort((a, b) -> (int) Math.signum(a.getDistance() - b.getDistance()));
+        var unusedMemories = new ArrayList<>(bucketMemories);
+        var unusedTargets = new ArrayList<>(frameTargets);
+        while(!connections.isEmpty()) {
+            var confirmedConnection = connections.get(0);
+            confirmedConnection.memory.updatePosWithFiltering(confirmedConnection.cameraTarget);
+            confirmedConnection.memory.updateConfidence();
+            unusedMemories.remove(confirmedConnection.memory);
+            unusedTargets.remove(confirmedConnection.cameraTarget);
+            connections.removeIf((connection) -> 
+                connection.memory == confirmedConnection.memory
+                || connection.cameraTarget == confirmedConnection.cameraTarget
+            );
         }
+        unusedMemories.forEach((memory) -> {
+            if(RobotState.getInstance().getPose().getTranslation().getDistance(memory.fieldPos) > RobotConstants.robotLength.in(Meters)*0.5) {
+                memory.decayConfidence(1);
+            }
+        });
+        unusedTargets.forEach(bucketMemories::add);
+        bucketMemories.removeIf((memory) -> memory.confidence <= 0);
+        bucketMemories.removeIf((memory) -> Double.isNaN(memory.fieldPos.getX()));
+        bucketMemories.removeIf((memory) -> RobotState.getInstance().getPose().getTranslation().getDistance(memory.fieldPos) <= 0.07);
+
+        if(optIntakeTarget.isPresent() && (optIntakeTarget.get().confidence < detargetConfidenceThreshold.get() || !bucketMemories.contains(optIntakeTarget.get()))) {
+            optIntakeTarget = Optional.empty();
+        }
+        if(optIntakeTarget.isEmpty() || !intakeTargetLocked) {
+            optIntakeTarget = bucketMemories.stream().filter((target) -> target.getPriority() >= acquireConfidenceThreshold.get()).sorted((a,b) -> (int)Math.signum(b.getPriority() - a.getPriority())).findFirst();
+        }
+        
+        Leds.getInstance().visionAcquired.setFlag(hasTarget());
+        Leds.getInstance().visionLocked.setFlag(targetLocked());
+        
+        Logger.recordOutput("Vision/Note/Note Memories", bucketMemories.stream().map(TrackedBucket::toASPose).toArray(Pose3d[]::new));
+        Logger.recordOutput("Vision/Note/Note Confidence", bucketMemories.stream().mapToDouble((note) -> note.confidence).toArray());
+        Logger.recordOutput("Vision/Note/Note Priority", bucketMemories.stream().mapToDouble(TrackedBucket::getPriority).toArray());
+        Logger.recordOutput("Vision/Note/Target", optIntakeTarget.map(TrackedBucket::toASPose).map((a) -> new Pose3d[]{a}).orElse(new Pose3d[0]));
+        Logger.recordOutput("Vision/Note/Locked Target", optIntakeTarget.filter((a) -> intakeTargetLocked).map(TrackedBucket::toASPose).map((a) -> new Pose3d[]{a}).orElse(new Pose3d[0]));
     }
 
     public DoubleSupplier applyDotProduct(Supplier<ChassisSpeeds> joystickFieldRelative) {
