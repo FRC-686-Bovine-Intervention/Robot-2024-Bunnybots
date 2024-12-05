@@ -56,6 +56,7 @@ public class ApriltagVision extends VirtualSubsystem {
                     return Optional.of(new AprilTag(target.tagID, optTagPose.get()));
                 })
                 .filter(Optional::isPresent)
+                .map(Optional::get)
                 .toArray(AprilTag[]::new)
             ;
             Logger.recordOutput(loggingKey + "/Targets/Tag IDs", Arrays.stream(usableTags).mapToInt((tag) -> tag.ID).toArray());
@@ -76,7 +77,7 @@ public class ApriltagVision extends VirtualSubsystem {
                 var bestRobotPose = bestCameraPose.transformBy(result.camMeta.mount.getRobotRelative().inverse());
                 var altCameraPose = FieldConstants.apriltagLayout.getTagPose(target.tagID).get().transformBy(target.altCameraToTag.inverse());
                 var altRobotPose = altCameraPose.transformBy(result.camMeta.mount.getRobotRelative().inverse());
-                if (result.targets[0].poseAmbiguity >= ambiguityThreshold.get()) {
+                if (result.targets[0].poseAmbiguity < ambiguityThreshold.get()) {
                     var currentRotation = RobotState.getInstance().getPose().getRotation();
                     var bestRotation = bestRobotPose.getRotation().toRotation2d();
                     var altRotation = altRobotPose.getRotation().toRotation2d();
@@ -95,6 +96,13 @@ public class ApriltagVision extends VirtualSubsystem {
                 cameraPose3d = null;
                 robotPose3d = null;
             }
+            if (robotPose3d == null || cameraPose3d == null) {
+                Logger.recordOutput(loggingKey + "/Robot pose null", robotPose3d == null);
+                Logger.recordOutput(loggingKey + "/Camera pose null", cameraPose3d == null);
+                continue;
+            }
+            Logger.recordOutput(loggingKey + "/Robot pose null", false);
+            Logger.recordOutput(loggingKey + "/Camera pose null", false);
             var robotPose2d = robotPose3d.toPose2d();
             Logger.recordOutput(loggingKey + "/Poses/Robot2d", robotPose2d);
             Logger.recordOutput(loggingKey + "/Poses/Robot3d", robotPose3d);

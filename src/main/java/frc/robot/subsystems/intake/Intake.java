@@ -3,8 +3,10 @@ package frc.robot.subsystems.intake;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -14,7 +16,9 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -27,7 +31,9 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-    public static final LoggedTunableMeasure<VoltageUnit> intakeVoltage = new LoggedTunableMeasure<>("Intake/Voltages/Intake", Volts.of(4));
+    public static final LoggedTunableMeasure<TimeUnit> intakeConfirmTime = new LoggedTunableMeasure<>("Intake/Intake Confirm Time", Seconds.of(0.5));
+    public static final LoggedTunableMeasure<VoltageUnit> slowIntakeVoltage = new LoggedTunableMeasure<>("Intake/Voltages/Slow Intake", Volts.of(4));
+    public static final LoggedTunableMeasure<VoltageUnit> fastIntakeVoltage = new LoggedTunableMeasure<>("Intake/Voltages/Fast Intake", Volts.of(8));
     public static final LoggedTunableMeasure<VoltageUnit> holdVoltage = new LoggedTunableMeasure<>("Intake/Voltages/Hold", Volts.of(2));
 
     public final TurretMech leftClaw = new TurretMech(
@@ -144,18 +150,59 @@ public class Intake extends SubsystemBase {
             false
         );
     }
-    public Command intake() {
-        return genCommand(
-            "Intake",
-            intakeVoltage,
-            true
-        );
-    }
     public Command eject() {
         return genCommand(
             "Eject",
             Volts::zero,
             true
         );
+    }
+    public Command intake(BooleanSupplier open) {
+        var subsystem = this;
+        return new Command() {
+            {
+                setName("Intake");
+                addRequirements(subsystem);
+            }
+
+            private final Timer sensorTimer = new Timer();
+
+            @Override
+            public void initialize() {
+                
+            }
+
+            @Override
+            public void execute() {
+                if (inputs.sensorDetect) {
+                    sensorTimer.start();
+                } else {
+                    sensorTimer.stop();
+                    sensorTimer.reset();
+                }
+                var openValue = open.getAsBoolean();
+                setClawOpen(openValue && !inputs.sensorDetect);
+                io.setMotorVoltage(
+                    (openValue) ? (
+                        slowIntakeVoltage.get()
+                    ) : (
+                        fastIntakeVoltage.get()
+                    )
+                );
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+                sensorTimer.stop();
+                sensorTimer.reset();
+                io.setMotorVoltage(Volts.zero());
+                setClawOpen(false);
+            }
+
+            @Override
+            public boolean isFinished() {
+                return sensorTimer.hasElapsed(intakeConfirmTime.in(Seconds));
+            }
+        };
     }
 }

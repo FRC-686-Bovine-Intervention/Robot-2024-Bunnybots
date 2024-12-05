@@ -54,6 +54,10 @@ import frc.robot.subsystems.vision.apriltag.ApriltagCamera;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIOPhotonVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionConstants;
+import frc.robot.subsystems.vision.bucket.BucketCamera;
+import frc.robot.subsystems.vision.bucket.BucketCameraIOPhotonVision;
+import frc.robot.subsystems.vision.bucket.BucketVision;
+import frc.robot.subsystems.vision.bucket.BucketVisionConstants;
 import frc.util.controllers.ButtonBoard3x3;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
@@ -66,6 +70,7 @@ public class RobotContainer {
     public final Intake intake;
     public final Puncher puncher;
     public final ApriltagVision apriltagVision;
+    public final BucketVision bucketVision;
     public final ManualOverrides manualOverrides;
     public final ObjectiveTracker objectiveTracker;
 
@@ -105,6 +110,12 @@ public class RobotContainer {
                         new ApriltagCameraIOPhotonVision(ApriltagVisionConstants.backRightApriltagCamera)
                     )
                 );
+                bucketVision = new BucketVision(
+                    new BucketCamera(
+                        BucketVisionConstants.bucketCamera,
+                        new BucketCameraIOPhotonVision(BucketVisionConstants.bucketCamera)
+                    )
+                );
                 arm = new Arm(new ArmIOFalcon());
                 intake = new Intake(new IntakeIOTalon());
                 puncher = new Puncher(new PuncherIOSolenoid());
@@ -117,6 +128,7 @@ public class RobotContainer {
                         .toArray(ModuleIO[]::new)
                 );
                 apriltagVision = new ApriltagVision();
+                bucketVision = new BucketVision();
                 arm = new Arm(new ArmIOSim());
                 intake = new Intake(new IntakeIOSim());
                 puncher = new Puncher(new PuncherIO() {});
@@ -131,6 +143,7 @@ public class RobotContainer {
                     new ModuleIO(){}
                 );
                 apriltagVision = new ApriltagVision();
+                bucketVision = new BucketVision();
                 arm = new Arm(new ArmIO(){});
                 intake = new Intake(new IntakeIO() {});
                 puncher = new Puncher(new PuncherIO() {});
@@ -183,7 +196,7 @@ public class RobotContainer {
         configureSystemCheck();
 
         if (RobotConstants.tuningMode) {
-            new Alert("Tuning mode active.", AlertType.kInfo).set(true);
+            new Alert("Tuning mode active", AlertType.kInfo).set(true);
         }
     }
 
@@ -230,18 +243,10 @@ public class RobotContainer {
 
 
         driveController.a().toggleOnTrue(
-            Commands.parallel(
-                arm.floor(),
-                intake.intake()
+            intake.intake(driveController.y().negate()).deadlineFor(
+                arm.floor()
             )
-            .until(intake.hasBucket)
-            .andThen(
-                Commands.parallel(
-                    arm.floor(),
-                    intake.idle()
-                )
-                .withTimeout(0.5)
-            )
+            .onlyIf(intake.hasBucket.negate())
         );
         driveController.x().and(objectiveTracker.highGoal).whileTrue(
             Commands.parallel(
@@ -260,6 +265,13 @@ public class RobotContainer {
                 // intake.eject()
             )
         );
+        driveController.leftTrigger.aboveThreshold(0.75).whileTrue(
+            bucketVision.autoIntake(
+                bucketVision.applyDotProduct(joystickTranslational),
+                intake.hasBucket.negate(),
+                drive
+            )
+        );
         driveController.rightBumper().and(objectiveTracker.highGoal).whileTrue(
             AutoDrive.autoDriveToHighGoal(drive)
             .withName("Auto Drive to High Goal")
@@ -273,7 +285,7 @@ public class RobotContainer {
             drive.setPose(FieldConstants.highGoalScoreStackingSide.getOurs());
         }));
         SmartDashboard.putData("Reset Pose", Commands.runOnce(() -> {
-            drive.setPose(new Pose2d());
+            drive.setPose(Pose2d.kZero);
         }));
         SmartDashboard.putData("Arm/Coast", arm.coast());
         SmartDashboard.putData("Arm/Voltage", arm.voltage(
@@ -311,7 +323,8 @@ public class RobotContainer {
         SmartDashboard.putData("System Check/Arm/Floor", arm.floor());
         
         SmartDashboard.putData("System Check/Intake/Hold", intake.getDefaultCommand());
-        SmartDashboard.putData("System Check/Intake/Intake", intake.intake());
+        SmartDashboard.putData("System Check/Intake/Fast Intake", intake.intake(() -> false));
+        SmartDashboard.putData("System Check/Intake/Slow Intake", intake.intake(() -> true));
         SmartDashboard.putData("System Check/Intake/Eject", intake.eject());
         
         SmartDashboard.putData("System Check/Puncher/Reject", puncher.getDefaultCommand());

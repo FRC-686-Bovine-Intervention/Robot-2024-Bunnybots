@@ -32,7 +32,7 @@ public final class VisionConstants {
         )
         .rotateBy(new Rotation3d(
             Degrees.of(+0),
-            Degrees.of(+20),
+            Degrees.of(+0),
             Degrees.of(+0)
         ))
     ));
@@ -49,7 +49,7 @@ public final class VisionConstants {
         )
         .rotateBy(new Rotation3d(
             Degrees.of(+0),
-            Degrees.of(+20),
+            Degrees.of(+0),
             Degrees.of(+0)
         ))
     ));
@@ -89,19 +89,19 @@ public final class VisionConstants {
     ));
     public static final CameraMount flagStickMount = new CameraMount(new Transform3d(
         new Translation3d(
-            Meters.of(+0.220594),
-            Meters.of(-0.280635),
-            Meters.of(+0.234983)
+            Meters.of(-0.219548),
+            Meters.of(-0.195904),
+            Meters.of(+1.147068)
         ),
         new Rotation3d(
             Degrees.of(+0),
-            Degrees.of(+0),
-            Degrees.of(-135)
+            Degrees.of(+30),
+            Degrees.of(+0)
         )
         .rotateBy(new Rotation3d(
             Degrees.of(+0),
-            Degrees.of(+20),
-            Degrees.of(+0)
+            Degrees.of(+0),
+            Degrees.of(+10)
         ))
     ));
 }

@@ -48,7 +48,7 @@ public interface ApriltagCameraIO {
 
             @Override
             public int getSize() {
-                return kSizeInt32 * 1 + Transform3d.struct.getSize() * 2;
+                return kSizeInt32 * 1 + Transform3d.struct.getSize() * 2 + kSizeDouble * 1;
             }
 
             @Override

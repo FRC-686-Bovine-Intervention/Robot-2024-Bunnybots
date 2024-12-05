@@ -7,14 +7,14 @@
     "cameras": [
         {
             "name": "Front Left",
-            "rotations": [{ "axis": "z", "degrees": 135 },{ "axis": "y", "degrees": 20 }],
+            "rotations": [{ "axis": "z", "degrees": 135 }],
             "position": [0.220594,0.280635,0.234983],
             "resolution": [1280, 800],
             "fov": 90
         },
         {
             "name": "Front Right",
-            "rotations": [{ "axis": "z", "degrees": -135 },{ "axis": "y", "degrees": 20 }],
+            "rotations": [{ "axis": "z", "degrees": -135 }],
             "position": [0.220594,-0.280635,0.234983],
             "resolution": [1280, 800],
             "fov": 90
@@ -30,6 +30,13 @@
             "name": "Back Right",
             "rotations": [{ "axis": "z", "degrees": -5 },{ "axis": "y", "degrees": -20 }],
             "position": [-0.209274,-0.255268,0.234983],
+            "resolution": [1280, 800],
+            "fov": 90
+        },
+        {
+            "name": "Flag Stick",
+            "rotations": [{ "axis": "y", "degrees": 30 },{ "axis": "z", "degrees": 10 }],
+            "position": [-0.219548,-0.195904,1.147068],
             "resolution": [1280, 800],
             "fov": 90
         }

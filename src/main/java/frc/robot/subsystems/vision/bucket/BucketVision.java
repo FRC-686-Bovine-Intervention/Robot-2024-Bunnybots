@@ -18,6 +18,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -31,10 +32,13 @@ import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.leds.Leds;
+import frc.robot.subsystems.vision.bucket.BucketCameraIO.BucketCameraTarget;
 import frc.util.LazyOptional;
 import frc.util.LoggedTunableMeasure;
 import frc.util.LoggedTunableNumber;
 import frc.util.VirtualSubsystem;
+import frc.util.loggerUtil.LoggerUtil;
+import frc.util.robotStructure.CameraMount;
 
 public class BucketVision extends VirtualSubsystem {
     private final BucketCamera[] cameras;
@@ -61,7 +65,7 @@ public class BucketVision extends VirtualSubsystem {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Apriltag Cam Poses", Arrays.stream(
+        Logger.recordOutput("Bucket Cam Poses", Arrays.stream(
             new BucketVisionConstants.BucketCameraConstants[]{
                 BucketVisionConstants.bucketCamera
             })
@@ -73,11 +77,12 @@ public class BucketVision extends VirtualSubsystem {
             .map(BucketCamera::periodic)
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .flatMap((result) -> Arrays.stream(result.targets))
-            .map((target) -> new TrackedBucket(null, 0))
+            .flatMap((result) ->
+                Arrays.stream(result.targets).map((target) -> TrackedBucket.from(result.camMeta.mount, target))
+            )
             .toList()
         ;
-        var connections = new ArrayList<TargetMemoryConnection>();
+        var connections = new ArrayList<TargetMemoryConnection>(bucketMemories.size() * frameTargets.size());
         bucketMemories.forEach(
             (memory) -> frameTargets.forEach(
                 (target) -> {
@@ -87,7 +92,7 @@ public class BucketVision extends VirtualSubsystem {
                 }
             )
         );
-        connections.sort((a, b) -> (int) Math.signum(a.getDistance() - b.getDistance()));
+        connections.sort((a, b) -> Double.compare(a.getDistance(), b.getDistance()));
         var unusedMemories = new ArrayList<>(bucketMemories);
         var unusedTargets = new ArrayList<>(frameTargets);
         while(!connections.isEmpty()) {
@@ -108,24 +113,35 @@ public class BucketVision extends VirtualSubsystem {
         });
         unusedTargets.forEach(bucketMemories::add);
         bucketMemories.removeIf((memory) -> memory.confidence <= 0);
-        bucketMemories.removeIf((memory) -> Double.isNaN(memory.fieldPos.getX()));
+        bucketMemories.removeIf((memory) -> Double.isNaN(memory.fieldPos.getX()) || Double.isNaN(memory.fieldPos.getY()));
         bucketMemories.removeIf((memory) -> RobotState.getInstance().getPose().getTranslation().getDistance(memory.fieldPos) <= 0.07);
 
-        if(optIntakeTarget.isPresent() && (optIntakeTarget.get().confidence < detargetConfidenceThreshold.get() || !bucketMemories.contains(optIntakeTarget.get()))) {
+        if(
+            optIntakeTarget.isPresent()
+            && (
+                optIntakeTarget.get().confidence < detargetConfidenceThreshold.get()
+                || !bucketMemories.contains(optIntakeTarget.get())
+            )
+        ) {
             optIntakeTarget = Optional.empty();
         }
         if(optIntakeTarget.isEmpty() || !intakeTargetLocked) {
-            optIntakeTarget = bucketMemories.stream().filter((target) -> target.getPriority() >= acquireConfidenceThreshold.get()).sorted((a,b) -> (int)Math.signum(b.getPriority() - a.getPriority())).findFirst();
+            optIntakeTarget = bucketMemories
+                .stream()
+                .filter((target) -> target.getPriority() >= acquireConfidenceThreshold.get())
+                .sorted((a,b) -> Double.compare(b.getPriority(), a.getPriority()))
+                .findFirst()
+            ;
         }
         
         Leds.getInstance().visionAcquired.setFlag(hasTarget());
         Leds.getInstance().visionLocked.setFlag(targetLocked());
         
-        Logger.recordOutput("Vision/Note/Note Memories", bucketMemories.stream().map(TrackedBucket::toASPose).toArray(Pose3d[]::new));
-        Logger.recordOutput("Vision/Note/Note Confidence", bucketMemories.stream().mapToDouble((note) -> note.confidence).toArray());
-        Logger.recordOutput("Vision/Note/Note Priority", bucketMemories.stream().mapToDouble(TrackedBucket::getPriority).toArray());
-        Logger.recordOutput("Vision/Note/Target", optIntakeTarget.map(TrackedBucket::toASPose).map((a) -> new Pose3d[]{a}).orElse(new Pose3d[0]));
-        Logger.recordOutput("Vision/Note/Locked Target", optIntakeTarget.filter((a) -> intakeTargetLocked).map(TrackedBucket::toASPose).map((a) -> new Pose3d[]{a}).orElse(new Pose3d[0]));
+        Logger.recordOutput("Vision/Bucket/Bucket Memories", bucketMemories.stream().map(TrackedBucket::toASPose).toArray(Pose3d[]::new));
+        Logger.recordOutput("Vision/Bucket/Bucket Confidence", bucketMemories.stream().mapToDouble((note) -> note.confidence).toArray());
+        Logger.recordOutput("Vision/Bucket/Bucket Priority", bucketMemories.stream().mapToDouble(TrackedBucket::getPriority).toArray());
+        Logger.recordOutput("Vision/Bucket/Target", LoggerUtil.toArray(optIntakeTarget.map(TrackedBucket::toASPose), Pose3d[]::new));
+        Logger.recordOutput("Vision/Bucket/Locked Target", LoggerUtil.toArray(optIntakeTarget.filter((a) -> intakeTargetLocked).map(TrackedBucket::toASPose), Pose3d[]::new));
     }
 
     public DoubleSupplier applyDotProduct(Supplier<ChassisSpeeds> joystickFieldRelative) {
@@ -167,14 +183,14 @@ public class BucketVision extends VirtualSubsystem {
         optIntakeTarget = Optional.empty();
     }
 
-    public Command autoIntake(DoubleSupplier throttle, BooleanSupplier noNote, Drive drive) {
+    public Command autoIntake(DoubleSupplier throttle, BooleanSupplier noBucket, Drive drive) {
         return 
             Commands.runOnce(() -> intakeTargetLocked = true)
             .alongWith(
                 drive.translationSubsystem.fieldRelative(getAutoIntakeTransSpeed(throttle).orElseGet(ChassisSpeeds::new)),
                 drive.rotationalSubsystem.pointTo(autoIntakeTargetLocation(), () -> RobotConstants.intakeForward)
             )
-            .onlyWhile(() -> noNote.getAsBoolean() && optIntakeTarget.isPresent())
+            .onlyWhile(() -> noBucket.getAsBoolean() && optIntakeTarget.isPresent())
             .finallyDo(() -> intakeTargetLocked = false)
             .withName("Auto Intake")
         ;
@@ -193,6 +209,29 @@ public class BucketVision extends VirtualSubsystem {
         public TrackedBucket(Translation2d fieldPos, double confidence) {
             this.fieldPos = fieldPos;
             this.confidence = confidence * confUpdatingFilteringFactor.get();
+        }
+
+        public static TrackedBucket from(CameraMount mount, BucketCameraTarget target) {
+            var camTransform = mount.getRobotRelative();
+            var targetCamViewTransform = camTransform.plus(
+                new Transform3d(
+                    Translation3d.kZero,
+                    target.cameraPose
+                )
+            );
+            var distOut = targetCamViewTransform.getTranslation().getZ() / Math.tan(targetCamViewTransform.getRotation().getY());
+            var distOff = distOut * Math.tan(targetCamViewTransform.getRotation().getZ());
+            var camToTargetTranslation = new Translation3d(distOut, distOff, -camTransform.getZ());
+            var fieldPos = new Pose3d(RobotState.getInstance().getPose())
+                .transformBy(camTransform)
+                .transformBy(new Transform3d(camToTargetTranslation, Rotation3d.kZero))
+                .toPose2d()
+                .getTranslation()
+            ;
+
+            var confidence = Math.sqrt(target.area) * confidencePerAreaPercent.get();
+
+            return new TrackedBucket(fieldPos, confidence);
         }
 
         public void updateConfidence() {
