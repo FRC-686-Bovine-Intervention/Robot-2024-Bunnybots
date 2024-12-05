@@ -27,7 +27,7 @@ import frc.util.robotStructure.Mechanism3d;
 public class Robot extends LoggedRobot {
     @Override
     public void robotInit() {
-        // Leds.getInstance();
+        Leds.getInstance();
         System.out.println("[Init Robot] Recording AdvantageKit Metadata");
         Logger.recordMetadata("Robot", RobotType.getRobot().name());
         Logger.recordMetadata("Mode", RobotType.getMode().name());

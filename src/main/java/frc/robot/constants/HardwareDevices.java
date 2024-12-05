@@ -4,7 +4,8 @@ import frc.util.hardwareID.CANBus;
 import frc.util.hardwareID.CANDevice;
 import frc.util.hardwareID.PnuematicsControl;
 import frc.util.hardwareID.PnuematicsControl.SolenoidPort;
-import frc.util.hardwareID.RIOPort;
+import frc.util.hardwareID.rioPorts.DIOPort;
+import frc.util.hardwareID.rioPorts.PWMPort;
 
 public class HardwareDevices {
     /*
@@ -57,8 +58,8 @@ public class HardwareDevices {
     public static final SolenoidPort puncherPistonID = pnuematicsHub.solenoidPort(1);
 
     // RIO
-    public static final RIOPort ledPort = RIOPort.port(0);
-    public static final RIOPort button1 = RIOPort.port(0);
-    public static final RIOPort button2 = RIOPort.port(0);
-    public static final RIOPort button3 = RIOPort.port(0);
+    public static final PWMPort ledPort = PWMPort.port(0);
+    public static final DIOPort button1 = DIOPort.port(0);
+    public static final DIOPort button2 = DIOPort.port(0);
+    public static final DIOPort button3 = DIOPort.port(0);
 }

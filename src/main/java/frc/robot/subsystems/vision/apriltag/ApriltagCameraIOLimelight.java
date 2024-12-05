@@ -1,13 +1,18 @@
 package frc.robot.subsystems.vision.apriltag;
 
-import edu.wpi.first.wpilibj.Timer;
-import frc.robot.subsystems.vision.VisionConstants.Camera;
+import java.util.Arrays;
 
+import edu.wpi.first.wpilibj.Timer;
+import frc.robot.subsystems.vision.apriltag.ApriltagVisionConstants.ApriltagCameraConstants;
+import frc.robot.subsystems.vision.apriltag.LimelightHelpers.LimelightTarget_Fiducial;
+import frc.util.GeomUtil;
+
+@Deprecated
 public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
 
     private final String cameraName; 
 
-    public ApriltagCameraIOLimelight(Camera cameraData) {
+    public ApriltagCameraIOLimelight(ApriltagCameraConstants cameraData) {
         // Important: need to configure robotToCamera pose using Limelight webUI
         // Important: need to configure AprilTag field map using Limelight webUI
         // https://docs.limelightvision.io/en/latest/apriltags_in_3d.html#robot-localization-botpose-and-megatag
@@ -15,10 +20,9 @@ public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
         LimelightHelpers.setPipelineIndex(cameraName, 0);
     }
 
+    @Override
     public void updateInputs(ApriltagCameraIOInputs inputs) {
-        // set default values
         inputs.isConnected = false;
-        inputs.hasResult = false;
 
         // get parsed results from JSON on NetworkTables.  
         // Use this JSON results to make sure all values are from the same snapshot
@@ -29,12 +33,20 @@ public class ApriltagCameraIOLimelight implements ApriltagCameraIO {
 
         if (!inputs.isConnected || LimelightHelpers.getFiducialID(cameraName) < 0) return;
 
-        var cameraToTargetDist = LimelightHelpers.getTargetPose3d_CameraSpace(cameraName).getTranslation().getNorm();
-        var visionPose = result.getBotPose3d_wpiBlue();
         double latencySeconds = (result.latency_capture + result.latency_pipeline + result.latency_jsonParse) / 1000.0;
         var timestamp = Timer.getFPGATimestamp() - latencySeconds;
+        inputs.timestamp = timestamp;
 
-        inputs.hasResult = true;
-        // inputs.result = new ApriltagCameraResult(timestamp, cameraToTargetDist, visionPose);
+        inputs.targets = Arrays.stream(result.targets_Fiducials).map(ApriltagCameraIOLimelight::targetFromLLTarget).toArray(ApriltagCameraTarget[]::new);
+        inputs.estimatedRobotPose = result.getBotPose3d_wpiBlue();
+    }
+
+    private static ApriltagCameraTarget targetFromLLTarget(LimelightTarget_Fiducial limelightTarget) {
+        return new ApriltagCameraTarget(
+            (int) limelightTarget.fiducialID,
+            GeomUtil.toTransform3d(limelightTarget.getTargetPose_CameraSpace()),
+            GeomUtil.toTransform3d(limelightTarget.getTargetPose_CameraSpace()),
+            0
+        );
     }
 }
