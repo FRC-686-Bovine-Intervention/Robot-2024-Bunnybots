@@ -48,8 +48,9 @@ public class Arm extends SubsystemBase {
     );
 
     public static final LoggedTunableMeasure<AngleUnit> floorSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Floor", Degrees.of(0));
-    public static final LoggedTunableMeasure<AngleUnit> puncherSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Puncher", Degrees.of(95));
-    
+    public static final LoggedTunableMeasure<AngleUnit> idleSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Idle", Degrees.of(95));
+    public static final LoggedTunableMeasure<AngleUnit> puncherSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Puncher", Degrees.of(90));
+
     private final LoggedTunableMeasure<AngleUnit> customAngleIncrement = new LoggedTunableMeasure<>("Arm/Setpoints/Custom/Increment", Degrees.of(5));
 
     public final LoggedInternalButton atPos = new LoggedInternalButton("Arm/At Position");
@@ -138,6 +139,13 @@ public class Arm extends SubsystemBase {
         return genCommand(
             "Puncher",
             puncherSetpoint
+        );
+    }
+
+    public Command idle() {
+        return genCommand(
+            "Idle",
+            idleSetpoint
         );
     }
 

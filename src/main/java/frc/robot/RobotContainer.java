@@ -168,7 +168,7 @@ public class RobotContainer {
         //         .withName("Robot spin")
         // );
         arm.setDefaultCommand(
-            arm.puncher()
+            arm.idle()
         );
         intake.setDefaultCommand(
             intake.idle()
@@ -211,6 +211,8 @@ public class RobotContainer {
                 .withTimeout(0.5)
             )
         );
+
+        intake.hasBucket.whileTrue(arm.puncher());
         driveController.x().whileTrue(
             Commands.parallel(
                 intake.eject(),
