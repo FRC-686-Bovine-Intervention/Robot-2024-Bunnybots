@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 
@@ -19,11 +19,11 @@ public interface BucketCameraIO {
     public default void updateInputs(BucketCameraIOInputs inputs) {}
 
     public static class BucketCameraTarget implements StructSerializable {
-        public final Rotation3d cameraPose;
+        public final Translation3d cameraToTargetVector;
         public final double area;
 
-        public BucketCameraTarget(Rotation3d cameraPose, double area) {
-            this.cameraPose = cameraPose;
+        public BucketCameraTarget(Translation3d cameraToTargetVector, double area) {
+            this.cameraToTargetVector = cameraToTargetVector;
             this.area = area;
         }
 
@@ -41,29 +41,29 @@ public interface BucketCameraIO {
 
             @Override
             public int getSize() {
-                return Rotation3d.struct.getSize() * 1 + kSizeDouble * 1;
+                return Translation3d.struct.getSize() * 1 + kSizeDouble * 1;
             }
 
             @Override
             public String getSchema() {
-                return "Rotation3d cameraPose;double area";
+                return "Translation3d cameraPose;double area";
             }
 
             @Override
             public Struct<?>[] getNested() {
-                return new Struct[]{Rotation3d.struct};
+                return new Struct[]{Translation3d.struct};
             }
 
             @Override
             public BucketCameraTarget unpack(ByteBuffer bb) {
-                var cameraPose = Rotation3d.struct.unpack(bb);
+                var cameraToTargetVector = Translation3d.struct.unpack(bb);
                 var area = bb.getDouble();
-                return new BucketCameraTarget(cameraPose, area);
+                return new BucketCameraTarget(cameraToTargetVector, area);
             }
 
             @Override
             public void pack(ByteBuffer bb, BucketCameraTarget value) {
-                Rotation3d.struct.pack(bb, value.cameraPose);
+                Translation3d.struct.pack(bb, value.cameraToTargetVector);
                 bb.putDouble(value.area);
             }
         }

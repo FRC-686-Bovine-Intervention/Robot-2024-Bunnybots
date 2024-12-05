@@ -17,8 +17,9 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -80,6 +81,8 @@ public class BucketVision extends VirtualSubsystem {
             .flatMap((result) ->
                 Arrays.stream(result.targets).map((target) -> TrackedBucket.from(result.camMeta.mount, target))
             )
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .toList()
         ;
         var connections = new ArrayList<TargetMemoryConnection>(bucketMemories.size() * frameTargets.size());
@@ -141,7 +144,7 @@ public class BucketVision extends VirtualSubsystem {
         Logger.recordOutput("Vision/Bucket/Bucket Confidence", bucketMemories.stream().mapToDouble((note) -> note.confidence).toArray());
         Logger.recordOutput("Vision/Bucket/Bucket Priority", bucketMemories.stream().mapToDouble(TrackedBucket::getPriority).toArray());
         Logger.recordOutput("Vision/Bucket/Target", LoggerUtil.toArray(optIntakeTarget.map(TrackedBucket::toASPose), Pose3d[]::new));
-        Logger.recordOutput("Vision/Bucket/Locked Target", LoggerUtil.toArray(optIntakeTarget.filter((a) -> intakeTargetLocked).map(TrackedBucket::toASPose), Pose3d[]::new));
+        Logger.recordOutput("Vision/Bucket/Locked Target", LoggerUtil.toArray(optIntakeTarget.filter((a) -> intakeTargetLocked).map(TrackedBucket::toASPose).map(Pose3d::getTranslation), Translation3d[]::new));
     }
 
     public DoubleSupplier applyDotProduct(Supplier<ChassisSpeeds> joystickFieldRelative) {
@@ -211,27 +214,35 @@ public class BucketVision extends VirtualSubsystem {
             this.confidence = confidence * confUpdatingFilteringFactor.get();
         }
 
-        public static TrackedBucket from(CameraMount mount, BucketCameraTarget target) {
+        public static Optional<TrackedBucket> from(CameraMount mount, BucketCameraTarget target) {
             var camTransform = mount.getRobotRelative();
-            var targetCamViewTransform = camTransform.plus(
-                new Transform3d(
-                    Translation3d.kZero,
-                    target.cameraPose
-                )
-            );
-            var distOut = targetCamViewTransform.getTranslation().getZ() / Math.tan(targetCamViewTransform.getRotation().getY());
-            var distOff = distOut * Math.tan(targetCamViewTransform.getRotation().getZ());
-            var camToTargetTranslation = new Translation3d(distOut, distOff, -camTransform.getZ());
-            var fieldPos = new Pose3d(RobotState.getInstance().getPose())
-                .transformBy(camTransform)
-                .transformBy(new Transform3d(camToTargetTranslation, Rotation3d.kZero))
-                .toPose2d()
-                .getTranslation()
-            ;
+            // var targetCamViewTransform = camTransform.plus(
+            //     new Transform3d(
+            //         Translation3d.kZero,
+            //         target.cameraPose
+            //     )
+            // );
+            // var distOut = targetCamViewTransform.getTranslation().getZ() / Math.tan(targetCamViewTransform.getRotation().getY());
+            // var distOff = distOut * Math.tan(targetCamViewTransform.getRotation().getZ());
+            // var camToTargetTranslation = new Translation3d(distOut, distOff, -camTransform.getZ());
+            // var fieldPos = new Pose3d(RobotState.getInstance().getPose())
+            //     .transformBy(camTransform)
+            //     .transformBy(new Transform3d(camToTargetTranslation, Rotation3d.kZero))
+            //     .toPose2d()
+            //     .getTranslation()
+            // ;
+            var cameraToTargetVectorRobotRelative = target.cameraToTargetVector.rotateBy(camTransform.getRotation());
+            if (cameraToTargetVectorRobotRelative.getZ() >= 0) {
+                // Target above horizon, ignore
+                return Optional.empty();
+            }
+            var toFloorScalingFactor = camTransform.getTranslation().getZ() / -cameraToTargetVectorRobotRelative.getZ();
+            var robotToTarget = cameraToTargetVectorRobotRelative.times(toFloorScalingFactor).plus(camTransform.getTranslation());
+            var fieldPose = RobotState.getInstance().getPose().transformBy(new Transform2d(robotToTarget.toTranslation2d(), Rotation2d.kZero));
 
             var confidence = Math.sqrt(target.area) * confidencePerAreaPercent.get();
 
-            return new TrackedBucket(fieldPos, confidence);
+            return Optional.of(new TrackedBucket(fieldPose.getTranslation(), confidence));
         }
 
         public void updateConfidence() {
