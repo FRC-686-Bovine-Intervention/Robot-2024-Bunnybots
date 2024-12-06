@@ -300,7 +300,7 @@ public class RobotContainer {
         AutoPaths.preload();
         var selector = new AutoSelector("AutoSelector");
 
-        selector.addRoutine(new ScoreHigh(drive));
+        selector.addRoutine(new ScoreHigh(this));
 
         new AutoManager(selector);
     }
