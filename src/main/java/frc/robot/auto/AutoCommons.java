@@ -111,6 +111,15 @@ public class AutoCommons {
         public static void preload() {
             preloading = true;
             // load paths
+            loadChoreoTrajectory("Inner To Stacking");
+            loadChoreoTrajectory("Outer To Stacking");
+            loadChoreoTrajectory("Stacking To Bucket4");
+            loadChoreoTrajectory("Stacking To Bucket3");
+            loadChoreoTrajectory("Stacking To Bucket2");
+            loadChoreoTrajectory("Bucket4 To Source");
+            loadChoreoTrajectory("Bucket4 To Stacking");
+            loadChoreoTrajectory("Bucket3 To Stacking");
+            loadChoreoTrajectory("Bucket2 To Stacking");
             preloading = false;
             System.out.println("[Init AutoPaths] Loaded paths");
             PathPlannerLogging.setLogActivePathCallback((path) -> Logger.recordOutput("Autonomous/Path", path.toArray(Pose2d[]::new)));
