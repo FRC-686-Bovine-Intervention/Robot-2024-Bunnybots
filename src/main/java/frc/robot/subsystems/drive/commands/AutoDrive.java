@@ -35,7 +35,7 @@ public class AutoDrive {
                     var constraintZones = new ArrayList<ConstraintsZone>(1);
                     var currentBluePose = AllianceFlipUtil.apply(currentPose);
                     points.add(new Pose2d(
-                        currentBluePose.getTranslation(),
+                        currentPose.getTranslation(),
                         new Rotation2d(
                             drive.getFieldMeasuredSpeeds().vxMetersPerSecond,
                             drive.getFieldMeasuredSpeeds().vyMetersPerSecond
@@ -47,131 +47,43 @@ public class AutoDrive {
                     if (includePreEntry) {
                         points.add(
                             (useFieldEntry) ? (
-                                FieldConstants.denFieldPreEntry.getBlue()
+                                FieldConstants.denFieldPreEntry.getOurs()
                             ) : (
-                                FieldConstants.denSourcePreEntry.getBlue()
+                                FieldConstants.denSourcePreEntry.getOurs()
                             )
                         );
                         rotationTargets.add(new RotationTarget(
                             points.size() - 1,
-                            Rotation2d.k180deg
+                            FieldConstants.denSourcePreEntry.getOurs().getRotation()
                         ));
                     }
                     if (includeEntry) {
                         points.add(
                             (useFieldEntry) ? (
-                                FieldConstants.denFieldEntry.getBlue()
+                                FieldConstants.denFieldEntry.getOurs()
                             ) : (
-                                FieldConstants.denSourceEntry.getBlue()
+                                FieldConstants.denSourceEntry.getOurs()
                             )
                         );
                         rotationTargets.add(new RotationTarget(
                             points.size() - 1,
-                            Rotation2d.k180deg
+                            FieldConstants.denSourceEntry.getOurs().getRotation()
                         ));
                     }
                     points.add(
                         (useFieldEntry) ? (
-                            FieldConstants.highGoalPreScoreStackingSide.getBlue()
+                            FieldConstants.highGoalPreScoreStackingSide.getOurs()
                         ) : (
-                            FieldConstants.highGoalPreScoreSourceSide.getBlue()
+                            FieldConstants.highGoalPreScoreSourceSide.getOurs()
                         )
                     );
                     points.add(
                         (useFieldEntry) ? (
-                            FieldConstants.highGoalScoreStackingSide.getBlue()
+                            FieldConstants.highGoalScoreStackingSide.getOurs()
                         ) : (
-                            FieldConstants.highGoalScoreSourceSide.getBlue()
+                            FieldConstants.highGoalScoreSourceSide.getOurs()
                         )
                     );
-                    constraintZones.add(new ConstraintsZone(
-                        points.size() - 2,
-                        points.size() - 1,
-                        new PathConstraints(
-                            1,
-                            1,
-                            1,
-                            1
-                        )
-                    ));
-                    return drive.followPath(new PathPlannerPath(
-                        PathPlannerPath.waypointsFromPoses(points),
-                        rotationTargets,
-                        Collections.emptyList(),
-                        constraintZones,
-                        Collections.emptyList(),
-                        new PathConstraints(
-                            3,
-                            3,
-                            3,
-                            3
-                        ),
-                        null,
-                        new GoalEndState(0, Rotation2d.k180deg),
-                        false
-                    ));
-                }
-            },
-            Set.of(drive.translationSubsystem, drive.rotationalSubsystem)
-        );
-    }
-    public static Command autoDriveToStackingGrid(Drive drive) {
-        return Commands.defer(
-            new Supplier<Command>() {
-                @Override
-                public Command get() {
-                    var currentPose = drive.getPose();
-                    var points = new ArrayList<Pose2d>(5);
-                    var rotationTargets = new ArrayList<RotationTarget>(2);
-                    var constraintZones = new ArrayList<ConstraintsZone>(1);
-                    var currentBluePose = AllianceFlipUtil.apply(currentPose);
-                    points.add(new Pose2d(
-                        currentBluePose.getTranslation(),
-                        new Rotation2d(
-                            drive.getFieldMeasuredSpeeds().vxMetersPerSecond,
-                            drive.getFieldMeasuredSpeeds().vyMetersPerSecond
-                        )
-                    ));
-                    var includePreEntry = currentBluePose.getMeasureX().gt(FieldConstants.denPreEntryX);
-                    var includeEntry = currentBluePose.getMeasureX().gt(FieldConstants.denEntryX) && currentBluePose.getMeasureY().lte(FieldConstants.denFieldEntryY);
-                    var useFieldEntry = currentBluePose.getMeasureY().gt(FieldConstants.denEntryDecisionY);
-                    if (includePreEntry) {
-                        points.add(
-                            (useFieldEntry) ? (
-                                FieldConstants.denFieldPreEntry.getBlue()
-                            ) : (
-                                FieldConstants.denSourcePreEntry.getBlue()
-                            )
-                        );
-                        rotationTargets.add(new RotationTarget(
-                            points.size() - 1,
-                            Rotation2d.k180deg
-                        ));
-                    }
-                    if (includeEntry) {
-                        points.add(
-                            (useFieldEntry) ? (
-                                FieldConstants.denFieldEntry.getBlue()
-                            ) : (
-                                FieldConstants.denSourceEntry.getBlue()
-                            )
-                        );
-                        rotationTargets.add(new RotationTarget(
-                            points.size() - 1,
-                            Rotation2d.k180deg
-                        ));
-                    }
-                    points.add(new Pose2d(
-                        new Translation2d(
-                            FieldConstants.stackingScoreX.in(Meters),
-                            MathUtil.clamp(
-                                points.get(points.size()-1).getY(),
-                                FieldConstants.stackingMinY.in(Meters),
-                                FieldConstants.stackingMaxY.in(Meters)
-                            )
-                        ),
-                        Rotation2d.k180deg
-                    ));
                     // constraintZones.add(new ConstraintsZone(
                     //     points.size() - 2,
                     //     points.size() - 1,
@@ -195,7 +107,95 @@ public class AutoDrive {
                             3
                         ),
                         null,
-                        new GoalEndState(0, Rotation2d.k180deg),
+                        new GoalEndState(0, FieldConstants.highGoalScoreStackingSide.getOurs().getRotation()),
+                        false
+                    ));
+                }
+            },
+            Set.of(drive.translationSubsystem, drive.rotationalSubsystem)
+        );
+    }
+    public static Command autoDriveToStackingGrid(Drive drive) {
+        return Commands.defer(
+            new Supplier<Command>() {
+                @Override
+                public Command get() {
+                    var currentPose = drive.getPose();
+                    var points = new ArrayList<Pose2d>(5);
+                    var rotationTargets = new ArrayList<RotationTarget>(2);
+                    var constraintZones = new ArrayList<ConstraintsZone>(1);
+                    var currentBluePose = AllianceFlipUtil.apply(currentPose);
+                    points.add(new Pose2d(
+                        currentPose.getTranslation(),
+                        new Rotation2d(
+                            drive.getFieldMeasuredSpeeds().vxMetersPerSecond,
+                            drive.getFieldMeasuredSpeeds().vyMetersPerSecond
+                        )
+                    ));
+                    var includePreEntry = currentBluePose.getMeasureX().gt(FieldConstants.denPreEntryX);
+                    var includeEntry = currentBluePose.getMeasureX().gt(FieldConstants.denEntryX) && currentBluePose.getMeasureY().lte(FieldConstants.denFieldEntryY);
+                    var useFieldEntry = currentBluePose.getMeasureY().gt(FieldConstants.denEntryDecisionY);
+                    if (includePreEntry) {
+                        points.add(
+                            (useFieldEntry) ? (
+                                FieldConstants.denFieldPreEntry.getOurs()
+                            ) : (
+                                FieldConstants.denSourcePreEntry.getOurs()
+                            )
+                        );
+                        rotationTargets.add(new RotationTarget(
+                            points.size() - 1,
+                            FieldConstants.denSourcePreEntry.getOurs().getRotation()
+                        ));
+                    }
+                    if (includeEntry) {
+                        points.add(
+                            (useFieldEntry) ? (
+                                FieldConstants.denFieldEntry.getOurs()
+                            ) : (
+                                FieldConstants.denSourceEntry.getOurs()
+                            )
+                        );
+                        rotationTargets.add(new RotationTarget(
+                            points.size() - 1,
+                            FieldConstants.denSourceEntry.getOurs().getRotation()
+                        ));
+                    }
+                    points.add(new Pose2d(
+                        new Translation2d(
+                            FieldConstants.stackingScoreX.in(Meters),
+                            MathUtil.clamp(
+                                points.get(points.size()-1).getY(),
+                                FieldConstants.stackingMinY.in(Meters),
+                                FieldConstants.stackingMaxY.in(Meters)
+                            )
+                        ),
+                        FieldConstants.highGoalScoreStackingSide.getOurs().getRotation()
+                    ));
+                    // constraintZones.add(new ConstraintsZone(
+                    //     points.size() - 2,
+                    //     points.size() - 1,
+                    //     new PathConstraints(
+                    //         1,
+                    //         1,
+                    //         1,
+                    //         1
+                    //     )
+                    // ));
+                    return drive.followBluePath(new PathPlannerPath(
+                        PathPlannerPath.waypointsFromPoses(points),
+                        rotationTargets,
+                        Collections.emptyList(),
+                        constraintZones,
+                        Collections.emptyList(),
+                        new PathConstraints(
+                            3,
+                            3,
+                            3,
+                            3
+                        ),
+                        null,
+                        new GoalEndState(0, FieldConstants.highGoalScoreStackingSide.getOurs().getRotation()),
                         false
                     ));
                 }

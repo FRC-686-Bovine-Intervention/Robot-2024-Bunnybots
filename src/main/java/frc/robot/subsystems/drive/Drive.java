@@ -269,7 +269,7 @@ public class Drive extends VirtualSubsystem {
         driveVelocity(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
     }
 
-    public Command followPath(PathPlannerPath path) {
+    public Command followBluePath(PathPlannerPath path) {
         return new FollowPathCommand(
             path,
             this::getPose,
@@ -278,6 +278,18 @@ public class Drive extends VirtualSubsystem {
             autoConfig(),
             robotConfig(),
             AllianceFlipUtil::shouldFlip,
+            this.translationSubsystem, this.rotationalSubsystem
+        );
+    }
+    public Command followPath(PathPlannerPath path) {
+        return new FollowPathCommand(
+            path,
+            this::getPose,
+            this::getRobotMeasuredSpeeds,
+            this::drivePPVelocity,
+            autoConfig(),
+            robotConfig(),
+            () -> false,
             this.translationSubsystem, this.rotationalSubsystem
         );
     }

@@ -61,7 +61,7 @@ public class AutoCommons {
         Canister1(1),
         Canister2(2),
         Canister3(3),
-        Canister4(4)
+        Canister4(4),
         ;
         private int number;
         Canister(int number) {
@@ -136,7 +136,7 @@ public class AutoCommons {
             if(loadedPaths.containsKey(name)) {
                 return loadedPaths.get(name);
             } else {
-                if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.WARNING).set(true);
+                if(!preloading) new Alert("[AutoPaths] Loading \"" + name + "\" which wasn't preloaded. Please add path to AutoPaths.preload()", AlertType.kWarning).set(true);
                 try {
                     var path = PathPlannerPath.fromChoreoTrajectory(name);
                     loadedPaths.put(name, path);

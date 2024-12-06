@@ -5,7 +5,6 @@
 package frc.robot;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -23,7 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoCommons.AutoPaths;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.auto.AutoSelector.AutoRoutine;
+import frc.robot.auto.ScoreHigh;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.arm.Arm;
