@@ -19,10 +19,13 @@ public class ObjectiveTracker extends VirtualSubsystem {
     public final Trigger stackingGrid = new Trigger(() -> currentObjective == Objective.StackingGrid);
     public final Trigger yard = new Trigger(() -> currentObjective == Objective.Yard);
 
-    public Command set(Objective objective) {
-        return Commands.runOnce(() -> {
+    public Runnable setRunnable(Objective objective) {
+        return () -> {
             currentObjective = objective;
-        });
+        };
+    }
+    public Command set(Objective objective) {
+        return Commands.runOnce(setRunnable(objective));
     }
 
     @Override

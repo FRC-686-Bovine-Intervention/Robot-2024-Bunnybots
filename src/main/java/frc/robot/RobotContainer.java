@@ -245,7 +245,7 @@ public class RobotContainer {
 
 
         driveController.a().toggleOnTrue(
-            intake.intake(driveController.y().negate()).deadlineFor(
+            intake.intake(driveController.rightTrigger.aboveThreshold(0.75).negate()).deadlineFor(
                 arm.floor()
             )
             .onlyIf(intake.hasBucket.negate())
@@ -266,7 +266,8 @@ public class RobotContainer {
                 objectiveTracker.set(Objective.StackingGrid),
                 arm.floor()
             )
-        ).onFalse(objectiveTracker.set(Objective.HighGoal));
+            .finallyDo(objectiveTracker.setRunnable(Objective.HighGoal))
+        );
         driveController.y().toggleOnTrue(
             Commands.parallel(
                 arm.lowGoal(),
