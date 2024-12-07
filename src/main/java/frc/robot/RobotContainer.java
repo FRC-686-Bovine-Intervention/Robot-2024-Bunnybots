@@ -23,6 +23,7 @@ import frc.robot.auto.AutoCommons.AutoPaths;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.ScoreHigh;
+import frc.robot.auto.ScoreStacking;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.arm.Arm;
@@ -300,7 +301,8 @@ public class RobotContainer {
         AutoPaths.preload();
         var selector = new AutoSelector("AutoSelector");
 
-        selector.addRoutine(new ScoreHigh(this));
+        selector.addDefaultRoutine(new ScoreHigh(this));
+        selector.addRoutine(new ScoreStacking(this));
 
         new AutoManager(selector);
     }

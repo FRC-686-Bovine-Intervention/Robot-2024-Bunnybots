@@ -16,8 +16,8 @@ public final class AutoConstants {
 
     public static final FlippedPose2d innerStartPose = FlippedPose2d.fromBlue(new Pose2d(
         new Translation2d(
-            FieldConstants.stackingGridOuterEdgeX.plus(RobotConstants.centerToFrontBumper),
-            FieldConstants.stackingGridOuterEdgeY
+            FieldConstants.highGoalScoreX,
+            FieldConstants.stackingGridOuterEdgeY.minus(RobotConstants.centerToSideBumper)
         ),
         Rotation2d.k180deg
     ));

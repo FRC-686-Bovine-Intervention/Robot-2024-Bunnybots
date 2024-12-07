@@ -20,7 +20,6 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -81,7 +80,7 @@ public class ArmIOFalcon implements ArmIO {
         var encoderConfig = new CANcoderConfiguration();
         encoder.getConfigurator().refresh(encoderConfig);
         encoderConfig.MagnetSensor
-            .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Signed_PlusMinusHalf)
+            .withAbsoluteSensorDiscontinuityPoint(Rotations.of(0.5))
             .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
         ;
         encoder.getConfigurator().apply(encoderConfig);

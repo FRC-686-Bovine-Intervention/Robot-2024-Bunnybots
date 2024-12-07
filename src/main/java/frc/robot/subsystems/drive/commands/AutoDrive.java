@@ -1,10 +1,13 @@
 package frc.robot.subsystems.drive.commands;
 
+import static edu.wpi.first.units.Units.Centimeters;
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import com.pathplanner.lib.path.ConstraintsZone;
@@ -14,16 +17,58 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.RotationTarget;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.util.AllianceFlipUtil;
+import frc.util.MathExtraUtil;
 
 public class AutoDrive {
+    public static Command preciseToPose(Pose2d pose, Drive drive) {
+        return new Command() {
+            {
+                addRequirements(drive.subsystems);
+            }
+            private final PIDController xController = new PIDController(2, 0, 0);
+            private final PIDController yController = new PIDController(15, 0, 0);
+            private final PIDController thetaController = new PIDController(3, 0, 0);
+
+            @Override
+            public void initialize() {
+                xController.reset();
+                yController.reset();
+                thetaController.reset();
+            }
+
+            @Override
+            public void execute() {
+                var currentPose = drive.getPose();
+                var xOut = xController.calculate(currentPose.getX(), pose.getX());
+                var yOut = yController.calculate(currentPose.getY(), pose.getY());
+                var thetaOut = thetaController.calculate(currentPose.getRotation().minus(pose.getRotation()).getRadians(), 0);
+
+                drive.runFieldSpeeds(new ChassisSpeeds(
+                    xOut,
+                    yOut,
+                    thetaOut
+                ));
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+                drive.stop();
+            }
+        };
+    }
+    public static BooleanSupplier withinTolerance(Pose2d pose, Drive drive) {
+        return () -> MathExtraUtil.isNear(pose, drive.getPose(), Centimeters.of(2), Degrees.of(10));
+    }
     public static Command autoDriveToHighGoal(Drive drive) {
         return Commands.defer(
             new Supplier<Command>() {
@@ -37,13 +82,18 @@ public class AutoDrive {
                     points.add(new Pose2d(
                         currentPose.getTranslation(),
                         new Rotation2d(
-                            drive.getFieldMeasuredSpeeds().vxMetersPerSecond,
-                            drive.getFieldMeasuredSpeeds().vyMetersPerSecond
+                            -drive.getFieldMeasuredSpeeds().vxMetersPerSecond,
+                            -drive.getFieldMeasuredSpeeds().vyMetersPerSecond
                         )
                     ));
                     var includePreEntry = currentBluePose.getMeasureX().gt(FieldConstants.denPreEntryX);
                     var includeEntry = currentBluePose.getMeasureX().gt(FieldConstants.denEntryX) && currentBluePose.getMeasureY().lte(FieldConstants.topObsticalBottomEdgeY);
                     var useFieldEntry = currentBluePose.getMeasureY().gt(FieldConstants.denEntryDecisionY);
+                    var goal = (useFieldEntry) ? (
+                        FieldConstants.highGoalScoreStackingSide.getOurs()
+                    ) : (
+                        FieldConstants.highGoalScoreSourceSide.getOurs()
+                    );
                     if (includePreEntry) {
                         points.add(
                             (useFieldEntry) ? (
@@ -77,13 +127,7 @@ public class AutoDrive {
                             FieldConstants.highGoalPreScoreSourceSide.getOurs()
                         )
                     );
-                    points.add(
-                        (useFieldEntry) ? (
-                            FieldConstants.highGoalScoreStackingSide.getOurs()
-                        ) : (
-                            FieldConstants.highGoalScoreSourceSide.getOurs()
-                        )
-                    );
+                    points.add(goal);
                     // constraintZones.add(new ConstraintsZone(
                     //     points.size() - 2,
                     //     points.size() - 1,
@@ -109,10 +153,12 @@ public class AutoDrive {
                         null,
                         new GoalEndState(0, FieldConstants.highGoalScoreStackingSide.getOurs().getRotation()),
                         false
-                    ));
+                    ))
+                    .andThen(preciseToPose(goal, drive))
+                    ;
                 }
             },
-            Set.of(drive.translationSubsystem, drive.rotationalSubsystem)
+            drive.subsystems
         );
     }
     public static Command autoDriveToStackingGrid(Drive drive) {
@@ -128,13 +174,24 @@ public class AutoDrive {
                     points.add(new Pose2d(
                         currentPose.getTranslation(),
                         new Rotation2d(
-                            drive.getFieldMeasuredSpeeds().vxMetersPerSecond,
-                            drive.getFieldMeasuredSpeeds().vyMetersPerSecond
+                            -drive.getFieldMeasuredSpeeds().vxMetersPerSecond,
+                            -drive.getFieldMeasuredSpeeds().vyMetersPerSecond
                         )
                     ));
                     var includePreEntry = currentBluePose.getMeasureX().gt(FieldConstants.denPreEntryX);
                     var includeEntry = currentBluePose.getMeasureX().gt(FieldConstants.denEntryX) && currentBluePose.getMeasureY().lte(FieldConstants.denFieldEntryY);
                     var useFieldEntry = currentBluePose.getMeasureY().gt(FieldConstants.denEntryDecisionY);
+                    var goal = new Pose2d(
+                        new Translation2d(
+                            FieldConstants.stackingScoreX.in(Meters),
+                            MathUtil.clamp(
+                                points.get(points.size()-1).getY(),
+                                FieldConstants.stackingMinY.in(Meters),
+                                FieldConstants.stackingMaxY.in(Meters)
+                            )
+                        ),
+                        FieldConstants.highGoalScoreStackingSide.getOurs().getRotation()
+                    );
                     if (includePreEntry) {
                         points.add(
                             (useFieldEntry) ? (
@@ -161,17 +218,7 @@ public class AutoDrive {
                             FieldConstants.denSourceEntry.getOurs().getRotation()
                         ));
                     }
-                    points.add(new Pose2d(
-                        new Translation2d(
-                            FieldConstants.stackingScoreX.in(Meters),
-                            MathUtil.clamp(
-                                points.get(points.size()-1).getY(),
-                                FieldConstants.stackingMinY.in(Meters),
-                                FieldConstants.stackingMaxY.in(Meters)
-                            )
-                        ),
-                        FieldConstants.highGoalScoreStackingSide.getOurs().getRotation()
-                    ));
+                    points.add(goal);
                     // constraintZones.add(new ConstraintsZone(
                     //     points.size() - 2,
                     //     points.size() - 1,
@@ -197,7 +244,9 @@ public class AutoDrive {
                         null,
                         new GoalEndState(0, FieldConstants.highGoalScoreStackingSide.getOurs().getRotation()),
                         false
-                    ));
+                    ))
+                    .andThen(preciseToPose(goal, drive))
+                    ;
                 }
             },
             Set.of(drive.translationSubsystem, drive.rotationalSubsystem)

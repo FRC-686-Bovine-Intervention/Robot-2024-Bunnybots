@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.commands.AutoDrive;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.puncher.Puncher;
 import frc.util.AllianceFlipUtil;
@@ -100,7 +101,7 @@ public class AutoCommons {
             intake.eject(),
             puncher.punch()
         )
-        .withTimeout(0.75)
+        .withTimeout(0.25)
         ;
     }
     public static Command intake(Intake intake, Arm arm) {
@@ -124,30 +125,41 @@ public class AutoCommons {
     }
 
     public static Command scorePreloadHigh(PathPlannerPath startToScore, Drive drive, Intake intake, Puncher puncher) {
+        var goal = new Pose2d(getLastPoint(startToScore), startToScore.getGoalEndState().rotation());
         return Commands.sequence(
             drive.followBluePath(startToScore),
+            AutoDrive.preciseToPose(goal, drive).until(
+                AutoDrive.withinTolerance(goal, drive)
+            ),
             punch(intake, puncher)
         );
     }
     public static Command grabStagedBucket(PathPlannerPath toBucket, Drive drive, Intake intake, Arm arm) {
         return Commands.parallel(
             drive.followBluePath(toBucket),
-            Commands.waitSeconds(1.5).andThen(
+            arm.puncher().withTimeout(1).andThen(
                 intake(intake, arm)
             )
         );
     }
     public static Command scoreStagedBucketHigh(PathPlannerPath toBucket, PathPlannerPath toScore, Drive drive, Intake intake, Arm arm, Puncher puncher) {
+        var goal = new Pose2d(getLastPoint(toScore), toScore.getGoalEndState().rotation());
         return Commands.sequence(
             grabStagedBucket(toBucket, drive, intake, arm),
-            drive.followBluePath(toScore),
-            punch(intake, puncher)
+            Commands.sequence(
+                drive.followBluePath(toScore),
+                    AutoDrive.preciseToPose(goal, drive).until(
+                    AutoDrive.withinTolerance(goal, drive)
+                ),
+                punch(intake, puncher)
+            )
+            .deadlineFor(arm.puncher())
         );
     }
     public static Command scoreStagedBucketStacking(PathPlannerPath toBucket, PathPlannerPath toScore, Drive drive, Intake intake, Arm arm, Puncher puncher) {
         return Commands.sequence(
             grabStagedBucket(toBucket, drive, intake, arm),
-            drive.followBluePath(toScore),
+            drive.followBluePath(toScore).deadlineFor(arm.puncher()),
             stack(intake, arm)
         );
     }
@@ -159,10 +171,16 @@ public class AutoCommons {
             preloading = true;
             // load paths
             loadChoreoTrajectory("Inner To Stacking");
+            loadChoreoTrajectory("Inner To Source");
+            loadChoreoTrajectory("Inner To Stacking");
             loadChoreoTrajectory("Outer To Stacking");
             loadChoreoTrajectory("Stacking To Bucket4");
             loadChoreoTrajectory("Stacking To Bucket3");
+            loadChoreoTrajectory("Source To Bucket2");
+            loadChoreoTrajectory("Source To Bucket3");
+            loadChoreoTrajectory("Source To Bucket4");
             loadChoreoTrajectory("Stacking To Bucket2");
+            loadChoreoTrajectory("Bucket3 To Source");
             loadChoreoTrajectory("Bucket4 To Source");
             loadChoreoTrajectory("Bucket4 To Stacking");
             loadChoreoTrajectory("Bucket3 To Stacking");
