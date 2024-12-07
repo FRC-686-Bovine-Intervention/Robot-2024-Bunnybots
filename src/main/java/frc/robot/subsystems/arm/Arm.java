@@ -47,6 +47,7 @@ public class Arm extends SubsystemBase {
         )
     );
 
+    public static final LoggedTunableMeasure<AngleUnit> lowGoalSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Low Goal", Degrees.of(30));
     public static final LoggedTunableMeasure<AngleUnit> floorSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Floor", Degrees.of(0));
     public static final LoggedTunableMeasure<AngleUnit> puncherSetpoint = new LoggedTunableMeasure<>("Arm/Setpoints/Puncher", Degrees.of(95));
     
@@ -138,6 +139,13 @@ public class Arm extends SubsystemBase {
         return genCommand(
             "Puncher",
             puncherSetpoint
+        );
+    }
+
+    public Command lowGoal() {
+        return genCommand(
+            "Low Goal",
+            lowGoalSetpoint
         );
     }
 

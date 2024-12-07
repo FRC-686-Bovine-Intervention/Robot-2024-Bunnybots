@@ -125,7 +125,7 @@ public class AutoCommons {
     }
 
     public static Command scorePreloadHigh(PathPlannerPath startToScore, Drive drive, Intake intake, Puncher puncher) {
-        var goal = new Pose2d(getLastPoint(startToScore), startToScore.getGoalEndState().rotation());
+        var goal = AllianceFlipUtil.apply(new Pose2d(getLastPoint(startToScore), startToScore.getGoalEndState().rotation()));
         return Commands.sequence(
             drive.followBluePath(startToScore),
             AutoDrive.preciseToPose(goal, drive).until(
@@ -143,7 +143,7 @@ public class AutoCommons {
         );
     }
     public static Command scoreStagedBucketHigh(PathPlannerPath toBucket, PathPlannerPath toScore, Drive drive, Intake intake, Arm arm, Puncher puncher) {
-        var goal = new Pose2d(getLastPoint(toScore), toScore.getGoalEndState().rotation());
+        var goal = AllianceFlipUtil.apply(new Pose2d(getLastPoint(toScore), toScore.getGoalEndState().rotation()));
         return Commands.sequence(
             grabStagedBucket(toBucket, drive, intake, arm),
             Commands.sequence(

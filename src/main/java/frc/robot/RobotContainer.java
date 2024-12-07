@@ -267,6 +267,12 @@ public class RobotContainer {
                 arm.floor()
             )
         ).onFalse(objectiveTracker.set(Objective.HighGoal));
+        driveController.y().toggleOnTrue(
+            Commands.parallel(
+                arm.lowGoal(),
+                intake.eject()
+            )
+        );
         driveController.leftTrigger.aboveThreshold(0.75).whileTrue(
             bucketVision.autoIntake(
                 bucketVision.applyDotProduct(joystickTranslational),
