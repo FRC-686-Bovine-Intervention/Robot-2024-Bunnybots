@@ -71,11 +71,11 @@ public class AutoCommons {
     }
 
     public static Translation2d getFirstPoint(PathPlannerPath path) {
-        return AllianceFlipUtil.apply(path.getPoint(0).position);
+        return path.getPoint(0).position;
     }
 
     public static Translation2d getLastPoint(PathPlannerPath path) {
-        return AllianceFlipUtil.apply(path.getPoint(path.numPoints() - 1).position);
+        return path.getPoint(path.numPoints() - 1).position;
     }
 
     public static Command setOdometryFlipped(FlippedPose2d pose, Drive drive) {
@@ -85,14 +85,14 @@ public class AutoCommons {
     public static Command followPathFlipped(PathPlannerPath path, Drive drive) {
         return new FollowPathCommand(path, drive::getPose, drive::getRobotMeasuredSpeeds, drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive.translationSubsystem, drive.rotationalSubsystem)
             .deadlineFor(Commands.startEnd(
-                () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
+                () -> Logger.recordOutput("Autonomous/Goal Pose", AllianceFlipUtil.apply(new Pose2d(getLastPoint(path), path.getGoalEndState().rotation()))),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)
             ));
     }
     public static Command followPathFlipped(PathPlannerPath path, Drive.Translational drive) {
         return new FollowPathCommand(path, drive.drive::getPose, drive.drive::getRobotMeasuredSpeeds, drive.drive::drivePPVelocity, Drive.autoConfig(), Drive.robotConfig(), AllianceFlipUtil::shouldFlip, drive)
             .deadlineFor(Commands.startEnd(
-                () -> Logger.recordOutput("Autonomous/Goal Pose", new Pose2d(getLastPoint(path), path.getGoalEndState().rotation())),
+                () -> Logger.recordOutput("Autonomous/Goal Pose", AllianceFlipUtil.apply(new Pose2d(getLastPoint(path), path.getGoalEndState().rotation()))),
                 () -> Logger.recordOutput("Autonomous/Goal Pose", (Pose2d)null)
             ));
     }
@@ -126,6 +126,7 @@ public class AutoCommons {
 
     public static Command scorePreloadHigh(PathPlannerPath startToScore, Drive drive, Intake intake, Puncher puncher) {
         var goal = AllianceFlipUtil.apply(new Pose2d(getLastPoint(startToScore), startToScore.getGoalEndState().rotation()));
+        Logger.recordOutput("DEBUG/preload goal", goal);
         return Commands.sequence(
             drive.followBluePath(startToScore),
             AutoDrive.preciseToPose(goal, drive).until(
