@@ -1,5 +1,6 @@
 package frc.robot.subsystems.vision.apriltag;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.math.geometry.Translation2d;
@@ -11,7 +12,7 @@ import frc.util.PoseBoundingBoxUtil.BoundingBox;
 import frc.util.robotStructure.CameraMount;
 
 public class ApriltagVisionConstants {
-    public static final Distance zMargin = Meters.of(0.75);
+    public static final Distance zMargin = Inches.of(6);
     public static final BoundingBox acceptableFieldBox = BoundingBox.rectangle(
         new Translation2d(
 

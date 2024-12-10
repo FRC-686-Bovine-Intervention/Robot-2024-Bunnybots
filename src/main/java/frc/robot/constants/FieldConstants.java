@@ -29,7 +29,12 @@ public final class FieldConstants {
     public static final Distance bucketRadius = Inches.of(6);
     public static final Distance bucketHeight = Inches.of(14.5);
 
+    public static final Distance bucket3Y = Inches.of(227.778477);
+    public static final Distance bucket2Y = Inches.of(262.168859);
+    public static final Distance bucket1Y = Inches.of(300.114098);
+
     public static final Distance stackingGridOuterEdgeX = Inches.of(27.5);
+    public static final Distance stackingGridOuterEdgeY = Inches.of(182.5);
     public static final Distance stackingGridInnerEdgeY = Inches.of(186);
     public static final Distance denWallInnerEdgeY = Inches.of(102.5);
     public static final Distance yardBottomOuterEdgeY = Inches.of(146.5);

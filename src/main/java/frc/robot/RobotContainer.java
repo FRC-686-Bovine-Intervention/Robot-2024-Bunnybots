@@ -5,7 +5,6 @@
 package frc.robot;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -23,7 +22,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoCommons.AutoPaths;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.auto.AutoSelector.AutoRoutine;
+import frc.robot.auto.ScoreHigh;
+import frc.robot.auto.ScoreStacking;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.arm.Arm;
@@ -78,7 +78,9 @@ public class RobotContainer {
     private final XboxController driveController = new XboxController(0);
     private final Joystick driveJoystick;
     private final Supplier<ChassisSpeeds> joystickTranslational;
+    @SuppressWarnings("unused")
     private final ButtonBoard3x3 buttonBoard = new ButtonBoard3x3(1);
+    @SuppressWarnings("unused")
     private final CommandJoystick simJoystick = new CommandJoystick(2);
 
     public RobotContainer() {
@@ -243,7 +245,7 @@ public class RobotContainer {
 
 
         driveController.a().toggleOnTrue(
-            intake.intake(driveController.y().negate()).deadlineFor(
+            intake.intake(driveController.rightTrigger.aboveThreshold(0.75).negate()).deadlineFor(
                 arm.floor()
             )
             .onlyIf(intake.hasBucket.negate())
@@ -261,8 +263,15 @@ public class RobotContainer {
         );
         driveController.b().toggleOnTrue(
             Commands.parallel(
+                objectiveTracker.set(Objective.StackingGrid),
                 arm.floor()
-                // intake.eject()
+            )
+            .finallyDo(objectiveTracker.setRunnable(Objective.HighGoal))
+        );
+        driveController.y().toggleOnTrue(
+            Commands.parallel(
+                arm.lowGoal(),
+                intake.eject()
             )
         );
         driveController.leftTrigger.aboveThreshold(0.75).whileTrue(
@@ -299,21 +308,8 @@ public class RobotContainer {
         AutoPaths.preload();
         var selector = new AutoSelector("AutoSelector");
 
-        selector.addRoutine(new AutoRoutine("Finish in 5", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(5);
-            }
-        });
-        selector.addRoutine(new AutoRoutine("Finish in 10", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(10);
-            }
-        });
-        selector.addRoutine(new AutoRoutine("Finish in 20", List.of()) {
-            public Command generateCommand() {
-                return Commands.waitSeconds(20);
-            }
-        });
+        selector.addDefaultRoutine(new ScoreHigh(this));
+        selector.addRoutine(new ScoreStacking(this));
 
         new AutoManager(selector);
     }

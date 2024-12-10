@@ -1,6 +1,7 @@
 package frc.robot.auto;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,13 +25,13 @@ public class AutoSelector extends VirtualSubsystem {
     private final List<StringPublisher> questionPublishers;
     private final List<SwitchableChooser> responseChoosers;
     private final String key;
-
+    
     private static final AutoRoutine defaultRoutine = new AutoRoutine("Do Nothing", List.of()) {
         public Command generateCommand() {
             return Commands.idle();
         }
     };
-    private final String questionPlaceHolder = "NA";
+    private final String questionPlaceHolder = "NA"; 
 
     private Command lastCommand;
     private AutoConfiguration lastConfiguration;
@@ -58,12 +59,10 @@ public class AutoSelector extends VirtualSubsystem {
     }
 
     public void addRoutine(AutoRoutine routine) {
-        populateQuestions(routine);
         routineChooser.addOption(routine.name, routine);
     }
 
     public void addDefaultRoutine(AutoRoutine routine) {
-        populateQuestions(routine);
         routineChooser.addDefaultOption(routine.name, routine);
     }
 
@@ -74,7 +73,7 @@ public class AutoSelector extends VirtualSubsystem {
         var selectedRoutine = routineChooser.get();
         if(selectedRoutine == null) return;
         var config = new AutoConfiguration(alliance, selectedRoutine.name);
-
+        populateQuestions(selectedRoutine);
         var questions = selectedRoutine.questions;
         for (int i = 0; i < responseChoosers.size(); i++) {
             if(i < questions.size()) {
@@ -85,7 +84,11 @@ public class AutoSelector extends VirtualSubsystem {
                 chooser.setOptions(question.getOptionNames());
                 var setOption = Optional.ofNullable(question.settingsSupplier.get().defaultOption()).map(Map.Entry::getKey);
                 chooser.setDefault(setOption);
-                if(lastConfiguration == null || config.routine() != lastConfiguration.routine()) {
+                if(
+                    lastConfiguration == null ||
+                    config.routine() != lastConfiguration.routine() ||
+                    lastConfiguration.questions.get(question.name) == SwitchableChooser.placeholder
+                ) {
                     chooser.setActive(setOption);
                 }
 
@@ -148,6 +151,10 @@ public class AutoSelector extends VirtualSubsystem {
                 return new Settings<T>(map, defaultOption);
             }
 
+            public static <T> Settings<T> from(Map.Entry<String,T> defaultOption, Map<String,T> options) {
+                return new Settings<T>(options, defaultOption);
+            }
+
             public static <T> Settings<T> empty() {
                 return new Settings<T>(Map.of(), null);
             }
@@ -165,12 +172,12 @@ public class AutoSelector extends VirtualSubsystem {
 
         public void setResponse(Optional<String> newResponse) {
             newResponse
-                .map((newR) ->
+                .map((newR) -> 
                     Optional.ofNullable(
                         settingsSupplier.get().options().get(newR)
                     )
                 )
-                .orElseGet(() ->
+                .orElseGet(() -> 
                     Optional.ofNullable(
                         settingsSupplier.get().defaultOption()
                     ).map(Map.Entry::getValue)
@@ -181,6 +188,13 @@ public class AutoSelector extends VirtualSubsystem {
 
         public String[] getOptionNames() {
             return settingsSupplier.get().options().keySet().stream().toArray(String[]::new);
+        }
+
+        public boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof AutoQuestion)) return false;
+
+            AutoQuestion<?> other = (AutoQuestion<?>) obj;
+            return this.name.equals(other.name) && Arrays.equals(this.getOptionNames(), other.getOptionNames());
         }
     }
 

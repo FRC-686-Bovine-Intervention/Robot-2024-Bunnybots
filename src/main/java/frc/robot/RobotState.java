@@ -39,7 +39,7 @@ public class RobotState {
 
     public void log() {
         Logger.recordOutput("Odometry/Robot", getPose());
-        Logger.recordOutput("Odometry/Std Devs", robotPoseStdDevs);
+        // Logger.recordOutput("Odometry/Std Devs", robotPoseStdDevs);
     }
 
     public Pose2d getPose() {

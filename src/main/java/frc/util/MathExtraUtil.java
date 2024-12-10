@@ -1,5 +1,8 @@
 package frc.util;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+
 import java.util.Arrays;
 
 import edu.wpi.first.math.MatBuilder;
@@ -14,6 +17,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Unit;
 
@@ -55,14 +60,22 @@ public class MathExtraUtil {
     }
 
     public static boolean isNear(Pose2d expected, Pose2d actual, double linearTolerance, double angularTolerance) {
-        var bol = isNear(expected.getTranslation(), actual.getTranslation(), linearTolerance) && isNear(expected.getRotation(), actual.getRotation(), angularTolerance);
-        return bol;
+        return isNear(expected.getTranslation(), actual.getTranslation(), linearTolerance) && isNear(expected.getRotation(), actual.getRotation(), angularTolerance);
+    }
+    public static boolean isNear(Pose2d expected, Pose2d actual, Measure<DistanceUnit> linearTolerance, Measure<AngleUnit> angularTolerance) {
+        return isNear(expected.getTranslation(), actual.getTranslation(), linearTolerance) && isNear(expected.getRotation(), actual.getRotation(), angularTolerance);
     }
     public static boolean isNear(Translation2d expected, Translation2d actual, double tolerance) {
         return actual.getDistance(expected) <= tolerance;
     }
+    public static boolean isNear(Translation2d expected, Translation2d actual, Measure<DistanceUnit> tolerance) {
+        return isNear(expected, actual, tolerance.in(Meters));
+    }
     public static boolean isNear(Rotation2d expected, Rotation2d actual, double tolerance) {
         return Math.abs(actual.minus(expected).getRadians()) <= tolerance;
+    }
+    public static boolean isNear(Rotation2d expected, Rotation2d actual, Measure<AngleUnit> tolerance) {
+        return isNear(expected, actual, tolerance.in(Radians));
     }
     public static boolean isNear(ChassisSpeeds expected, ChassisSpeeds actual, double linearTolerance, double angularTolerance) {
         var bol = isNear(new Translation2d(expected.vxMetersPerSecond, expected.vyMetersPerSecond), new Translation2d(actual.vxMetersPerSecond, actual.vyMetersPerSecond), linearTolerance) && MathUtil.isNear(expected.omegaRadiansPerSecond, actual.omegaRadiansPerSecond, angularTolerance);

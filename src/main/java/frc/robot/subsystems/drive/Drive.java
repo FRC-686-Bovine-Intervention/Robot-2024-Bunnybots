@@ -8,16 +8,14 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -60,6 +58,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -77,6 +76,7 @@ import frc.util.controllers.Joystick;
 import frc.util.robotStructure.Root;
 
 public class Drive extends VirtualSubsystem {
+    public final Set<Subsystem> subsystems;
     private final GyroIO gyroIO;
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
     private Rotation2d gyroAngle = new Rotation2d();
@@ -96,6 +96,7 @@ public class Drive extends VirtualSubsystem {
 
     private static final LoggedTunableNumber rotationCorrection = new LoggedTunableNumber("Drive/Rotation Correction", 0.125);
 
+    private boolean usePostProcessing = false;
     private ChassisSpeeds setpointSpeeds = new ChassisSpeeds();
     private Translation2d centerOfRotation = new Translation2d();
     private SwerveModuleState[] setpointStates = new SwerveModuleState[] {
@@ -126,6 +127,7 @@ public class Drive extends VirtualSubsystem {
 
         this.translationSubsystem = new Translational(this);
         this.rotationalSubsystem = new Rotational(this);
+        subsystems = Set.of(translationSubsystem, rotationalSubsystem);
         AutoBuilder.configure(
             this::getPose,
             this::setPose,
@@ -234,12 +236,13 @@ public class Drive extends VirtualSubsystem {
         //     //     module.stop();
         //     // }
         // } else
-        if (!Objects.equals(translationSubsystem.getCurrentCommand(), rotationalSubsystem.getCurrentCommand())) {
+        if (usePostProcessing) {
             runRobotSpeeds(setpointSpeeds);
         }
     }
 
     public void runSetpoints(SwerveModuleState... states) {
+        usePostProcessing = false;
         setpointStates = states;
         Logger.recordOutput("Drive/Swerve States/Setpoints", setpointStates);
         IntStream.range(0, modules.length).forEach((i) -> modules[i].runSetpoint(setpointStates[i]));
@@ -269,7 +272,7 @@ public class Drive extends VirtualSubsystem {
         driveVelocity(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
     }
 
-    public Command followPath(PathPlannerPath path) {
+    public Command followBluePath(PathPlannerPath path) {
         return new FollowPathCommand(
             path,
             this::getPose,
@@ -278,6 +281,18 @@ public class Drive extends VirtualSubsystem {
             autoConfig(),
             robotConfig(),
             AllianceFlipUtil::shouldFlip,
+            this.translationSubsystem, this.rotationalSubsystem
+        );
+    }
+    public Command followPath(PathPlannerPath path) {
+        return new FollowPathCommand(
+            path,
+            this::getPose,
+            this::getRobotMeasuredSpeeds,
+            this::drivePPVelocity,
+            autoConfig(),
+            robotConfig(),
+            () -> false,
             this.translationSubsystem, this.rotationalSubsystem
         );
     }
@@ -519,6 +534,7 @@ public class Drive extends VirtualSubsystem {
         }
 
         public void driveVelocity(double vx, double vy) {
+            drive.usePostProcessing = true;
             drive.setpointSpeeds.vxMetersPerSecond = vx;
             drive.setpointSpeeds.vyMetersPerSecond = vy;
         }
@@ -527,6 +543,7 @@ public class Drive extends VirtualSubsystem {
         }
 
         public void stop() {
+            drive.usePostProcessing = false;
             driveVelocity(0,0);
         }
 
@@ -577,12 +594,14 @@ public class Drive extends VirtualSubsystem {
         }
 
         public void driveVelocity(double omega) {
+            drive.usePostProcessing = true;
             drive.setpointSpeeds.omegaRadiansPerSecond = omega;
         }
         public void driveVelocity(ChassisSpeeds speeds) {
             driveVelocity(speeds.omegaRadiansPerSecond);
         }
         public void stop() {
+            drive.usePostProcessing = false;
             driveVelocity(0);
         }
 

@@ -11,6 +11,8 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -166,6 +168,7 @@ public class Intake extends SubsystemBase {
             }
 
             private final Timer sensorTimer = new Timer();
+            private final Debouncer sensorDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
             @Override
             public void initialize() {
@@ -181,7 +184,7 @@ public class Intake extends SubsystemBase {
                     sensorTimer.reset();
                 }
                 var openValue = open.getAsBoolean();
-                setClawOpen(openValue && !inputs.sensorDetect);
+                setClawOpen(openValue && !sensorDebouncer.calculate(inputs.sensorDetect));
                 io.setMotorVoltage(
                     (openValue) ? (
                         slowIntakeVoltage.get()

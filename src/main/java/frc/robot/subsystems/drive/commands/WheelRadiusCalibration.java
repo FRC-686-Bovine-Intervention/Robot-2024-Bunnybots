@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.VelocityUnit;
@@ -88,7 +89,7 @@ public class WheelRadiusCalibration extends Command {
 
         sampleTimer.stop();
         totalTimer.stop();
-        drive.driveVelocity(0,0,0);
+        drive.runRobotSpeeds(new ChassisSpeeds());
     }
 
     @Override

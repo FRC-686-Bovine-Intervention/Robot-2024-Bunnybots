@@ -1,0 +1,426 @@
+{
+ "name":"bunny_bots",
+ "version":"v2025.0.0",
+ "type":"Swerve",
+ "variables":{
+  "expressions":{
+   "HighGoalScoreX":{
+    "dimension":"Length",
+    "var":{
+     "exp":"7.5 in + CenterToBumper",
+     "val":0.6223
+    }
+   },
+   "FrameLength":{
+    "dimension":"Length",
+    "var":{
+     "exp":"26 in",
+     "val":0.6604
+    }
+   },
+   "StackingOuterY":{
+    "dimension":"Length",
+    "var":{
+     "exp":"186 in",
+     "val":4.7244
+    }
+   },
+   "Bucket1Y":{
+    "dimension":"Length",
+    "var":{
+     "exp":"300.114098 in",
+     "val":7.6228980892
+    }
+   },
+   "MaxVelocity":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"1.5 (m / s)",
+     "val":1.5
+    }
+   },
+   "PreScoring":{
+    "dimension":"Length",
+    "var":{
+     "exp":"24 in",
+     "val":0.6095999999999999
+    }
+   },
+   "MaxAngularVelocity":{
+    "dimension":"AngVel",
+    "var":{
+     "exp":"3.14 (rad / s)",
+     "val":3.14
+    }
+   },
+   "Bucket3Y":{
+    "dimension":"Length",
+    "var":{
+     "exp":"227.778477 in",
+     "val":5.7855733158
+    }
+   },
+   "TrackLength":{
+    "dimension":"Length",
+    "var":{
+     "exp":"25.5 in",
+     "val":0.6476999999999999
+    }
+   },
+   "Bucket2Y":{
+    "dimension":"Length",
+    "var":{
+     "exp":"262.168859 in",
+     "val":6.6590890186
+    }
+   },
+   "PrePickup":{
+    "dimension":"Length",
+    "var":{
+     "exp":"4.5 ft",
+     "val":1.3716000000000002
+    }
+   },
+   "TrackWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"25.5 in",
+     "val":0.6476999999999999
+    }
+   },
+   "HighGoalSourceY":{
+    "dimension":"Length",
+    "var":{
+     "exp":"129.5 in",
+     "val":3.2893
+    }
+   },
+   "HighGoalStackingY":{
+    "dimension":"Length",
+    "var":{
+     "exp":"155.5 in",
+     "val":3.9497
+    }
+   },
+   "DenSourceEntryY":{
+    "dimension":"Length",
+    "var":{
+     "exp":"(102.5 in + 146.5 in) / 2",
+     "val":3.1623
+    }
+   },
+   "CenterToBumper":{
+    "dimension":"Length",
+    "var":{
+     "exp":"FrameLength / 2 + BumperWidth",
+     "val":0.4318
+    }
+   },
+   "StackingOffset":{
+    "dimension":"Length",
+    "var":{
+     "exp":"18 in",
+     "val":0.4572
+    }
+   },
+   "PickupAngle":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "BucketLineX":{
+    "dimension":"Length",
+    "var":{
+     "exp":"148.09 in",
+     "val":3.761486
+    }
+   },
+   "ScoringAngle":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "BumperWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"4 in",
+     "val":0.1016
+    }
+   },
+   "StackingOuterX":{
+    "dimension":"Length",
+    "var":{
+     "exp":"27.5 in",
+     "val":0.6985
+    }
+   }
+  },
+  "poses":{
+   "Stacking1":{
+    "x":{
+     "exp":"OuterStart.x()",
+     "val":1.1303
+    },
+    "y":{
+     "exp":"OuterStart.y() + StackingOffset",
+     "val":7.1162890186
+    },
+    "heading":{
+     "exp":"ScoringAngle",
+     "val":3.141592653589793
+    }
+   },
+   "HighGoalStacking":{
+    "x":{
+     "exp":"HighGoalScoreX",
+     "val":0.6223
+    },
+    "y":{
+     "exp":"HighGoalStackingY",
+     "val":3.9497
+    },
+    "heading":{
+     "exp":"ScoringAngle",
+     "val":3.141592653589793
+    }
+   },
+   "Bucket2PrePickup":{
+    "x":{
+     "exp":"Bucket2Pickup.x() - PrePickup",
+     "val":2.3898859999999997
+    },
+    "y":{
+     "exp":"Bucket2Pickup.y()",
+     "val":6.6590890186
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   },
+   "Bucket3PrePickup":{
+    "x":{
+     "exp":"Bucket3Pickup.x() - PrePickup",
+     "val":2.3898859999999997
+    },
+    "y":{
+     "exp":"Bucket3Pickup.y()",
+     "val":5.7855733158
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   },
+   "Bucket1PrePickup":{
+    "x":{
+     "exp":"Bucket1Pickup.x() - PrePickup",
+     "val":2.3898859999999997
+    },
+    "y":{
+     "exp":"Bucket1Pickup.y()",
+     "val":7.6228980892
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   },
+   "Bucket1Pickup":{
+    "x":{
+     "exp":"BucketLineX",
+     "val":3.761486
+    },
+    "y":{
+     "exp":"Bucket1Y",
+     "val":7.6228980892
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   },
+   "OuterStart":{
+    "x":{
+     "exp":"StackingOuterX + CenterToBumper",
+     "val":1.1303
+    },
+    "y":{
+     "exp":"Bucket2Y",
+     "val":6.6590890186
+    },
+    "heading":{
+     "exp":"ScoringAngle",
+     "val":3.141592653589793
+    }
+   },
+   "InnerStart":{
+    "x":{
+     "exp":"HighGoalScoreX",
+     "val":0.6223
+    },
+    "y":{
+     "exp":"StackingOuterY - CenterToBumper",
+     "val":4.2926
+    },
+    "heading":{
+     "exp":"ScoringAngle",
+     "val":3.141592653589793
+    }
+   },
+   "Stacking2":{
+    "x":{
+     "exp":"OuterStart.x()",
+     "val":1.1303
+    },
+    "y":{
+     "exp":"Stacking1.y() + StackingOffset",
+     "val":7.573489018599999
+    },
+    "heading":{
+     "exp":"ScoringAngle",
+     "val":3.141592653589793
+    }
+   },
+   "Bucket3Pickup":{
+    "x":{
+     "exp":"BucketLineX",
+     "val":3.761486
+    },
+    "y":{
+     "exp":"Bucket3Y",
+     "val":5.7855733158
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   },
+   "Bucket4PrePickup":{
+    "x":{
+     "exp":"Bucket4Pickup.x() - PrePickup",
+     "val":2.3898859999999997
+    },
+    "y":{
+     "exp":"Bucket4Pickup.y()",
+     "val":3.1623
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   },
+   "Bucket2Pickup":{
+    "x":{
+     "exp":"BucketLineX",
+     "val":3.761486
+    },
+    "y":{
+     "exp":"Bucket2Y",
+     "val":6.6590890186
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   },
+   "HighGoalSource":{
+    "x":{
+     "exp":"HighGoalScoreX",
+     "val":0.6223
+    },
+    "y":{
+     "exp":"HighGoalSourceY",
+     "val":3.2893
+    },
+    "heading":{
+     "exp":"ScoringAngle",
+     "val":3.141592653589793
+    }
+   },
+   "Bucket4Pickup":{
+    "x":{
+     "exp":"BucketLineX",
+     "val":3.761486
+    },
+    "y":{
+     "exp":"DenSourceEntryY",
+     "val":3.1623
+    },
+    "heading":{
+     "exp":"PickupAngle",
+     "val":0.0
+    }
+   }
+  }
+ },
+ "config":{
+  "frontLeft":{
+   "x":{
+    "exp":"TrackWidth / 2",
+    "val":0.32384999999999997
+   },
+   "y":{
+    "exp":"TrackWidth / 2",
+    "val":0.32384999999999997
+   }
+  },
+  "backLeft":{
+   "x":{
+    "exp":"-TrackWidth / 2",
+    "val":-0.32384999999999997
+   },
+   "y":{
+    "exp":"-TrackWidth / 2",
+    "val":-0.32384999999999997
+   }
+  },
+  "mass":{
+   "exp":"125 kg",
+   "val":125.0
+  },
+  "inertia":{
+   "exp":"6 kg m ^ 2",
+   "val":6.0
+  },
+  "gearing":{
+   "exp":"6.5",
+   "val":6.5
+  },
+  "radius":{
+   "exp":"2 in",
+   "val":0.0508
+  },
+  "vmax":{
+   "exp":"534.4896301307434 rad / s",
+   "val":534.4896301307434
+  },
+  "tmax":{
+   "exp":"1.003696498054475 N m",
+   "val":1.003696498054475
+  },
+  "bumper":{
+   "front":{
+    "exp":"CenterToBumper",
+    "val":0.4318
+   },
+   "side":{
+    "exp":"CenterToBumper",
+    "val":0.4318
+   },
+   "back":{
+    "exp":"CenterToBumper",
+    "val":0.4318
+   }
+  },
+  "differentialTrackWidth":{
+   "exp":"22 in",
+   "val":0.5588
+  }
+ },
+ "generationFeatures":[]
+}

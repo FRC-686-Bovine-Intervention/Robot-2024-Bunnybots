@@ -28,7 +28,7 @@ public final class RobotConstants {
     public static final Distance centerToFrontFrame = frameLength.divide(2);
     public static final Distance centerToSideFrame = frameWidth.divide(2);
     
-    public static final Distance bumperWidth = Inches.of(3.25);
+    public static final Distance bumperWidth = Inches.of(4);
     
     public static final Distance centerToFrontBumper = centerToFrontFrame.plus(bumperWidth);
     public static final Distance centerToSideBumper = centerToSideFrame.plus(bumperWidth);
