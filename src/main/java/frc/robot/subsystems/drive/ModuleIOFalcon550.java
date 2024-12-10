@@ -1,9 +1,9 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -32,10 +32,10 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
-import frc.util.LoggedTunableNumber;
 import frc.util.TalonFXTempAlerts;
-import frc.util.loggerUtil.LoggedTunableFF;
-import frc.util.loggerUtil.LoggedTunablePID;
+import frc.util.loggerUtil.tunables.LoggedTunableAngularProfile;
+import frc.util.loggerUtil.tunables.LoggedTunableFF;
+import frc.util.loggerUtil.tunables.LoggedTunablePID;
 
 public class ModuleIOFalcon550 implements ModuleIO {
     protected final TalonFX driveMotor;
@@ -57,7 +57,11 @@ public class ModuleIOFalcon550 implements ModuleIO {
     private final NeutralOut driveNeutral = new NeutralOut();
 
 
-    private static final LoggedTunableNumber driveProfilekA = new LoggedTunableNumber("Drive/Module/Drive/PID/Profile/kA", 5000);
+    private static final LoggedTunableAngularProfile driveProfileConsts = new LoggedTunableAngularProfile(
+        "Drive/Module/Drive/Profile",
+        RotationsPerSecond.of(50000),
+        RotationsPerSecondPerSecond.of(5000)
+    );
     private static final LoggedTunablePID drivePIDConsts = new LoggedTunablePID(
         "Drive/Module/Drive/PID",
         0.025928*2*Math.PI,
@@ -105,11 +109,10 @@ public class ModuleIOFalcon550 implements ModuleIO {
             .withStatorCurrentLimit(Amps.of(55))
             .withStatorCurrentLimitEnable(true)
         ;
-        driveConfig.MotionMagic
-            .withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(driveProfilekA.get()))
-            // .withMotionMagicJerk(RadiansPerSecondPerSecond.per(Second).of(1))
-        ;
-
+        driveFFConsts.update(driveConfig.Slot0);
+        drivePIDConsts.update(driveConfig.Slot0);
+        driveProfileConsts.update(driveConfig.MotionMagic);
+        
         driveMotor.getConfigurator().apply(driveConfig);
 
         var turnConfig = new SparkMaxConfig();
@@ -150,14 +153,14 @@ public class ModuleIOFalcon550 implements ModuleIO {
             driveFFConsts.update(slotConfig);
             driveMotor.getConfigurator().apply(slotConfig);
         }
-        if (turnPIDConsts.hasChanged(hashCode())) {
-            turnPIDConsts.update(turnPID);
-        }
-        if (driveProfilekA.hasChanged(hashCode())) {
+        if (driveProfileConsts.hasChanged(hashCode())) {
             var motionMagic = new MotionMagicConfigs();
             driveMotor.getConfigurator().refresh(motionMagic);
-            motionMagic.withMotionMagicAcceleration(RadiansPerSecondPerSecond.of(driveProfilekA.get()));
+            driveProfileConsts.update(motionMagic);
             driveMotor.getConfigurator().apply(motionMagic);
+        }
+        if (turnPIDConsts.hasChanged(hashCode())) {
+            turnPIDConsts.update(turnPID);
         }
         
         inputs.driveMotor.updateFrom(driveMotor);

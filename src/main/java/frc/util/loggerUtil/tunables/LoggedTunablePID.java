@@ -1,5 +1,8 @@
-package frc.util.loggerUtil;
+package frc.util.loggerUtil.tunables;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
+import com.ctre.phoenix6.configs.Slot2Configs;
 import com.ctre.phoenix6.configs.SlotConfigs;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -36,6 +39,27 @@ public class LoggedTunablePID {
         );
     }
     public void update(SlotConfigs pid) {
+        pid
+            .withKP(kP.get())
+            .withKI(kI.get())
+            .withKD(kD.get())
+        ;
+    }
+    public void update(Slot0Configs pid) {
+        pid
+            .withKP(kP.get())
+            .withKI(kI.get())
+            .withKD(kD.get())
+        ;
+    }
+    public void update(Slot1Configs pid) {
+        pid
+            .withKP(kP.get())
+            .withKI(kI.get())
+            .withKD(kD.get())
+        ;
+    }
+    public void update(Slot2Configs pid) {
         pid
             .withKP(kP.get())
             .withKI(kI.get())

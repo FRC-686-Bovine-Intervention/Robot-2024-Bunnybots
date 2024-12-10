@@ -1,4 +1,4 @@
-package frc.util.loggerUtil;
+package frc.util.loggerUtil.inputs;
 
 import java.nio.ByteBuffer;
 

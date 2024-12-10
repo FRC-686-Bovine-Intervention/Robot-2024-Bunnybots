@@ -28,7 +28,6 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 
@@ -51,7 +50,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
@@ -96,7 +94,6 @@ public class Drive extends VirtualSubsystem {
 
     private static final LoggedTunableNumber rotationCorrection = new LoggedTunableNumber("Drive/Rotation Correction", 0.125);
 
-    private boolean usePostProcessing = false;
     private ChassisSpeeds setpointSpeeds = new ChassisSpeeds();
     private Translation2d centerOfRotation = new Translation2d();
     private SwerveModuleState[] setpointStates = new SwerveModuleState[] {
@@ -132,7 +129,7 @@ public class Drive extends VirtualSubsystem {
             this::getPose,
             this::setPose,
             this::getRobotMeasuredSpeeds,
-            this::driveVelocity,
+            this::runRobotSpeeds,
             autoConfig(),
             robotConfig(),
             AllianceFlipUtil::shouldFlip,
@@ -236,13 +233,14 @@ public class Drive extends VirtualSubsystem {
         //     //     module.stop();
         //     // }
         // } else
-        if (usePostProcessing) {
+        if (translationSubsystem.needsPostProcessing || rotationalSubsystem.needsPostProcessing) {
             runRobotSpeeds(setpointSpeeds);
         }
     }
 
     public void runSetpoints(SwerveModuleState... states) {
-        usePostProcessing = false;
+        translationSubsystem.needsPostProcessing = false;
+        rotationalSubsystem.needsPostProcessing = false;
         setpointStates = states;
         Logger.recordOutput("Drive/Swerve States/Setpoints", setpointStates);
         IntStream.range(0, modules.length).forEach((i) -> modules[i].runSetpoint(setpointStates[i]));
@@ -259,17 +257,6 @@ public class Drive extends VirtualSubsystem {
     }
     public void runFieldSpeeds(ChassisSpeeds fieldSpeeds) {
         runRobotSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(fieldSpeeds, getRotation()));
-    }
-
-    @Deprecated
-    public void driveVelocity(double vx, double vy, double omega) {
-        setpointSpeeds.vxMetersPerSecond = vx;
-        setpointSpeeds.vyMetersPerSecond = vy;
-        setpointSpeeds.omegaRadiansPerSecond = omega;
-    }
-    @Deprecated
-    public void driveVelocity(ChassisSpeeds speeds) {
-        driveVelocity(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
     }
 
     public Command followBluePath(PathPlannerPath path) {
@@ -492,40 +479,10 @@ public class Drive extends VirtualSubsystem {
         );
     }
 
-    private static final LoggedTunableNumber kAutoDriveMaxVelocity = new LoggedTunableNumber("Drive/kAutoDriveMaxVelocity", 3);
-    private static final LoggedTunableNumber kMaxAcceleration = new LoggedTunableNumber("Drive/kMaxAcceleration", 5);
-    private static final LoggedTunableNumber kMaxAngularVelocity = new LoggedTunableNumber("Drive/kMaxAngularVelocity", Units.degreesToRadians(540));
-    private static final LoggedTunableNumber kMaxAngularAcceleration = new LoggedTunableNumber("Drive/kMaxAngularAcceleration", Units.degreesToRadians(720));
-    private static final PathConstraints pathConstraints = new PathConstraints(
-        kAutoDriveMaxVelocity.get(),
-        kMaxAcceleration.get(),
-        kMaxAngularVelocity.get(),
-        kMaxAngularAcceleration.get()
-    );
-
-    // private static final Map<Pose2d, String> locationNames = new HashMap<>(Map.of(
-    //     FieldConstants.amp, "Amp",
-    //     FieldConstants.subwooferFront, "Subwoofer Front",
-    //     FieldConstants.podium, "Podium",
-    //     FieldConstants.pathfindSource, "Source",
-    //     FieldConstants.pathfindSpeaker, "Speaker Offset"
-    // ));
-
-    // public static final String autoDrivePrefix = "AutoDrive";
-
-    // public Command driveToFlipped(Pose2d pos) {
-    //     String name = locationNames.entrySet().stream()
-    //         .filter(e -> e.getKey().equals(pos))
-    //         .findFirst()
-    //         .map(Map.Entry::getValue)
-    //         .orElse(pos.toString());
-
-    //     return AutoBuilder.pathfindToPoseFlipped(pos, pathConstraints, 0, 0).withName(String.format("%s (%s)", autoDrivePrefix, name));
-    // }
-
     public final Translational translationSubsystem;
     public static class Translational extends SubsystemBase {
         public final Drive drive;
+        private boolean needsPostProcessing = false;
         
         private Translational(Drive drive) {
             this.drive = drive;
@@ -534,7 +491,7 @@ public class Drive extends VirtualSubsystem {
         }
 
         public void driveVelocity(double vx, double vy) {
-            drive.usePostProcessing = true;
+            needsPostProcessing = true;
             drive.setpointSpeeds.vxMetersPerSecond = vx;
             drive.setpointSpeeds.vyMetersPerSecond = vy;
         }
@@ -543,7 +500,7 @@ public class Drive extends VirtualSubsystem {
         }
 
         public void stop() {
-            drive.usePostProcessing = false;
+            needsPostProcessing = false;
             driveVelocity(0,0);
         }
 
@@ -586,6 +543,7 @@ public class Drive extends VirtualSubsystem {
     public final Rotational rotationalSubsystem;
     public static class Rotational extends SubsystemBase {
         public final Drive drive;
+        private boolean needsPostProcessing = false;
         
         private Rotational(Drive drive) {
             this.drive = drive;
@@ -594,14 +552,14 @@ public class Drive extends VirtualSubsystem {
         }
 
         public void driveVelocity(double omega) {
-            drive.usePostProcessing = true;
+            needsPostProcessing = true;
             drive.setpointSpeeds.omegaRadiansPerSecond = omega;
         }
         public void driveVelocity(ChassisSpeeds speeds) {
             driveVelocity(speeds.omegaRadiansPerSecond);
         }
         public void stop() {
-            drive.usePostProcessing = false;
+            needsPostProcessing = false;
             driveVelocity(0);
         }
 

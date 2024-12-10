@@ -1,13 +1,10 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Millimeters;
-
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.VoltageUnit;
-import edu.wpi.first.units.measure.MutDistance;
-import frc.util.loggerUtil.LoggedMotor;
+import frc.util.loggerUtil.inputs.LoggedMotor;
 
 public interface IntakeIO {
     

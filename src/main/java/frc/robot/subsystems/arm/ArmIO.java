@@ -5,8 +5,8 @@ import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.VoltageUnit;
-import frc.util.loggerUtil.LoggedEncoder;
-import frc.util.loggerUtil.LoggedMotor;
+import frc.util.loggerUtil.inputs.LoggedEncoder;
+import frc.util.loggerUtil.inputs.LoggedMotor;
 
 public interface ArmIO {
     @AutoLog

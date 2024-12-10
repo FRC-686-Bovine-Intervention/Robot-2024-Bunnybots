@@ -1,5 +1,6 @@
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.Hertz;
@@ -15,18 +16,21 @@ import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.pathplanner.lib.config.RobotConfig;
 
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.HardwareDevices;
+import frc.robot.constants.RobotConstants;
 import frc.util.Environment;
 import frc.util.GearRatio;
 import frc.util.GearRatio.Wheel;
@@ -168,4 +172,19 @@ public final class DriveConstants {
     public static final double headingKd = 0;
     public static final Angle headingTolerance = Degrees.of(1);
     public static final AngularVelocity omegaTolerance = DegreesPerSecond.of(1);
+
+    public static final RobotConfig robotConfig = new RobotConfig(
+        RobotConstants.robotWeight,
+        RobotConstants.robotMOI,
+        new com.pathplanner.lib.config.ModuleConfig(
+            DriveConstants.wheelRadius,
+            DriveConstants.maxDriveSpeed,
+            1.0,
+            DCMotor.getFalcon500(1),
+            Amps.of(55),
+            1
+        ),
+        DriveConstants.trackWidthX,
+        DriveConstants.trackWidthY
+    );
 }

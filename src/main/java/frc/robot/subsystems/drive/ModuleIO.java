@@ -6,7 +6,7 @@ import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.VoltageUnit;
-import frc.util.loggerUtil.LoggedEncodedMotor;
+import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 
 public interface ModuleIO {
     @AutoLog

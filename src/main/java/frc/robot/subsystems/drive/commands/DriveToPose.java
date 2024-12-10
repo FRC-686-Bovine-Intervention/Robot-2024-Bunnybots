@@ -28,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.util.LoggedTunableMeasure;
-import frc.util.loggerUtil.LoggedTunablePID;
+import frc.util.loggerUtil.tunables.LoggedTunablePID;
 import frc.util.wpilib.ProfiledPIDController;
 
 @Deprecated
@@ -169,7 +169,7 @@ public class DriveToPose extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        drive.driveVelocity(0, 0, 0);
+        drive.runRobotSpeeds(new ChassisSpeeds());
     }
 
     @Override

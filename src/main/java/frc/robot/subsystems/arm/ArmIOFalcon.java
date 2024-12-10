@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import org.littletonrobotics.junction.Logger;
@@ -25,22 +24,22 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.units.AngleUnit;
-import edu.wpi.first.units.AngularAccelerationUnit;
-import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.VoltageUnit;
 import frc.robot.constants.HardwareDevices;
-import frc.util.LoggedTunableMeasure;
-import frc.util.loggerUtil.LoggedTunableFF;
-import frc.util.loggerUtil.LoggedTunablePID;
+import frc.util.loggerUtil.tunables.LoggedTunableAngularProfile;
+import frc.util.loggerUtil.tunables.LoggedTunableFF;
+import frc.util.loggerUtil.tunables.LoggedTunablePID;
 
 public class ArmIOFalcon implements ArmIO {
     protected final TalonFX motor = HardwareDevices.armMotorID.talonFX();
     protected final CANcoder encoder = HardwareDevices.armEncoderID.cancoder();
     
-    private final LoggedTunableMeasure<AngularVelocityUnit> profilekV = new LoggedTunableMeasure<>("Arm/Falcon/PID/Profile/kV", RadiansPerSecond.of(4));
-    private final LoggedTunableMeasure<AngularAccelerationUnit> profilekA = new LoggedTunableMeasure<>("Arm/Falcon/PID/Profile/kA", RadiansPerSecondPerSecond.of(8));
-    // private final LoggedTunableMeasure<AngleUnit> kJ = new LoggedTunableMeasure<>("Pivot/PID/Profile/kJ", Radians.of(0));
+    private final LoggedTunableAngularProfile profileConsts = new LoggedTunableAngularProfile(
+        "Arm/Falcon/Profile",
+        RadiansPerSecond.of(4),
+        RadiansPerSecondPerSecond.of(8)
+    );
     private final LoggedTunablePID pidConsts = new LoggedTunablePID(
         "Arm/Falcon/PID",
         15,
@@ -75,6 +74,9 @@ public class ArmIOFalcon implements ArmIO {
             .withReverseSoftLimitEnable(true)
             .withReverseSoftLimitThreshold(ArmConstants.minAngle)
         ;
+        ffConsts.update(motorConfig.Slot0);
+        pidConsts.update(motorConfig.Slot0);
+        profileConsts.update(motorConfig.MotionMagic);
         motor.getConfigurator().apply(motorConfig);
 
         var encoderConfig = new CANcoderConfiguration();
@@ -103,14 +105,11 @@ public class ArmIOFalcon implements ArmIO {
             ffConsts.update(slotConfig);
             motor.getConfigurator().apply(slotConfig);
         }
-        if (LoggedTunableMeasure.hasChanged(hashCode(), profilekV, profilekA)) {
-            var motionMagic = new MotionMagicConfigs();
-            motor.getConfigurator().refresh(motionMagic);
-            motionMagic
-                .withMotionMagicCruiseVelocity(profilekV.in(RotationsPerSecond))
-                .withMotionMagicAcceleration(profilekA.in(RotationsPerSecondPerSecond))
-            ;
-            motor.getConfigurator().apply(motionMagic);
+        if (profileConsts.hasChanged(hashCode())) {
+            var motionMagicConfigs = new MotionMagicConfigs();
+            motor.getConfigurator().refresh(motionMagicConfigs);
+            profileConsts.update(motionMagicConfigs);
+            motor.getConfigurator().apply(motionMagicConfigs);
         }
     }
 
