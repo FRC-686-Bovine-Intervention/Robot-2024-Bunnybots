@@ -32,11 +32,11 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
 import frc.util.Environment;
-import frc.util.GearRatio;
-import frc.util.GearRatio.Wheel;
-import frc.util.LoggedTunableNumber;
 import frc.util.MathExtraUtil;
-import frc.util.hardwareID.CANDevice;
+import frc.util.hardwareID.can.CANDevice;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
+import frc.util.mechanismUtil.GearRatio;
+import frc.util.mechanismUtil.Wheel;
 
 public final class DriveConstants {
     public static final double odometryLoopFrequencyHz = 100;

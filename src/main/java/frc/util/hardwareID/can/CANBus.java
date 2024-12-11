@@ -1,4 +1,4 @@
-package frc.util.hardwareID;
+package frc.util.hardwareID.can;
 
 public class CANBus {
     public final String name;

@@ -3,6 +3,7 @@ package frc.util.hardwareID;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
+import frc.util.hardwareID.can.CANDevice;
 
 public class PnuematicsControl {
     public final CANDevice canDevice;

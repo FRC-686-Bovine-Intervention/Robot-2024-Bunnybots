@@ -35,10 +35,10 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.vision.bucket.BucketCameraIO.BucketCameraTarget;
 import frc.util.LazyOptional;
-import frc.util.LoggedTunableMeasure;
-import frc.util.LoggedTunableNumber;
 import frc.util.VirtualSubsystem;
 import frc.util.loggerUtil.LoggerUtil;
+import frc.util.loggerUtil.tunables.LoggedTunableMeasure;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.CameraMount;
 
 public class BucketVision extends VirtualSubsystem {

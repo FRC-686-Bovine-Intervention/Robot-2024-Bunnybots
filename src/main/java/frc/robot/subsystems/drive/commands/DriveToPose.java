@@ -27,7 +27,7 @@ import edu.wpi.first.units.LinearVelocityUnit;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.Drive;
-import frc.util.LoggedTunableMeasure;
+import frc.util.loggerUtil.tunables.LoggedTunableMeasure;
 import frc.util.loggerUtil.tunables.LoggedTunablePID;
 import frc.util.wpilib.ProfiledPIDController;
 

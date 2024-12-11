@@ -13,8 +13,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagCamera.ApriltagCameraResult;
-import frc.util.LoggedTunableNumber;
 import frc.util.VirtualSubsystem;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 
 public class ApriltagVision extends VirtualSubsystem {
     private final ApriltagCamera[] cameras;

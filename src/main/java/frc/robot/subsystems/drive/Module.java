@@ -38,7 +38,7 @@ import edu.wpi.first.units.measure.MutLinearVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.util.CurrentSpikeDetector;
-import frc.util.LoggedTunableMeasure;
+import frc.util.loggerUtil.tunables.LoggedTunableMeasure;
 
 public class Module {
     private final ModuleIO io;

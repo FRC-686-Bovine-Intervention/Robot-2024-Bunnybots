@@ -1,9 +1,9 @@
 package frc.robot.constants;
 
-import frc.util.hardwareID.CANBus;
-import frc.util.hardwareID.CANDevice;
 import frc.util.hardwareID.PnuematicsControl;
 import frc.util.hardwareID.PnuematicsControl.SolenoidPort;
+import frc.util.hardwareID.can.CANBus;
+import frc.util.hardwareID.can.CANDevice;
 import frc.util.hardwareID.rioPorts.DIOPort;
 import frc.util.hardwareID.rioPorts.PWMPort;
 

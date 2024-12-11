@@ -7,7 +7,6 @@ import com.ctre.phoenix6.configs.SlotConfigs;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import frc.util.LoggedTunableNumber;
 
 public class LoggedTunableFF {
     private final LoggedTunableNumber kS;

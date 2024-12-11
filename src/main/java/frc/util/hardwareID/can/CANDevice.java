@@ -1,4 +1,4 @@
-package frc.util.hardwareID;
+package frc.util.hardwareID.can;
 
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
@@ -10,6 +10,7 @@ import com.revrobotics.spark.SparkMax;
 
 import au.grapplerobotics.LaserCan;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import frc.util.hardwareID.PnuematicsControl;
 
 public class CANDevice {
     public final int id;

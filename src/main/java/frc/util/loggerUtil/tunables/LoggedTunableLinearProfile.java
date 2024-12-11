@@ -6,7 +6,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.LinearVelocityUnit;
 import edu.wpi.first.units.Measure;
-import frc.util.LoggedTunableMeasure;
 
 public class LoggedTunableLinearProfile {
     private final LoggedTunableMeasure<LinearVelocityUnit> kV;

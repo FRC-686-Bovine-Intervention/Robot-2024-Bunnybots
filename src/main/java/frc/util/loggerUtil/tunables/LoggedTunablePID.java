@@ -6,7 +6,6 @@ import com.ctre.phoenix6.configs.Slot2Configs;
 import com.ctre.phoenix6.configs.SlotConfigs;
 
 import edu.wpi.first.math.controller.PIDController;
-import frc.util.LoggedTunableNumber;
 import frc.util.wpilib.ProfiledPIDController;
 
 public class LoggedTunablePID {

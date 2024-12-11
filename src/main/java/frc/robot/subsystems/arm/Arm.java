@@ -27,8 +27,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.util.Cooldown;
 import frc.util.LoggedInternalButton;
-import frc.util.LoggedTunableMeasure;
 import frc.util.MathExtraUtil;
+import frc.util.loggerUtil.tunables.LoggedTunableMeasure;
 import frc.util.robotStructure.Mechanism3d;
 import frc.util.robotStructure.angle.ArmMech;
 

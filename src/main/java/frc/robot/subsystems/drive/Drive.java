@@ -66,11 +66,11 @@ import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.leds.Leds;
 import frc.util.AllianceFlipUtil;
 import frc.util.LazyOptional;
-import frc.util.LoggedTunableNumber;
 import frc.util.MathExtraUtil;
 import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
 import frc.util.controllers.Joystick;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.Root;
 
 public class Drive extends VirtualSubsystem {

@@ -23,9 +23,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.Module;
-import frc.util.LoggedTunableMeasure;
-import frc.util.LoggedTunableNumber;
 import frc.util.MathExtraUtil;
+import frc.util.loggerUtil.tunables.LoggedTunableMeasure;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 
 public class WheelRadiusCalibration extends Command {
     private final Drive drive;

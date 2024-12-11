@@ -11,7 +11,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.Measure;
-import frc.util.LoggedTunableMeasure;
 
 public class LoggedTunableAngularProfile {
     private final LoggedTunableMeasure<AngularVelocityUnit> kV;

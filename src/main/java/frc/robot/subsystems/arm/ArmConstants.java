@@ -10,8 +10,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.MomentOfInertia;
-import frc.util.GearRatio;
-import frc.util.LoggedTunableMeasure;
+import frc.util.loggerUtil.tunables.LoggedTunableMeasure;
+import frc.util.mechanismUtil.GearRatio;
 
 public final class ArmConstants {
     public static final Frequency MotorSignalFrequency = Hertz.of(50);
