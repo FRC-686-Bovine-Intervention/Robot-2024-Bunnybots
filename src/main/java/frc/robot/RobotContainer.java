@@ -52,8 +52,11 @@ import frc.robot.subsystems.puncher.PuncherIOSolenoid;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagCamera;
 import frc.robot.subsystems.vision.apriltag.ApriltagCameraIOPhotonVision;
+import frc.robot.subsystems.vision.apriltag.ApriltagCameraIOSim;
+import frc.robot.subsystems.vision.apriltag.ApriltagCameraSim;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionConstants;
+import frc.robot.subsystems.vision.apriltag.ApriltagVisionSim;
 import frc.robot.subsystems.vision.bucket.BucketCamera;
 import frc.robot.subsystems.vision.bucket.BucketCameraIOPhotonVision;
 import frc.robot.subsystems.vision.bucket.BucketVision;
@@ -129,7 +132,24 @@ public class RobotContainer {
                         .map(ModuleIOSim::new)
                         .toArray(ModuleIO[]::new)
                 );
-                apriltagVision = new ApriltagVision();
+                apriltagVision = new ApriltagVisionSim(
+                    new ApriltagCameraSim(
+                        ApriltagVisionConstants.frontLeftApriltagCamera,
+                        new ApriltagCameraIOSim(ApriltagVisionConstants.frontLeftApriltagCamera)
+                    ),
+                    new ApriltagCameraSim(
+                        ApriltagVisionConstants.frontRightApriltagCamera,
+                        new ApriltagCameraIOSim(ApriltagVisionConstants.frontRightApriltagCamera)
+                    ),
+                    new ApriltagCameraSim(
+                        ApriltagVisionConstants.backLeftApriltagCamera,
+                        new ApriltagCameraIOSim(ApriltagVisionConstants.backLeftApriltagCamera)
+                    ),
+                    new ApriltagCameraSim(
+                        ApriltagVisionConstants.backRightApriltagCamera,
+                        new ApriltagCameraIOSim(ApriltagVisionConstants.backRightApriltagCamera)
+                    )
+                );
                 bucketVision = new BucketVision();
                 arm = new Arm(new ArmIOSim());
                 intake = new Intake(new IntakeIOSim());

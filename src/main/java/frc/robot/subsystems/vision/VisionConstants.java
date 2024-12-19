@@ -3,6 +3,8 @@ package frc.robot.subsystems.vision;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
+import org.photonvision.simulation.SimCameraProperties;
+
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -12,12 +14,17 @@ public final class VisionConstants {
     public static class CameraConstants {
         public final String hardwareName;
         public final CameraMount mount;
+        public final SimCameraProperties simCamProps;
 
-        public CameraConstants(String hardwareName, CameraMount mount) {
+        public CameraConstants(String hardwareName, CameraMount mount, SimCameraProperties simCamProps) {
             this.hardwareName = hardwareName;
             this.mount = mount;
+            this.simCamProps = simCamProps;
         }
     }
+
+    public static SimCameraProperties apriltagSimCamProps = new SimCameraProperties();
+    public static SimCameraProperties bucketSimCamProps = new SimCameraProperties();
 
     public static final CameraMount frontLeftModuleMount = new CameraMount(new Transform3d(
         new Translation3d(
